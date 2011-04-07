@@ -389,11 +389,11 @@ u8 GPS_CalculateDeviation(GPS_Pos_t * pCurrentPos, GPS_Pos_t * pTargetPos, GPS_D
 	pDeviationFromTarget->Status = INVALID;
 	return FALSE;
 }
-
+s32	GPSPosDevIntegral_North,GPSPosDevIntegral_East;
 void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 {
 	s32 D_North,D_East,P_North,P_East,I_North,I_East,PID_North,PID_East;
-	s32	GPSPosDevIntegral_North,GPSPosDevIntegral_East,coscompass,PID_Nick,PID_Roll,sincompass;
+	s32	coscompass,PID_Nick,PID_Roll,sincompass;
 	static u32 beep_rythm;
 	static u32 GPSDataTimeout = 0;
 
@@ -404,7 +404,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 	static GPS_Pos_t RangedTargetPosition = {0,0,0, INVALID};		// the limited target position, this is derived from the target position with repect to the operating radius
 	static s32 OperatingRadiusOld = -1;
 	static u32 WPTime = 0;
-
+		DebugOut.Analog[23] = GPSPosDevIntegral_North;
+		DebugOut.Analog[24] = GPSPosDevIntegral_East;
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//+ Check for new data from GPS-receiver
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -412,6 +413,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 	{
 	 	case INVALID: // no gps data available
 			// do nothing
+			
 			GPS_Parameter.PID_Limit = 0; // disables PID output
 			break;
 
@@ -460,7 +462,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				{
 					// the GPS control is deactived
 					case GPS_FLIGHT_MODE_FREE:
-
+					
 						GPS_Parameter.PID_Limit = 0; // disables PID output
 						// update hold position
 						GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
@@ -474,9 +476,9 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 						if(GPS_IsManuallyControlled())
 						{
-
+							
 							GPS_Parameter.PID_Limit = 0; // disables PID output, as long as the manual conrol is active
-						    GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
+						    	GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
 							GPS_pTargetPosition = NULL;
 							GPS_TargetRadius = 0;
 						}
@@ -493,8 +495,9 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 						if(GPS_IsManuallyControlled()) // the human pilot takes the action
 						{
+							
 							GPS_Parameter.PID_Limit = 0; // disables PID output, as long as the manual conrol is active
-						    GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);  // update hold position
+						    	GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);  // update hold position
 							GPS_pTargetPosition = NULL;	// set target position invalid
 							GPS_TargetRadius = 0;
 						}
@@ -513,8 +516,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 									// check if the pointer to the waypoint has been changed or the data have been updated
 									if((GPS_pWaypoint != GPS_pWaypointOld) || (GPS_pWaypoint->Position.Status == NEWDATA))
 									{
-										GPSPosDevIntegral_North = 0;
-										GPSPosDevIntegral_East = 0;
+										
 										GPS_pWaypointOld = GPS_pWaypoint;
 									}
 									// if WP has been reached once, wait hold time before trigger to next one
@@ -523,6 +525,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 										/* ToDo: Adjust GPS_pWaypoint->Heading, GPS_pWaypoint->Event handling */
 										if(CheckDelay(WPTime))
 										{
+											
 								 			GPS_pWaypoint = PointList_WPNext(); // goto to next waypoint, return NULL if end of list has been reached
 							}
 									} // EOF if(WPArrived)
@@ -547,7 +550,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 								if(GPS_HomePosition.Status == INVALID)
 								{
 									GPS_pTargetPosition = &GPS_HoldPosition; // fall back to hold mode if home position is not a
-				GPS_TargetRadius = 100;
+									GPS_TargetRadius = 100;
 									BeepTime = 255; // beep to indicate missin home position
 								}
 								else // the home position is valid
@@ -564,6 +567,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 					case GPS_FLIGHT_MODE_UNDEF:
 					default:
+						
 						GPS_Parameter.PID_Limit = 0; // disables PID output
 						// update hold position
 						GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
@@ -583,6 +587,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				{	// if the target position has been changed or the value has been updated or the OperatingRadius has changed
 					if((GPS_pTargetPosition != pTargetPositionOld)  || (GPS_pTargetPosition->Status == NEWDATA) || (GPS_Parameter.OperatingRadius != OperatingRadiusOld) )
 					{
+						GPSPosDevIntegral_North = 0;
+						GPSPosDevIntegral_East = 0;
 						BeepTime = 255; // beep to indicate setting of a new target position
 						NCFlags &= ~NC_FLAG_TARGET_REACHED;	// clear target reached flag
 						// calculate deviation of new target position from home position
@@ -654,8 +660,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 		// combine P & I
 		PID_North = P_North + I_North;
 		PID_East  = P_East + I_East;
-		DebugOut.Analog[23] = GPSPosDevIntegral_North;
-		DebugOut.Analog[24] = GPSPosDevIntegral_East;
+
 		
 		GPS_LimitXY(&P_North, &P_North, GPS_Parameter.P_Limit);
 		
