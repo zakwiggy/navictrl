@@ -496,7 +496,7 @@ clean: begin clean_list finished end
 
 clean_list :
 
-	rm -r .dir  *.hex *.elf *.lss *.map *.lst *.o *.sym
+	rm -r .dep  *.hex *.elf *.lss *.map *.lst *.o *.sym
 	
 
 
