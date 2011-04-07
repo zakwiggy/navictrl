@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/src
+END
+usb_core.c
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/src/usb_core.c
+END
+usb_int.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/src/usb_int.c
+END
+usb_mem.c
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/src/usb_mem.c
+END
+usb_regs.c
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/src/usb_regs.c
+END
+usb_init.c
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/src/usb_init.c
+END

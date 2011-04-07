@@ -1,0 +1,1123 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_fmi.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	FMI_BankRemapConfig
+  24              	FMI_BankRemapConfig:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_fmi.c"
+   1:libstr91x/src/91x_fmi.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_fmi.c **** * File Name          : 91x_fmi.c
+   3:libstr91x/src/91x_fmi.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_fmi.c **** * Version            : V2.1
+   5:libstr91x/src/91x_fmi.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_fmi.c **** * Description        : This file provides all the FMI firmware functions.
+   7:libstr91x/src/91x_fmi.c **** ********************************************************************************
+   8:libstr91x/src/91x_fmi.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_fmi.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME. AS
+  10:libstr91x/src/91x_fmi.c **** * A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_fmi.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_fmi.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_fmi.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+  15:libstr91x/src/91x_fmi.c **** 
+  16:libstr91x/src/91x_fmi.c **** 
+  17:libstr91x/src/91x_fmi.c **** /* Standard include ----------------------------------------------------------*/
+  18:libstr91x/src/91x_fmi.c **** #include "91x_fmi.h"
+  19:libstr91x/src/91x_fmi.c **** 
+  20:libstr91x/src/91x_fmi.c **** /* Include of other module interface headers ---------------------------------*/
+  21:libstr91x/src/91x_fmi.c **** /* Local includes ------------------------------------------------------------*/
+  22:libstr91x/src/91x_fmi.c **** /* Private typedef -----------------------------------------------------------*/
+  23:libstr91x/src/91x_fmi.c **** /* Private define ------------------------------------------------------------*/
+  24:libstr91x/src/91x_fmi.c **** 
+  25:libstr91x/src/91x_fmi.c **** #define TIMEOUT      0xFFFFFF     /* Timeout value */
+  26:libstr91x/src/91x_fmi.c **** 
+  27:libstr91x/src/91x_fmi.c **** /* Private macro -------------------------------------------------------------*/
+  28:libstr91x/src/91x_fmi.c **** /* Private variables ---------------------------------------------------------*/
+  29:libstr91x/src/91x_fmi.c **** /* Private function prototypes -----------------------------------------------*/
+  30:libstr91x/src/91x_fmi.c **** /* Interface functions -------------------------------------------------------*/
+  31:libstr91x/src/91x_fmi.c **** /* Private functions ---------------------------------------------------------*/
+  32:libstr91x/src/91x_fmi.c **** 
+  33:libstr91x/src/91x_fmi.c **** 
+  34:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+  35:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_BankRemapConfig
+  36:libstr91x/src/91x_fmi.c **** * Description    : Configure the addresses and sizes of bank 0 and bank 1. 
+  37:libstr91x/src/91x_fmi.c **** * Input1         : FMI_BootBankSize: specifies the boot bank size.
+  38:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  39:libstr91x/src/91x_fmi.c **** *                     - 0x0: 32KBytes.
+  40:libstr91x/src/91x_fmi.c **** *                     - 0x1: 64KBytes.
+  41:libstr91x/src/91x_fmi.c **** *                     - 0x2: 128KBytes.
+  42:libstr91x/src/91x_fmi.c **** *                     - 0x3: 256KBytes.
+  43:libstr91x/src/91x_fmi.c **** *                     - 0x4: 512KBytes.
+  44:libstr91x/src/91x_fmi.c **** *                     ....
+  45:libstr91x/src/91x_fmi.c **** *                     - 0xB: 64MBytes.
+  46:libstr91x/src/91x_fmi.c **** * Input2         : FMI_NonBootBankSize: specifies the non boot bank size.
+  47:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  48:libstr91x/src/91x_fmi.c **** *                     - 0x0: 8KBytes.
+  49:libstr91x/src/91x_fmi.c **** *                     - 0x1: 16KBytes.
+  50:libstr91x/src/91x_fmi.c **** *                     - 0x2: 32KBytes.
+  51:libstr91x/src/91x_fmi.c **** *                     - 0x3: 64KBytes.
+  52:libstr91x/src/91x_fmi.c **** *                     ....
+  53:libstr91x/src/91x_fmi.c **** *                     - 0xD: 64MBytes.
+  54:libstr91x/src/91x_fmi.c **** * Input3         : FMI_BootBankAddress: specifies the address of the boot bank.
+  55:libstr91x/src/91x_fmi.c **** * Input4         : FMI_NonBootBankAddress: specifies the address of the non 
+  56:libstr91x/src/91x_fmi.c **** *                  boot bank.
+  57:libstr91x/src/91x_fmi.c **** * Output         : None
+  58:libstr91x/src/91x_fmi.c **** * Return         : None
+  59:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+  60:libstr91x/src/91x_fmi.c **** void FMI_BankRemapConfig(u8 FMI_BootBankSize, u8 FMI_NonBootBankSize, \
+  61:libstr91x/src/91x_fmi.c ****                          u32 FMI_BootBankAddress, u32 FMI_NonBootBankAddress)
+  62:libstr91x/src/91x_fmi.c **** {
+  27              		.loc 1 62 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  63:libstr91x/src/91x_fmi.c ****     FMI->BBSR   = FMI_BootBankSize;
+  33              		.loc 1 63 0
+  34 0000 15C3A0E3 		mov	ip, #1409286144
+  64:libstr91x/src/91x_fmi.c ****     FMI->NBBSR  = FMI_NonBootBankSize;
+  65:libstr91x/src/91x_fmi.c ****     FMI->BBADR  = (FMI_BootBankAddress >> 2);
+  66:libstr91x/src/91x_fmi.c ****     FMI->NBBADR = (FMI_NonBootBankAddress >> 2);
+  35              		.loc 1 66 0
+  36 0004 2331A0E1 		mov	r3, r3, lsr #2
+  37              	.LVL1:
+  65:libstr91x/src/91x_fmi.c ****     FMI->BBADR  = (FMI_BootBankAddress >> 2);
+  38              		.loc 1 65 0
+  39 0008 2221A0E1 		mov	r2, r2, lsr #2
+  40              	.LVL2:
+  63:libstr91x/src/91x_fmi.c ****     FMI->BBSR   = FMI_BootBankSize;
+  41              		.loc 1 63 0
+  42 000c 00008CE5 		str	r0, [ip, #0]
+  64:libstr91x/src/91x_fmi.c ****     FMI->NBBSR  = FMI_NonBootBankSize;
+  43              		.loc 1 64 0
+  44 0010 04108CE5 		str	r1, [ip, #4]
+  65:libstr91x/src/91x_fmi.c ****     FMI->BBADR  = (FMI_BootBankAddress >> 2);
+  45              		.loc 1 65 0
+  46 0014 0C208CE5 		str	r2, [ip, #12]
+  47              		.loc 1 66 0
+  48 0018 10308CE5 		str	r3, [ip, #16]
+  67:libstr91x/src/91x_fmi.c ****     FMI->CR     |= 0x18; /* Enable bank 1 */
+  49              		.loc 1 67 0
+  50 001c 18009CE5 		ldr	r0, [ip, #24]
+  51              	.LVL3:
+  52 0020 183080E3 		orr	r3, r0, #24
+  53 0024 18308CE5 		str	r3, [ip, #24]
+  68:libstr91x/src/91x_fmi.c **** }
+  54              		.loc 1 68 0
+  55 0028 1EFF2FE1 		bx	lr
+  56              		.cfi_endproc
+  57              	.LFE0:
+  59              		.align	2
+  60              		.global	FMI_Config
+  62              	FMI_Config:
+  63              	.LFB1:
+  69:libstr91x/src/91x_fmi.c **** 
+  70:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+  71:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_Config
+  72:libstr91x/src/91x_fmi.c **** * Description    : Configure the FMI.
+  73:libstr91x/src/91x_fmi.c **** * Input1         : FMI_ReadWaitState: specifies the needed read wait states.
+  74:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  75:libstr91x/src/91x_fmi.c **** *                     - FMI_READ_WAIT_STATE_1: One read wait state.
+  76:libstr91x/src/91x_fmi.c **** *                     - FMI_READ_WAIT_STATE_2: Two read wait states.
+  77:libstr91x/src/91x_fmi.c **** *                     - FMI_READ_WAIT_STATE_3: Three read wait states.
+  78:libstr91x/src/91x_fmi.c **** * Input2         : FMI_WriteWaitState: specifies the needed write wait states.
+  79:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  80:libstr91x/src/91x_fmi.c **** *                     - FMI_WRITE_WAIT_STATE_1: One write wait state.
+  81:libstr91x/src/91x_fmi.c **** *                     - FMI_WRITE_WAIT_STATE_2: Two write wait states.
+  82:libstr91x/src/91x_fmi.c **** * Input3         : FMI_PWD: specifies the power down mode status.
+  83:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  84:libstr91x/src/91x_fmi.c **** *                     - FMI_PWD_ENABLE:  Enable the PWD.
+  85:libstr91x/src/91x_fmi.c **** *                     - FMI_PWD_DISABLE: Disable the PWD.
+  86:libstr91x/src/91x_fmi.c **** * Input4         : FMI_LVDEN: specifies the low voltage detector status.
+  87:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  88:libstr91x/src/91x_fmi.c **** *                     - FMI_LVD_ENABLE:  Enable the LVD.
+  89:libstr91x/src/91x_fmi.c **** *                     - FMI_LVD_DISABLE: Disable the LVD.
+  90:libstr91x/src/91x_fmi.c **** * Input5         : FMI_FreqRange: specifies the working frequency range.
+  91:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+  92:libstr91x/src/91x_fmi.c **** *                     - FMI_FREQ_LOW:  Low working frequency (up to 66MHz).
+  93:libstr91x/src/91x_fmi.c **** *                     - FMI_FREQ_HIGH: High working frequency (above 66MHz) .
+  94:libstr91x/src/91x_fmi.c **** * Output         : None
+  95:libstr91x/src/91x_fmi.c **** * Return         : None
+  96:libstr91x/src/91x_fmi.c **** *
+  97:libstr91x/src/91x_fmi.c **** *NOTE:
+  98:libstr91x/src/91x_fmi.c **** *This function should be executed from SRAM when booting from bank1 
+  99:libstr91x/src/91x_fmi.c **** *to avoid any conflicts(reading and writing at the same time in bank1)
+ 100:libstr91x/src/91x_fmi.c **** *
+ 101:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 102:libstr91x/src/91x_fmi.c **** void FMI_Config(u16 FMI_ReadWaitState, u32 FMI_WriteWaitState, u16 FMI_PWD,\
+ 103:libstr91x/src/91x_fmi.c ****                 u16 FMI_LVDEN, u16 FMI_FreqRange)
+ 104:libstr91x/src/91x_fmi.c **** {
+  64              		.loc 1 104 0
+  65              		.cfi_startproc
+  66              		@ args = 4, pretend = 0, frame = 0
+  67              		@ frame_needed = 0, uses_anonymous_args = 0
+  68              		@ link register save eliminated.
+  69              	.LVL4:
+  70 002c 30002DE9 		stmfd	sp!, {r4, r5}
+  71              	.LCFI0:
+  72              		.cfi_def_cfa_offset 8
+ 105:libstr91x/src/91x_fmi.c ****   /* Configure the write wait state value */
+ 106:libstr91x/src/91x_fmi.c ****   if (FMI_WriteWaitState == FMI_WRITE_WAIT_STATE_1)
+ 107:libstr91x/src/91x_fmi.c ****   {
+ 108:libstr91x/src/91x_fmi.c ****     FMI->CR |= FMI_WRITE_WAIT_STATE_1;
+  73              		.loc 1 108 0
+  74 0030 1553A0E3 		mov	r5, #1409286144
+  75              		.cfi_offset 5, -4
+  76              		.cfi_offset 4, -8
+ 106:libstr91x/src/91x_fmi.c ****   if (FMI_WriteWaitState == FMI_WRITE_WAIT_STATE_1)
+  77              		.loc 1 106 0
+  78 0034 010C51E3 		cmp	r1, #256
+  79              		.loc 1 108 0
+  80 0038 181095E5 		ldr	r1, [r5, #24]
+  81              	.LVL5:
+ 104:libstr91x/src/91x_fmi.c **** {
+  82              		.loc 1 104 0
+  83 003c B8C0DDE1 		ldrh	ip, [sp, #8]
+  84              		.loc 1 108 0
+  85 0040 011C8103 		orreq	r1, r1, #256
+ 109:libstr91x/src/91x_fmi.c ****   }
+ 110:libstr91x/src/91x_fmi.c ****   else
+ 111:libstr91x/src/91x_fmi.c ****   {
+ 112:libstr91x/src/91x_fmi.c ****     FMI->CR &= FMI_WRITE_WAIT_STATE_0;
+  86              		.loc 1 112 0
+  87 0044 011CC113 		bicne	r1, r1, #256
+  88 0048 181085E5 		str	r1, [r5, #24]
+ 113:libstr91x/src/91x_fmi.c ****   }
+ 114:libstr91x/src/91x_fmi.c **** 
+ 115:libstr91x/src/91x_fmi.c ****   /* Write a write flash configuration register command */
+ 116:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_BANK_1 = 0x60;
+  89              		.loc 1 116 0
+  90 004c 1513A0E3 		mov	r1, #1409286144
+  91 0050 0C4091E5 		ldr	r4, [r1, #12]
+  92 0054 6050A0E3 		mov	r5, #96	@ movhi
+  93 0058 0441A0E1 		mov	r4, r4, asl #2
+  94 005c B050C4E1 		strh	r5, [r4, #0]	@ movhi
+ 117:libstr91x/src/91x_fmi.c **** 
+ 118:libstr91x/src/91x_fmi.c ****   /* Configure the flash configuration register */
+ 119:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_BANK_1|FMI_ReadWaitState|FMI_PWD|FMI_LVDEN|FMI_FreqRange) = 0x03;
+  95              		.loc 1 119 0
+  96 0060 0C1091E5 		ldr	r1, [r1, #12]
+  97 0064 010180E1 		orr	r0, r0, r1, asl #2
+  98              	.LVL6:
+  99 0068 021080E1 		orr	r1, r0, r2
+ 100 006c 030081E1 		orr	r0, r1, r3
+ 101 0070 0C2080E1 		orr	r2, r0, ip
+ 102              	.LVL7:
+ 103 0074 0330A0E3 		mov	r3, #3	@ movhi
+ 104              	.LVL8:
+ 105 0078 B030C2E1 		strh	r3, [r2, #0]	@ movhi
+ 120:libstr91x/src/91x_fmi.c **** }
+ 106              		.loc 1 120 0
+ 107 007c 3000BDE8 		ldmfd	sp!, {r4, r5}
+ 108 0080 1EFF2FE1 		bx	lr
+ 109              		.cfi_endproc
+ 110              	.LFE1:
+ 112              		.align	2
+ 113              		.global	FMI_EraseSector
+ 115              	FMI_EraseSector:
+ 116              	.LFB2:
+ 121:libstr91x/src/91x_fmi.c **** 
+ 122:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 123:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_EraseSector
+ 124:libstr91x/src/91x_fmi.c **** * Description    : Erase the needed sector.
+ 125:libstr91x/src/91x_fmi.c **** * Input          : FMI_Sector: specifies the sector to be erased.  
+ 126:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 127:libstr91x/src/91x_fmi.c **** *                     - FMI_B0S0: FMI bank 0 sector 0. 
+ 128:libstr91x/src/91x_fmi.c **** *                       ...
+ 129:libstr91x/src/91x_fmi.c **** *                     - FMI_B0S31: FMI bank 0 sector 31.
+ 130:libstr91x/src/91x_fmi.c **** *
+ 131:libstr91x/src/91x_fmi.c **** *
+ 132:libstr91x/src/91x_fmi.c **** *                     - FMI_B1S0: FMI bank 1 sector 0.
+ 133:libstr91x/src/91x_fmi.c **** *                      ...
+ 134:libstr91x/src/91x_fmi.c **** *                     - FMI_B1S7: FMI bank 1 sector 7.
+ 135:libstr91x/src/91x_fmi.c **** * Output         : None
+ 136:libstr91x/src/91x_fmi.c **** * Return         : None
+ 137:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 138:libstr91x/src/91x_fmi.c **** void FMI_EraseSector(vu32 FMI_Sector)
+ 139:libstr91x/src/91x_fmi.c **** { 
+ 117              		.loc 1 139 0
+ 118              		.cfi_startproc
+ 119              		@ args = 0, pretend = 0, frame = 8
+ 120              		@ frame_needed = 0, uses_anonymous_args = 0
+ 121              		@ link register save eliminated.
+ 122              	.LVL9:
+ 123 0084 08D04DE2 		sub	sp, sp, #8
+ 124              	.LCFI1:
+ 125              		.cfi_def_cfa_offset 8
+ 126              		.loc 1 139 0
+ 127 0088 04008DE5 		str	r0, [sp, #4]
+ 140:libstr91x/src/91x_fmi.c ****   /* Write an erase set-up command to the sector */
+ 141:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Sector = 0x20;
+ 128              		.loc 1 141 0
+ 129 008c 04109DE5 		ldr	r1, [sp, #4]
+ 130 0090 2000A0E3 		mov	r0, #32	@ movhi
+ 131              	.LVL10:
+ 132 0094 B000C1E1 		strh	r0, [r1, #0]	@ movhi
+ 142:libstr91x/src/91x_fmi.c **** 
+ 143:libstr91x/src/91x_fmi.c ****   /* Write an erase confirm command to the sector */
+ 144:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Sector = 0xD0;
+ 133              		.loc 1 144 0
+ 134 0098 04309DE5 		ldr	r3, [sp, #4]
+ 135 009c D020A0E3 		mov	r2, #208	@ movhi
+ 136 00a0 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 145:libstr91x/src/91x_fmi.c **** }
+ 137              		.loc 1 145 0
+ 138 00a4 08D08DE2 		add	sp, sp, #8
+ 139 00a8 1EFF2FE1 		bx	lr
+ 140              		.cfi_endproc
+ 141              	.LFE2:
+ 143              		.align	2
+ 144              		.global	FMI_EraseBank
+ 146              	FMI_EraseBank:
+ 147              	.LFB3:
+ 146:libstr91x/src/91x_fmi.c **** 
+ 147:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 148:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_EraseBank
+ 149:libstr91x/src/91x_fmi.c **** * Description    : Erase the needed bank.
+ 150:libstr91x/src/91x_fmi.c **** * Input          : FMI_Bank: specifies the bank to be erased.
+ 151:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 152:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_0: FMI bank 0.
+ 153:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_1: FMI bank 1.
+ 154:libstr91x/src/91x_fmi.c **** * Output         : None
+ 155:libstr91x/src/91x_fmi.c **** * Return         : None
+ 156:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 157:libstr91x/src/91x_fmi.c **** void FMI_EraseBank(vu32 FMI_Bank)
+ 158:libstr91x/src/91x_fmi.c **** {
+ 148              		.loc 1 158 0
+ 149              		.cfi_startproc
+ 150              		@ args = 0, pretend = 0, frame = 8
+ 151              		@ frame_needed = 0, uses_anonymous_args = 0
+ 152              		@ link register save eliminated.
+ 153              	.LVL11:
+ 154 00ac 08D04DE2 		sub	sp, sp, #8
+ 155              	.LCFI2:
+ 156              		.cfi_def_cfa_offset 8
+ 157              		.loc 1 158 0
+ 158 00b0 04008DE5 		str	r0, [sp, #4]
+ 159:libstr91x/src/91x_fmi.c ****   /* Write a bank erase set-up command to the bank */
+ 160:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0x80;
+ 159              		.loc 1 160 0
+ 160 00b4 04109DE5 		ldr	r1, [sp, #4]
+ 161 00b8 8000A0E3 		mov	r0, #128	@ movhi
+ 162              	.LVL12:
+ 163 00bc B000C1E1 		strh	r0, [r1, #0]	@ movhi
+ 161:libstr91x/src/91x_fmi.c **** 
+ 162:libstr91x/src/91x_fmi.c ****   /* Write an erase confirm command to the sector */
+ 163:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0xD0;
+ 164              		.loc 1 163 0
+ 165 00c0 04309DE5 		ldr	r3, [sp, #4]
+ 166 00c4 D020A0E3 		mov	r2, #208	@ movhi
+ 167 00c8 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 164:libstr91x/src/91x_fmi.c **** }
+ 168              		.loc 1 164 0
+ 169 00cc 08D08DE2 		add	sp, sp, #8
+ 170 00d0 1EFF2FE1 		bx	lr
+ 171              		.cfi_endproc
+ 172              	.LFE3:
+ 174              		.align	2
+ 175              		.global	FMI_WriteHalfWord
+ 177              	FMI_WriteHalfWord:
+ 178              	.LFB4:
+ 165:libstr91x/src/91x_fmi.c **** 
+ 166:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 167:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_WriteHalfWord
+ 168:libstr91x/src/91x_fmi.c **** * Description    : Write a halfword to the needed Flash memory address.
+ 169:libstr91x/src/91x_fmi.c **** * Input 1        : FMI_Address: specifies the address offset where the data will 
+ 170:libstr91x/src/91x_fmi.c **** *                  be written.
+ 171:libstr91x/src/91x_fmi.c **** * Input 2        : FMI_Data: the needed data.
+ 172:libstr91x/src/91x_fmi.c **** * Output         : None
+ 173:libstr91x/src/91x_fmi.c **** * Return         : None
+ 174:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 175:libstr91x/src/91x_fmi.c **** void FMI_WriteHalfWord(u32 FMI_Address, u16 FMI_Data)
+ 176:libstr91x/src/91x_fmi.c **** {
+ 179              		.loc 1 176 0
+ 180              		.cfi_startproc
+ 181              		@ args = 0, pretend = 0, frame = 0
+ 182              		@ frame_needed = 0, uses_anonymous_args = 0
+ 183              		@ link register save eliminated.
+ 184              	.LVL13:
+ 177:libstr91x/src/91x_fmi.c ****   /* Write a program command to the sector to be written */
+ 178:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_Address & 0xFFFFFFFC) = 0x40;
+ 185              		.loc 1 178 0
+ 186 00d4 0330C0E3 		bic	r3, r0, #3
+ 187 00d8 4020A0E3 		mov	r2, #64	@ movhi
+ 188 00dc B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 179:libstr91x/src/91x_fmi.c ****   
+ 180:libstr91x/src/91x_fmi.c ****   /* Write the halfword to the destination address */
+ 181:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Address = FMI_Data;
+ 189              		.loc 1 181 0
+ 190 00e0 B010C0E1 		strh	r1, [r0, #0]	@ movhi
+ 182:libstr91x/src/91x_fmi.c **** }
+ 191              		.loc 1 182 0
+ 192 00e4 1EFF2FE1 		bx	lr
+ 193              		.cfi_endproc
+ 194              	.LFE4:
+ 196              		.align	2
+ 197              		.global	FMI_WriteOTPHalfWord
+ 199              	FMI_WriteOTPHalfWord:
+ 200              	.LFB5:
+ 183:libstr91x/src/91x_fmi.c **** 
+ 184:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 185:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_WriteOTPHalfWord
+ 186:libstr91x/src/91x_fmi.c **** * Description    : Write a halfword to the needed OTP sector address.
+ 187:libstr91x/src/91x_fmi.c **** * Input 1        : FMI_OTPHWAddress: specifies the halfword address offset  
+ 188:libstr91x/src/91x_fmi.c **** *                  where the data will be written.
+ 189:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 190:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_0: OTP Low halfword 0.
+ 191:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_0: OTP High halfword 0.
+ 192:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_1: OTP Low halfword 1.
+ 193:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_1: OTP High halfword 1.
+ 194:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_2: OTP Low halfword 2.
+ 195:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_2: OTP High halfword 2.
+ 196:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_3: OTP Low halfword 3.
+ 197:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_3: OTP High halfword 3.
+ 198:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_4: OTP Low halfword 4.
+ 199:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_4: OTP High halfword 4.
+ 200:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_5: OTP Low halfword 5.
+ 201:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_5: OTP High halfword 5.
+ 202:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_6: OTP Low halfword 6.
+ 203:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_6: OTP High halfword 6.
+ 204:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_LOW_HALFWORD_7: OTP Low halfword 7.
+ 205:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_HIGH_HALFWORD_7: OTP High halfword 7.
+ 206:libstr91x/src/91x_fmi.c **** * Input 2        : FMI_OTPData: The needed OTP data.
+ 207:libstr91x/src/91x_fmi.c **** * Output         : None
+ 208:libstr91x/src/91x_fmi.c **** * Return         : None
+ 209:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 210:libstr91x/src/91x_fmi.c **** void FMI_WriteOTPHalfWord(u8 FMI_OTPHWAddress, u16 FMI_OTPData)
+ 211:libstr91x/src/91x_fmi.c **** {
+ 201              		.loc 1 211 0
+ 202              		.cfi_startproc
+ 203              		@ args = 0, pretend = 0, frame = 0
+ 204              		@ frame_needed = 0, uses_anonymous_args = 0
+ 205              		@ link register save eliminated.
+ 206              	.LVL14:
+ 212:libstr91x/src/91x_fmi.c ****   /* Write a write OTP command to the needed address */
+ 213:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_BANK_1) = 0xC0;
+ 207              		.loc 1 213 0
+ 208 00e8 1533A0E3 		mov	r3, #1409286144
+ 209 00ec 0C2093E5 		ldr	r2, [r3, #12]
+ 210 00f0 C0C0A0E3 		mov	ip, #192	@ movhi
+ 211 00f4 0221A0E1 		mov	r2, r2, asl #2
+ 212 00f8 B0C0C2E1 		strh	ip, [r2, #0]	@ movhi
+ 214:libstr91x/src/91x_fmi.c ****   
+ 215:libstr91x/src/91x_fmi.c ****   /* Write the halfword to the destination address */
+ 216:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_BANK_1 + FMI_OTPHWAddress) = FMI_OTPData;
+ 213              		.loc 1 216 0
+ 214 00fc 0C2093E5 		ldr	r2, [r3, #12]
+ 215 0100 0231A0E1 		mov	r3, r2, asl #2
+ 216 0104 B31080E1 		strh	r1, [r0, r3]	@ movhi
+ 217:libstr91x/src/91x_fmi.c **** }
+ 217              		.loc 1 217 0
+ 218 0108 1EFF2FE1 		bx	lr
+ 219              		.cfi_endproc
+ 220              	.LFE5:
+ 222              		.align	2
+ 223              		.global	FMI_ReadWord
+ 225              	FMI_ReadWord:
+ 226              	.LFB6:
+ 218:libstr91x/src/91x_fmi.c **** 
+ 219:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 220:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_ReadWord
+ 221:libstr91x/src/91x_fmi.c **** * Description    : Read the correspondent data.
+ 222:libstr91x/src/91x_fmi.c **** * Input          : FMI_Address: specifies the needed address.
+ 223:libstr91x/src/91x_fmi.c **** * Output         : None
+ 224:libstr91x/src/91x_fmi.c **** * Return         : The data contained in the specified address.
+ 225:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 226:libstr91x/src/91x_fmi.c **** u32 FMI_ReadWord(u32 FMI_Address)
+ 227:libstr91x/src/91x_fmi.c **** {
+ 227              		.loc 1 227 0
+ 228              		.cfi_startproc
+ 229              		@ args = 0, pretend = 0, frame = 0
+ 230              		@ frame_needed = 0, uses_anonymous_args = 0
+ 231              		@ link register save eliminated.
+ 232              	.LVL15:
+ 228:libstr91x/src/91x_fmi.c ****   return(*(u32*)FMI_Address);
+ 229:libstr91x/src/91x_fmi.c **** }
+ 233              		.loc 1 229 0
+ 234 010c 000090E5 		ldr	r0, [r0, #0]
+ 235              	.LVL16:
+ 236 0110 1EFF2FE1 		bx	lr
+ 237              		.cfi_endproc
+ 238              	.LFE6:
+ 240              		.align	2
+ 241              		.global	FMI_ReadOTPData
+ 243              	FMI_ReadOTPData:
+ 244              	.LFB7:
+ 230:libstr91x/src/91x_fmi.c **** 
+ 231:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 232:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_ReadOTPData
+ 233:libstr91x/src/91x_fmi.c **** * Description    : Read data from the OTP sector.
+ 234:libstr91x/src/91x_fmi.c **** * Input          : FMI_OTPAddress: specifies the address of the data to be read.
+ 235:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 236:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_0:   OTP word 0 . 
+ 237:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_1:   OTP word 1 .
+ 238:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_2:   OTP word 2 .
+ 239:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_3:   OTP word 3 .
+ 240:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_4:   OTP word 4 .
+ 241:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_5:   OTP word 5 .
+ 242:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_6:   OTP word 6 . 
+ 243:libstr91x/src/91x_fmi.c **** *                     - FMI_OTP_WORD_7:   OTP word 7 .
+ 244:libstr91x/src/91x_fmi.c **** * Output         : None
+ 245:libstr91x/src/91x_fmi.c **** * Return         : The needed OTP words.
+ 246:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 247:libstr91x/src/91x_fmi.c **** u32 FMI_ReadOTPData(u8 FMI_OTPAddress)
+ 248:libstr91x/src/91x_fmi.c **** {
+ 245              		.loc 1 248 0
+ 246              		.cfi_startproc
+ 247              		@ args = 0, pretend = 0, frame = 0
+ 248              		@ frame_needed = 0, uses_anonymous_args = 0
+ 249              		@ link register save eliminated.
+ 250              	.LVL17:
+ 249:libstr91x/src/91x_fmi.c ****   u32 OTP_Data = 0x0;
+ 250:libstr91x/src/91x_fmi.c ****   /* write a read OTP sector command */
+ 251:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_BANK_1) = 0x98;
+ 251              		.loc 1 251 0
+ 252 0114 15C3A0E3 		mov	ip, #1409286144
+ 253 0118 0C209CE5 		ldr	r2, [ip, #12]
+ 254 011c 9830A0E3 		mov	r3, #152	@ movhi
+ 255 0120 0211A0E1 		mov	r1, r2, asl #2
+ 256 0124 B030C1E1 		strh	r3, [r1, #0]	@ movhi
+ 252:libstr91x/src/91x_fmi.c ****   
+ 253:libstr91x/src/91x_fmi.c ****   /* Read the correspondent data */
+ 254:libstr91x/src/91x_fmi.c ****   OTP_Data = (*(vu32*)(FMI_BANK_1 + FMI_OTPAddress));
+ 257              		.loc 1 254 0
+ 258 0128 0C209CE5 		ldr	r2, [ip, #12]
+ 259 012c 020190E7 		ldr	r0, [r0, r2, asl #2]
+ 260              	.LVL18:
+ 255:libstr91x/src/91x_fmi.c **** 
+ 256:libstr91x/src/91x_fmi.c ****   /* Write a read array command */
+ 257:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_BANK_1) = 0xFF;
+ 261              		.loc 1 257 0
+ 262 0130 0C109CE5 		ldr	r1, [ip, #12]
+ 263 0134 FF20A0E3 		mov	r2, #255	@ movhi
+ 264 0138 0131A0E1 		mov	r3, r1, asl #2
+ 265 013c B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 258:libstr91x/src/91x_fmi.c **** 
+ 259:libstr91x/src/91x_fmi.c ****   return OTP_Data;
+ 260:libstr91x/src/91x_fmi.c **** }
+ 266              		.loc 1 260 0
+ 267 0140 1EFF2FE1 		bx	lr
+ 268              		.cfi_endproc
+ 269              	.LFE7:
+ 271              		.align	2
+ 272              		.global	FMI_GetFlagStatus
+ 274              	FMI_GetFlagStatus:
+ 275              	.LFB8:
+ 261:libstr91x/src/91x_fmi.c **** 
+ 262:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 263:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_GetFlagStatus
+ 264:libstr91x/src/91x_fmi.c **** * Description    : Check whether the specified FMI flag is set or not.
+ 265:libstr91x/src/91x_fmi.c **** * Input1         : FMI_Flag: flag to check.
+ 266:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 267:libstr91x/src/91x_fmi.c **** *                     - FMI_FLAG_SPS: Sector Protection Status Flag.
+ 268:libstr91x/src/91x_fmi.c **** *                     - FMI_FLAG_PSS: Program Suspend Status Flag.
+ 269:libstr91x/src/91x_fmi.c **** *                     - FMI_FLAG_PS: Program Status Flag.
+ 270:libstr91x/src/91x_fmi.c **** *                     - FMI_FLAG_ES: Erase Status Flag.
+ 271:libstr91x/src/91x_fmi.c **** *                     - FMI_FLAG_ESS: Erase Suspend Status Flag.
+ 272:libstr91x/src/91x_fmi.c **** *                     - FMI_FLAG_PECS: FPEC Status Flag.
+ 273:libstr91x/src/91x_fmi.c **** * Input2         : FMI_Bank: specifies the needed bank.
+ 274:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 275:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_0: FMI bank 0.
+ 276:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_1: FMI bank 1.
+ 277:libstr91x/src/91x_fmi.c **** * Output         : None
+ 278:libstr91x/src/91x_fmi.c **** * Return         : None
+ 279:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 280:libstr91x/src/91x_fmi.c **** FlagStatus FMI_GetFlagStatus(u8 FMI_Flag, vu32 FMI_Bank)
+ 281:libstr91x/src/91x_fmi.c **** {    
+ 276              		.loc 1 281 0
+ 277              		.cfi_startproc
+ 278              		@ args = 0, pretend = 0, frame = 8
+ 279              		@ frame_needed = 0, uses_anonymous_args = 0
+ 280              		@ link register save eliminated.
+ 281              	.LVL19:
+ 282 0144 08D04DE2 		sub	sp, sp, #8
+ 283              	.LCFI3:
+ 284              		.cfi_def_cfa_offset 8
+ 285              		.loc 1 281 0
+ 286 0148 04108DE5 		str	r1, [sp, #4]
+ 282:libstr91x/src/91x_fmi.c ****   u16 FMI_Status_Register = 0;
+ 283:libstr91x/src/91x_fmi.c **** 
+ 284:libstr91x/src/91x_fmi.c ****   /* Write a read status register command */
+ 285:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0x70;
+ 287              		.loc 1 285 0
+ 288 014c 04309DE5 		ldr	r3, [sp, #4]
+ 289 0150 7020A0E3 		mov	r2, #112	@ movhi
+ 290 0154 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 291              	.L12:
+ 286:libstr91x/src/91x_fmi.c **** 
+ 287:libstr91x/src/91x_fmi.c ****   /* Wait until operation completion */
+ 288:libstr91x/src/91x_fmi.c ****   while(!((*(vu16 *)FMI_Bank) & 0x80));
+ 292              		.loc 1 288 0 discriminator 1
+ 293 0158 04C09DE5 		ldr	ip, [sp, #4]
+ 294 015c B010DCE1 		ldrh	r1, [ip, #0]
+ 295              	.LVL20:
+ 296 0160 800011E3 		tst	r1, #128
+ 297 0164 FBFFFF0A 		beq	.L12
+ 289:libstr91x/src/91x_fmi.c **** 
+ 290:libstr91x/src/91x_fmi.c ****   /* Read the status register */
+ 291:libstr91x/src/91x_fmi.c ****   FMI_Status_Register = *(vu16 *)FMI_Bank;
+ 298              		.loc 1 291 0
+ 299 0168 04109DE5 		ldr	r1, [sp, #4]
+ 300 016c B020D1E1 		ldrh	r2, [r1, #0]
+ 301              	.LVL21:
+ 292:libstr91x/src/91x_fmi.c **** 
+ 293:libstr91x/src/91x_fmi.c ****   /* Write a read array command */
+ 294:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0xFF;
+ 302              		.loc 1 294 0
+ 303 0170 04309DE5 		ldr	r3, [sp, #4]
+ 295:libstr91x/src/91x_fmi.c ****    
+ 296:libstr91x/src/91x_fmi.c ****   if((FMI_Status_Register & FMI_Flag) != RESET)
+ 297:libstr91x/src/91x_fmi.c ****   {
+ 298:libstr91x/src/91x_fmi.c ****     return SET;
+ 304              		.loc 1 298 0
+ 305 0174 020010E1 		tst	r0, r2
+ 294:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0xFF;
+ 306              		.loc 1 294 0
+ 307 0178 FF00A0E3 		mov	r0, #255	@ movhi
+ 308              	.LVL22:
+ 309 017c B000C3E1 		strh	r0, [r3, #0]	@ movhi
+ 299:libstr91x/src/91x_fmi.c ****   }
+ 300:libstr91x/src/91x_fmi.c ****   else
+ 301:libstr91x/src/91x_fmi.c ****   {
+ 302:libstr91x/src/91x_fmi.c ****     return RESET;
+ 303:libstr91x/src/91x_fmi.c ****   }
+ 304:libstr91x/src/91x_fmi.c **** }
+ 310              		.loc 1 304 0
+ 311 0180 0000A003 		moveq	r0, #0
+ 312 0184 0100A013 		movne	r0, #1
+ 313 0188 08D08DE2 		add	sp, sp, #8
+ 314 018c 1EFF2FE1 		bx	lr
+ 315              		.cfi_endproc
+ 316              	.LFE8:
+ 318              		.align	2
+ 319              		.global	FMI_GetReadWaitStateValue
+ 321              	FMI_GetReadWaitStateValue:
+ 322              	.LFB9:
+ 305:libstr91x/src/91x_fmi.c **** 
+ 306:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 307:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_GetReadWaitStateValue
+ 308:libstr91x/src/91x_fmi.c **** * Description    : Get the current Read wait state value.
+ 309:libstr91x/src/91x_fmi.c **** * Input          : None
+ 310:libstr91x/src/91x_fmi.c **** * Output         : None
+ 311:libstr91x/src/91x_fmi.c **** * Return         : The current read wait states value.
+ 312:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 313:libstr91x/src/91x_fmi.c **** u16 FMI_GetReadWaitStateValue(void)
+ 314:libstr91x/src/91x_fmi.c **** { 
+ 323              		.loc 1 314 0
+ 324              		.cfi_startproc
+ 325              		@ args = 0, pretend = 0, frame = 0
+ 326              		@ frame_needed = 0, uses_anonymous_args = 0
+ 327              		@ link register save eliminated.
+ 315:libstr91x/src/91x_fmi.c ****   u16 FMI_Configuration_Register = 0;
+ 316:libstr91x/src/91x_fmi.c ****   /*Write a read RSIG command to any word address in Bank1*/
+ 317:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_BANK_1 = 0x90;
+ 328              		.loc 1 317 0
+ 329 0190 1533A0E3 		mov	r3, #1409286144
+ 330 0194 0C2093E5 		ldr	r2, [r3, #12]
+ 331 0198 90C0A0E3 		mov	ip, #144	@ movhi
+ 332 019c 0201A0E1 		mov	r0, r2, asl #2
+ 333 01a0 B0C0C0E1 		strh	ip, [r0, #0]	@ movhi
+ 318:libstr91x/src/91x_fmi.c **** 
+ 319:libstr91x/src/91x_fmi.c ****   /* Read the flash configuration register */
+ 320:libstr91x/src/91x_fmi.c **** #ifdef Flash_512KB_256KB
+ 321:libstr91x/src/91x_fmi.c ****   FMI_Configuration_Register = *(vu16 *)(FMI_BANK_1 + 0x14);
+ 334              		.loc 1 321 0
+ 335 01a4 0C1093E5 		ldr	r1, [r3, #12]
+ 336 01a8 0121A0E1 		mov	r2, r1, asl #2
+ 337 01ac B401D2E1 		ldrh	r0, [r2, #20]
+ 322:libstr91x/src/91x_fmi.c **** #endif
+ 323:libstr91x/src/91x_fmi.c **** 
+ 324:libstr91x/src/91x_fmi.c **** #ifdef  Flash_2MB_1MB
+ 325:libstr91x/src/91x_fmi.c ****   FMI_Configuration_Register = *(vu16 *)(FMI_BANK_1 + 0x1C);
+ 326:libstr91x/src/91x_fmi.c **** #endif
+ 327:libstr91x/src/91x_fmi.c ****   /* Write a read array command */
+ 328:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_BANK_1 = 0xFF;
+ 338              		.loc 1 328 0
+ 339 01b0 0CC093E5 		ldr	ip, [r3, #12]
+ 329:libstr91x/src/91x_fmi.c **** 
+ 330:libstr91x/src/91x_fmi.c ****   FMI_Configuration_Register = ((FMI_Configuration_Register >> 11) + 1) & 0x3;
+ 340              		.loc 1 330 0
+ 341 01b4 A015A0E1 		mov	r1, r0, lsr #11
+ 328:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_BANK_1 = 0xFF;
+ 342              		.loc 1 328 0
+ 343 01b8 0C31A0E1 		mov	r3, ip, asl #2
+ 344              		.loc 1 330 0
+ 345 01bc 010081E2 		add	r0, r1, #1
+ 346              	.LVL23:
+ 328:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_BANK_1 = 0xFF;
+ 347              		.loc 1 328 0
+ 348 01c0 FF20A0E3 		mov	r2, #255	@ movhi
+ 349 01c4 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 331:libstr91x/src/91x_fmi.c **** 
+ 332:libstr91x/src/91x_fmi.c ****   /* Return the wait states value */
+ 333:libstr91x/src/91x_fmi.c ****   return FMI_Configuration_Register;
+ 334:libstr91x/src/91x_fmi.c **** }
+ 350              		.loc 1 334 0
+ 351 01c8 030000E2 		and	r0, r0, #3
+ 352              	.LVL24:
+ 353 01cc 1EFF2FE1 		bx	lr
+ 354              		.cfi_endproc
+ 355              	.LFE9:
+ 357              		.align	2
+ 358              		.global	FMI_GetWriteWaitStateValue
+ 360              	FMI_GetWriteWaitStateValue:
+ 361              	.LFB10:
+ 335:libstr91x/src/91x_fmi.c **** 
+ 336:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 337:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_GetWriteWaitStateValue
+ 338:libstr91x/src/91x_fmi.c **** * Description    : Get the current write wait state value.
+ 339:libstr91x/src/91x_fmi.c **** * Input          : None
+ 340:libstr91x/src/91x_fmi.c **** * Output         : None
+ 341:libstr91x/src/91x_fmi.c **** * Return         : The current write wait states value.
+ 342:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 343:libstr91x/src/91x_fmi.c **** u16 FMI_GetWriteWaitStateValue(void)
+ 344:libstr91x/src/91x_fmi.c **** {
+ 362              		.loc 1 344 0
+ 363              		.cfi_startproc
+ 364              		@ args = 0, pretend = 0, frame = 0
+ 365              		@ frame_needed = 0, uses_anonymous_args = 0
+ 366              		@ link register save eliminated.
+ 345:libstr91x/src/91x_fmi.c ****   return ((u16)((FMI->CR & 0x100) >> 8));
+ 367              		.loc 1 345 0
+ 368 01d0 1533A0E3 		mov	r3, #1409286144
+ 369 01d4 181093E5 		ldr	r1, [r3, #24]
+ 370 01d8 010C01E2 		and	r0, r1, #256
+ 346:libstr91x/src/91x_fmi.c **** }
+ 371              		.loc 1 346 0
+ 372 01dc 2004A0E1 		mov	r0, r0, lsr #8
+ 373 01e0 1EFF2FE1 		bx	lr
+ 374              		.cfi_endproc
+ 375              	.LFE10:
+ 377              		.align	2
+ 378              		.global	FMI_SuspendEnable
+ 380              	FMI_SuspendEnable:
+ 381              	.LFB11:
+ 347:libstr91x/src/91x_fmi.c **** 
+ 348:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 349:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_SuspendEnable
+ 350:libstr91x/src/91x_fmi.c **** * Description    : Suspend command enable.
+ 351:libstr91x/src/91x_fmi.c **** * Input          : FMI_Bank: specifies the bank to be suspended.
+ 352:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 353:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_0: FMI bank 0.
+ 354:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_1: FMI bank 1.
+ 355:libstr91x/src/91x_fmi.c **** * Output         : None
+ 356:libstr91x/src/91x_fmi.c **** * Return         : None
+ 357:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 358:libstr91x/src/91x_fmi.c **** void FMI_SuspendEnable(vu32 FMI_Bank)
+ 359:libstr91x/src/91x_fmi.c **** {
+ 382              		.loc 1 359 0
+ 383              		.cfi_startproc
+ 384              		@ args = 0, pretend = 0, frame = 8
+ 385              		@ frame_needed = 0, uses_anonymous_args = 0
+ 386              		@ link register save eliminated.
+ 387              	.LVL25:
+ 388 01e4 08D04DE2 		sub	sp, sp, #8
+ 389              	.LCFI4:
+ 390              		.cfi_def_cfa_offset 8
+ 391              		.loc 1 359 0
+ 392 01e8 04008DE5 		str	r0, [sp, #4]
+ 360:libstr91x/src/91x_fmi.c ****   /* Write a suspend command to the bank */
+ 361:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0xB0;
+ 393              		.loc 1 361 0
+ 394 01ec 04309DE5 		ldr	r3, [sp, #4]
+ 395 01f0 B020A0E3 		mov	r2, #176	@ movhi
+ 396 01f4 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 362:libstr91x/src/91x_fmi.c **** }
+ 397              		.loc 1 362 0
+ 398 01f8 08D08DE2 		add	sp, sp, #8
+ 399 01fc 1EFF2FE1 		bx	lr
+ 400              		.cfi_endproc
+ 401              	.LFE11:
+ 403              		.align	2
+ 404              		.global	FMI_ResumeEnable
+ 406              	FMI_ResumeEnable:
+ 407              	.LFB12:
+ 363:libstr91x/src/91x_fmi.c **** 
+ 364:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 365:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_ResumeEnable
+ 366:libstr91x/src/91x_fmi.c **** * Description    : Resume the suspended command.
+ 367:libstr91x/src/91x_fmi.c **** * Input          : FMI_Bank: specifies the suspended bank.
+ 368:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 369:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_0: FMI bank 0.
+ 370:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_1: FMI bank 1.
+ 371:libstr91x/src/91x_fmi.c **** * Output         : None
+ 372:libstr91x/src/91x_fmi.c **** * Return         : None
+ 373:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 374:libstr91x/src/91x_fmi.c **** void FMI_ResumeEnable(vu32 FMI_Bank)
+ 375:libstr91x/src/91x_fmi.c **** {
+ 408              		.loc 1 375 0
+ 409              		.cfi_startproc
+ 410              		@ args = 0, pretend = 0, frame = 8
+ 411              		@ frame_needed = 0, uses_anonymous_args = 0
+ 412              		@ link register save eliminated.
+ 413              	.LVL26:
+ 414 0200 08D04DE2 		sub	sp, sp, #8
+ 415              	.LCFI5:
+ 416              		.cfi_def_cfa_offset 8
+ 417              		.loc 1 375 0
+ 418 0204 04008DE5 		str	r0, [sp, #4]
+ 376:libstr91x/src/91x_fmi.c ****   /* Write a resume command to the bank */
+ 377:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0xD0;
+ 419              		.loc 1 377 0
+ 420 0208 04309DE5 		ldr	r3, [sp, #4]
+ 421 020c D020A0E3 		mov	r2, #208	@ movhi
+ 422 0210 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 378:libstr91x/src/91x_fmi.c **** }
+ 423              		.loc 1 378 0
+ 424 0214 08D08DE2 		add	sp, sp, #8
+ 425 0218 1EFF2FE1 		bx	lr
+ 426              		.cfi_endproc
+ 427              	.LFE12:
+ 429              		.align	2
+ 430              		.global	FMI_ClearFlag
+ 432              	FMI_ClearFlag:
+ 433              	.LFB13:
+ 379:libstr91x/src/91x_fmi.c **** 
+ 380:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 381:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_ClearFlag
+ 382:libstr91x/src/91x_fmi.c **** * Description    : Clear the FMI Flags on the correspondent bank.
+ 383:libstr91x/src/91x_fmi.c **** * Input          : FMI_Bank: specifies the needed bank.
+ 384:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 385:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_0: FMI bank 0.
+ 386:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_1: FMI bank 1.
+ 387:libstr91x/src/91x_fmi.c **** * Output         : None
+ 388:libstr91x/src/91x_fmi.c **** * Return         : None
+ 389:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 390:libstr91x/src/91x_fmi.c **** void FMI_ClearFlag(vu32 FMI_Bank)
+ 391:libstr91x/src/91x_fmi.c **** {
+ 434              		.loc 1 391 0
+ 435              		.cfi_startproc
+ 436              		@ args = 0, pretend = 0, frame = 8
+ 437              		@ frame_needed = 0, uses_anonymous_args = 0
+ 438              		@ link register save eliminated.
+ 439              	.LVL27:
+ 440 021c 08D04DE2 		sub	sp, sp, #8
+ 441              	.LCFI6:
+ 442              		.cfi_def_cfa_offset 8
+ 443              		.loc 1 391 0
+ 444 0220 04008DE5 		str	r0, [sp, #4]
+ 392:libstr91x/src/91x_fmi.c ****   /* Write a clear status register command */
+ 393:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0x50;
+ 445              		.loc 1 393 0
+ 446 0224 04309DE5 		ldr	r3, [sp, #4]
+ 447 0228 5020A0E3 		mov	r2, #80	@ movhi
+ 448 022c B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 394:libstr91x/src/91x_fmi.c **** }
+ 449              		.loc 1 394 0
+ 450 0230 08D08DE2 		add	sp, sp, #8
+ 451 0234 1EFF2FE1 		bx	lr
+ 452              		.cfi_endproc
+ 453              	.LFE13:
+ 455              		.align	2
+ 456              		.global	FMI_WriteProtectionCmd
+ 458              	FMI_WriteProtectionCmd:
+ 459              	.LFB14:
+ 395:libstr91x/src/91x_fmi.c **** 
+ 396:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 397:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_WriteProtectionCmd
+ 398:libstr91x/src/91x_fmi.c **** * Description    : Enable or disable the write protection for the needed sector.
+ 399:libstr91x/src/91x_fmi.c **** * Input1         : FMI_Sector: specifies the sector to be protected or   
+ 400:libstr91x/src/91x_fmi.c **** *                  unprotected. 
+ 401:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 402:libstr91x/src/91x_fmi.c **** *
+ 403:libstr91x/src/91x_fmi.c **** *                     - FMI_B0S0:  FMI bank 0 sector 0. 
+ 404:libstr91x/src/91x_fmi.c **** *                       ...
+ 405:libstr91x/src/91x_fmi.c **** *                     - FMI_B0S31: FMI bank 0 sector 31.
+ 406:libstr91x/src/91x_fmi.c **** *
+ 407:libstr91x/src/91x_fmi.c **** *
+ 408:libstr91x/src/91x_fmi.c **** *                     - FMI_B1S0: FMI bank 1 sector 0.
+ 409:libstr91x/src/91x_fmi.c **** *                      ...
+ 410:libstr91x/src/91x_fmi.c **** *                     - FMI_B1S7: FMI bank 1 sector 7.
+ 411:libstr91x/src/91x_fmi.c **** *
+ 412:libstr91x/src/91x_fmi.c **** * Input2         : FMI_NewState: specifies the protection status.
+ 413:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 414:libstr91x/src/91x_fmi.c **** *                     - ENABLE:  Enable the protection.
+ 415:libstr91x/src/91x_fmi.c **** *                     - DISABLE: Disable the protection.
+ 416:libstr91x/src/91x_fmi.c **** * Output         : None
+ 417:libstr91x/src/91x_fmi.c **** * Return         : None
+ 418:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 419:libstr91x/src/91x_fmi.c **** void FMI_WriteProtectionCmd(vu32 FMI_Sector, FunctionalState FMI_NewState)
+ 420:libstr91x/src/91x_fmi.c **** {
+ 460              		.loc 1 420 0
+ 461              		.cfi_startproc
+ 462              		@ args = 0, pretend = 0, frame = 8
+ 463              		@ frame_needed = 0, uses_anonymous_args = 0
+ 464              		@ link register save eliminated.
+ 465              	.LVL28:
+ 466 0238 08D04DE2 		sub	sp, sp, #8
+ 467              	.LCFI7:
+ 468              		.cfi_def_cfa_offset 8
+ 469              		.loc 1 420 0
+ 470 023c 04008DE5 		str	r0, [sp, #4]
+ 421:libstr91x/src/91x_fmi.c ****   if (FMI_NewState == ENABLE)
+ 422:libstr91x/src/91x_fmi.c ****   {
+ 423:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0x60;
+ 471              		.loc 1 423 0
+ 472 0240 04209DE5 		ldr	r2, [sp, #4]
+ 473 0244 6000A0E3 		mov	r0, #96	@ movhi
+ 474              	.LVL29:
+ 475 0248 B000C2E1 		strh	r0, [r2, #0]	@ movhi
+ 424:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0x01;
+ 476              		.loc 1 424 0
+ 477 024c 04C09DE5 		ldr	ip, [sp, #4]
+ 421:libstr91x/src/91x_fmi.c ****   if (FMI_NewState == ENABLE)
+ 478              		.loc 1 421 0
+ 479 0250 010051E3 		cmp	r1, #1
+ 425:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0xFF;
+ 426:libstr91x/src/91x_fmi.c ****   }
+ 427:libstr91x/src/91x_fmi.c ****   else /* DISABLE */
+ 428:libstr91x/src/91x_fmi.c ****   {
+ 429:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0x60;
+ 430:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0xD0;
+ 480              		.loc 1 430 0
+ 481 0254 D000A013 		movne	r0, #208	@ movhi
+ 424:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0x01;
+ 482              		.loc 1 424 0
+ 483 0258 B010CC01 		streqh	r1, [ip, #0]	@ movhi
+ 484              		.loc 1 430 0
+ 485 025c B000CC11 		strneh	r0, [ip, #0]	@ movhi
+ 431:libstr91x/src/91x_fmi.c ****     *(vu16*)FMI_Sector = 0xFF;
+ 486              		.loc 1 431 0
+ 487 0260 04309DE5 		ldr	r3, [sp, #4]
+ 488 0264 FF20A0E3 		mov	r2, #255	@ movhi
+ 489 0268 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 432:libstr91x/src/91x_fmi.c ****   }
+ 433:libstr91x/src/91x_fmi.c **** }
+ 490              		.loc 1 433 0
+ 491 026c 08D08DE2 		add	sp, sp, #8
+ 492 0270 1EFF2FE1 		bx	lr
+ 493              		.cfi_endproc
+ 494              	.LFE14:
+ 496              		.align	2
+ 497              		.global	FMI_WaitForLastOperation
+ 499              	FMI_WaitForLastOperation:
+ 500              	.LFB15:
+ 434:libstr91x/src/91x_fmi.c **** 
+ 435:libstr91x/src/91x_fmi.c **** 
+ 436:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 437:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_WaitForLastOperation
+ 438:libstr91x/src/91x_fmi.c **** * Description    : Wait until the last operation (Write halfword, Write OTP 
+ 439:libstr91x/src/91x_fmi.c **** *                  halfword, Erase sector and Erase bank) completion.
+ 440:libstr91x/src/91x_fmi.c **** * Input          : FMI_Bank: specifies the bank where the operation is on going.
+ 441:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 442:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_0: FMI bank 0.
+ 443:libstr91x/src/91x_fmi.c **** *                     - FMI_BANK_1: FMI bank 1.
+ 444:libstr91x/src/91x_fmi.c **** * Output         : None
+ 445:libstr91x/src/91x_fmi.c **** * Return         : The timeout status.
+ 446:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 447:libstr91x/src/91x_fmi.c **** *                     - FMI_TIME_OUT_ERROR: Timeout error occurred.
+ 448:libstr91x/src/91x_fmi.c **** *                     - FMI_NO_TIME_OUT_ERROR: No timeout error.
+ 449:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 450:libstr91x/src/91x_fmi.c **** u8 FMI_WaitForLastOperation(vu32 FMI_Bank)
+ 451:libstr91x/src/91x_fmi.c **** {
+ 501              		.loc 1 451 0
+ 502              		.cfi_startproc
+ 503              		@ args = 0, pretend = 0, frame = 8
+ 504              		@ frame_needed = 0, uses_anonymous_args = 0
+ 505              		@ link register save eliminated.
+ 506              	.LVL30:
+ 507 0274 08D04DE2 		sub	sp, sp, #8
+ 508              	.LCFI8:
+ 509              		.cfi_def_cfa_offset 8
+ 510              		.loc 1 451 0
+ 511 0278 04008DE5 		str	r0, [sp, #4]
+ 452:libstr91x/src/91x_fmi.c ****   u32 Time_Out = 0;
+ 453:libstr91x/src/91x_fmi.c ****  
+ 454:libstr91x/src/91x_fmi.c ****   /* Write a read status register command */
+ 455:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_Bank) = 0x70;
+ 512              		.loc 1 455 0
+ 513 027c 04C09DE5 		ldr	ip, [sp, #4]
+ 514 0280 7020A0E3 		mov	r2, #112	@ movhi
+ 515 0284 B020CCE1 		strh	r2, [ip, #0]	@ movhi
+ 456:libstr91x/src/91x_fmi.c **** 
+ 457:libstr91x/src/91x_fmi.c ****   /* Wait until operation compeletion */
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 516              		.loc 1 458 0
+ 517 0288 04109DE5 		ldr	r1, [sp, #4]
+ 518 028c B030D1E1 		ldrh	r3, [r1, #0]
+ 519 0290 803013E2 		ands	r3, r3, #128
+ 520 0294 0100A013 		movne	r0, #1
+ 521              	.LVL31:
+ 522 0298 1600001A 		bne	.L24
+ 523 029c FFC4E0E3 		mvn	ip, #-16777216
+ 524 02a0 0B0000EA 		b	.L26
+ 525              	.LVL32:
+ 526              	.L25:
+ 527              		.loc 1 458 0 is_stmt 0 discriminator 2
+ 528 02a4 04209DE5 		ldr	r2, [sp, #4]
+ 459:libstr91x/src/91x_fmi.c ****   {
+ 460:libstr91x/src/91x_fmi.c ****     Time_Out ++;  /* Time Out */
+ 529              		.loc 1 460 0 is_stmt 1 discriminator 2
+ 530 02a8 013083E2 		add	r3, r3, #1
+ 531              	.LVL33:
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 532              		.loc 1 458 0 discriminator 2
+ 533 02ac B000D2E1 		ldrh	r0, [r2, #0]
+ 534 02b0 800010E3 		tst	r0, #128
+ 535 02b4 0C00001A 		bne	.L33
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 536              		.loc 1 458 0 is_stmt 0
+ 537 02b8 04009DE5 		ldr	r0, [sp, #4]
+ 538              		.loc 1 460 0 is_stmt 1
+ 539 02bc 023081E2 		add	r3, r1, #2
+ 540              	.LVL34:
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 541              		.loc 1 458 0
+ 542 02c0 B010D0E1 		ldrh	r1, [r0, #0]
+ 543 02c4 802011E2 		ands	r2, r1, #128
+ 544 02c8 0700001A 		bne	.L33
+ 545 02cc 0C0053E1 		cmp	r3, ip
+ 546 02d0 0D00000A 		beq	.L35
+ 547              	.LVL35:
+ 548              	.L26:
+ 549 02d4 04109DE5 		ldr	r1, [sp, #4]
+ 550              		.loc 1 460 0
+ 551 02d8 013083E2 		add	r3, r3, #1
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 552              		.loc 1 458 0
+ 553 02dc B000D1E1 		ldrh	r0, [r1, #0]
+ 554              		.loc 1 460 0
+ 555 02e0 0310A0E1 		mov	r1, r3
+ 556              	.LVL36:
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 557              		.loc 1 458 0
+ 558 02e4 800010E3 		tst	r0, #128
+ 559 02e8 EDFFFF0A 		beq	.L25
+ 560              	.L33:
+ 561 02ec FF24E0E3 		mvn	r2, #-16777216
+ 562 02f0 020053E0 		subs	r0, r3, r2
+ 563 02f4 0100A013 		movne	r0, #1
+ 564              	.LVL37:
+ 565              	.L24:
+ 461:libstr91x/src/91x_fmi.c ****   }
+ 462:libstr91x/src/91x_fmi.c **** 
+ 463:libstr91x/src/91x_fmi.c ****   /* Write a read array command */
+ 464:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_Bank = 0xFF;
+ 566              		.loc 1 464 0
+ 567 02f8 04309DE5 		ldr	r3, [sp, #4]
+ 568 02fc FFC0A0E3 		mov	ip, #255	@ movhi
+ 569 0300 B0C0C3E1 		strh	ip, [r3, #0]	@ movhi
+ 465:libstr91x/src/91x_fmi.c ****  
+ 466:libstr91x/src/91x_fmi.c ****   if (Time_Out == TIMEOUT)
+ 467:libstr91x/src/91x_fmi.c ****   {
+ 468:libstr91x/src/91x_fmi.c ****     return FMI_TIME_OUT_ERROR;
+ 469:libstr91x/src/91x_fmi.c ****   }
+ 470:libstr91x/src/91x_fmi.c ****   else
+ 471:libstr91x/src/91x_fmi.c ****   {
+ 472:libstr91x/src/91x_fmi.c ****     return FMI_NO_TIME_OUT_ERROR;
+ 473:libstr91x/src/91x_fmi.c ****   }
+ 474:libstr91x/src/91x_fmi.c **** }
+ 570              		.loc 1 474 0
+ 571 0304 08D08DE2 		add	sp, sp, #8
+ 572 0308 1EFF2FE1 		bx	lr
+ 573              	.LVL38:
+ 574              	.L35:
+ 458:libstr91x/src/91x_fmi.c ****   while((!((*(vu16 *)FMI_Bank) & 0x80))&&(Time_Out < TIMEOUT ))
+ 575              		.loc 1 458 0
+ 576 030c 0200A0E1 		mov	r0, r2
+ 577 0310 F8FFFFEA 		b	.L24
+ 578              		.cfi_endproc
+ 579              	.LFE15:
+ 581              		.align	2
+ 582              		.global	FMI_ReadRSIGData
+ 584              	FMI_ReadRSIGData:
+ 585              	.LFB16:
+ 475:libstr91x/src/91x_fmi.c **** 
+ 476:libstr91x/src/91x_fmi.c **** /*******************************************************************************
+ 477:libstr91x/src/91x_fmi.c **** * Function Name  : FMI_ReadRSIGData
+ 478:libstr91x/src/91x_fmi.c **** * Description    : Read the Electronic Signature stored in the user configuration 
+ 479:libstr91x/src/91x_fmi.c **** *                  sector of Bank 1.
+ 480:libstr91x/src/91x_fmi.c **** * Input          :  FMI_LSB_RSIGAddress: specifies the low byte of the address
+ 481:libstr91x/src/91x_fmi.c **** *                   to select the register.
+ 482:libstr91x/src/91x_fmi.c **** *                  This parameter can be one of the following values:
+ 483:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_0. 
+ 484:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_1. 
+ 485:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_2. 
+ 486:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_3. 
+ 487:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_4. 
+ 488:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_5.
+ 489:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_6. 
+ 490:libstr91x/src/91x_fmi.c **** *                     - FMI_ReadRSIGData_7. 
+ 491:libstr91x/src/91x_fmi.c **** *                     
+ 492:libstr91x/src/91x_fmi.c **** * Output         : None
+ 493:libstr91x/src/91x_fmi.c **** * Return         : The needed RSIG data.
+ 494:libstr91x/src/91x_fmi.c **** *******************************************************************************/
+ 495:libstr91x/src/91x_fmi.c **** 
+ 496:libstr91x/src/91x_fmi.c **** u32 FMI_ReadRSIGData(u8 FMI_LSB_RSIGAddress)
+ 497:libstr91x/src/91x_fmi.c **** {
+ 586              		.loc 1 497 0
+ 587              		.cfi_startproc
+ 588              		@ args = 0, pretend = 0, frame = 0
+ 589              		@ frame_needed = 0, uses_anonymous_args = 0
+ 590              		@ link register save eliminated.
+ 591              	.LVL39:
+ 498:libstr91x/src/91x_fmi.c ****   u32 RSIG_Data = 0x0;
+ 499:libstr91x/src/91x_fmi.c ****   
+ 500:libstr91x/src/91x_fmi.c ****   /*Write a read RSIG command to any word address in Bank1*/ 
+ 501:libstr91x/src/91x_fmi.c ****   *(vu16 *)(FMI_BANK_1) = 0x90; 
+ 592              		.loc 1 501 0
+ 593 0314 15C3A0E3 		mov	ip, #1409286144
+ 594 0318 0C309CE5 		ldr	r3, [ip, #12]
+ 595 031c 9010A0E3 		mov	r1, #144	@ movhi
+ 596 0320 0321A0E1 		mov	r2, r3, asl #2
+ 597 0324 B010C2E1 		strh	r1, [r2, #0]	@ movhi
+ 502:libstr91x/src/91x_fmi.c ****   
+ 503:libstr91x/src/91x_fmi.c ****   /*Read any RSIG register from any address in Bank1*/ 
+ 504:libstr91x/src/91x_fmi.c ****   RSIG_Data = (*(vu32*)(FMI_BANK_1 + (FMI_LSB_RSIGAddress<<2))); 
+ 598              		.loc 1 504 0
+ 599 0328 0C309CE5 		ldr	r3, [ip, #12]
+ 600 032c 0321A0E1 		mov	r2, r3, asl #2
+ 601 0330 000192E7 		ldr	r0, [r2, r0, asl #2]
+ 602              	.LVL40:
+ 505:libstr91x/src/91x_fmi.c **** 
+ 506:libstr91x/src/91x_fmi.c ****   /*write a Read Array command (FFh) to any word address in Bank 1 to*/
+ 507:libstr91x/src/91x_fmi.c ****   /*return it to Read Array mode.*/
+ 508:libstr91x/src/91x_fmi.c ****   *(vu16 *)FMI_BANK_1 = 0xFF; 
+ 603              		.loc 1 508 0
+ 604 0334 0C109CE5 		ldr	r1, [ip, #12]
+ 605 0338 FF20A0E3 		mov	r2, #255	@ movhi
+ 606 033c 0131A0E1 		mov	r3, r1, asl #2
+ 607 0340 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 509:libstr91x/src/91x_fmi.c **** 
+ 510:libstr91x/src/91x_fmi.c ****   return RSIG_Data;
+ 511:libstr91x/src/91x_fmi.c **** }
+ 608              		.loc 1 511 0
+ 609 0344 1EFF2FE1 		bx	lr
+ 610              		.cfi_endproc
+ 611              	.LFE16:
+ 613              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_fmi.c
+     /tmp/ccNOCxec.s:21     .text:00000000 $a
+     /tmp/ccNOCxec.s:24     .text:00000000 FMI_BankRemapConfig
+     /tmp/ccNOCxec.s:62     .text:0000002c FMI_Config
+     /tmp/ccNOCxec.s:115    .text:00000084 FMI_EraseSector
+     /tmp/ccNOCxec.s:146    .text:000000ac FMI_EraseBank
+     /tmp/ccNOCxec.s:177    .text:000000d4 FMI_WriteHalfWord
+     /tmp/ccNOCxec.s:199    .text:000000e8 FMI_WriteOTPHalfWord
+     /tmp/ccNOCxec.s:225    .text:0000010c FMI_ReadWord
+     /tmp/ccNOCxec.s:243    .text:00000114 FMI_ReadOTPData
+     /tmp/ccNOCxec.s:274    .text:00000144 FMI_GetFlagStatus
+     /tmp/ccNOCxec.s:321    .text:00000190 FMI_GetReadWaitStateValue
+     /tmp/ccNOCxec.s:360    .text:000001d0 FMI_GetWriteWaitStateValue
+     /tmp/ccNOCxec.s:380    .text:000001e4 FMI_SuspendEnable
+     /tmp/ccNOCxec.s:406    .text:00000200 FMI_ResumeEnable
+     /tmp/ccNOCxec.s:432    .text:0000021c FMI_ClearFlag
+     /tmp/ccNOCxec.s:458    .text:00000238 FMI_WriteProtectionCmd
+     /tmp/ccNOCxec.s:499    .text:00000274 FMI_WaitForLastOperation
+     /tmp/ccNOCxec.s:584    .text:00000314 FMI_ReadRSIGData
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

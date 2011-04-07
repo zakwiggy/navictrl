@@ -1,0 +1,398 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_ahbapb.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	AHBAPB_DeInit
+  24              	AHBAPB_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_ahbapb.c"
+   1:libstr91x/src/91x_ahbapb.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_ahbapb.c **** * File Name          : 91x_ahbapb.c
+   3:libstr91x/src/91x_ahbapb.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_ahbapb.c **** * Version            : V2.1
+   5:libstr91x/src/91x_ahbapb.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_ahbapb.c **** * Description        : This file provides all the AHBAPB firmware functions.
+   7:libstr91x/src/91x_ahbapb.c **** ********************************************************************************
+   8:libstr91x/src/91x_ahbapb.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_ahbapb.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_ahbapb.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_ahbapb.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_ahbapb.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_ahbapb.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+  15:libstr91x/src/91x_ahbapb.c **** 
+  16:libstr91x/src/91x_ahbapb.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_ahbapb.c **** #include "91x_ahbapb.h"
+  18:libstr91x/src/91x_ahbapb.c **** 
+  19:libstr91x/src/91x_ahbapb.c **** /* Private typedef -----------------------------------------------------------*/
+  20:libstr91x/src/91x_ahbapb.c **** /* Private define ------------------------------------------------------------*/
+  21:libstr91x/src/91x_ahbapb.c **** 
+  22:libstr91x/src/91x_ahbapb.c **** /* Private macro -------------------------------------------------------------*/
+  23:libstr91x/src/91x_ahbapb.c **** /* Private variables ---------------------------------------------------------*/
+  24:libstr91x/src/91x_ahbapb.c **** /* Private function prototypes -----------------------------------------------*/
+  25:libstr91x/src/91x_ahbapb.c **** /* Private functions ---------------------------------------------------------*/
+  26:libstr91x/src/91x_ahbapb.c **** #define AHBAPB_SplitCounter_Mask 0xFFE0FFFF
+  27:libstr91x/src/91x_ahbapb.c **** #define AHBAPB_SetTimeOut_Mask   0xFFFFFFE0
+  28:libstr91x/src/91x_ahbapb.c **** #define AHBAPB_Address_Mask      0xFEFFFFFF
+  29:libstr91x/src/91x_ahbapb.c **** #define AHBAPB_FLAG_RW_Mask      0x01000000
+  30:libstr91x/src/91x_ahbapb.c **** /*******************************************************************************
+  31:libstr91x/src/91x_ahbapb.c **** * Function Name  : AHBAPB_DeInit
+  32:libstr91x/src/91x_ahbapb.c **** * Description    : Deinitializes the AHBAPBx peripheral registers to their default
+  33:libstr91x/src/91x_ahbapb.c **** *                  reset values.
+  34:libstr91x/src/91x_ahbapb.c **** * Input          : AHBAPBx: where x can be 0 or 1 to select the AHBAPB peripheral.
+  35:libstr91x/src/91x_ahbapb.c **** * Output         : None
+  36:libstr91x/src/91x_ahbapb.c **** * Return         : None
+  37:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+  38:libstr91x/src/91x_ahbapb.c **** void AHBAPB_DeInit(AHBAPB_TypeDef* AHBAPBx)
+  39:libstr91x/src/91x_ahbapb.c **** {
+  27              		.loc 1 39 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  40:libstr91x/src/91x_ahbapb.c ****   AHBAPBx->BCR = 0x00000000;
+  33              		.loc 1 40 0
+  34 0000 0030A0E3 		mov	r3, #0
+  35 0004 043080E5 		str	r3, [r0, #4]
+  41:libstr91x/src/91x_ahbapb.c ****   AHBAPBx->BSR = 0x00000000;
+  36              		.loc 1 41 0
+  37 0008 003080E5 		str	r3, [r0, #0]
+  42:libstr91x/src/91x_ahbapb.c **** }
+  38              		.loc 1 42 0
+  39 000c 1EFF2FE1 		bx	lr
+  40              		.cfi_endproc
+  41              	.LFE0:
+  43              		.align	2
+  44              		.global	AHBAPB_Init
+  46              	AHBAPB_Init:
+  47              	.LFB1:
+  43:libstr91x/src/91x_ahbapb.c **** /*******************************************************************************
+  44:libstr91x/src/91x_ahbapb.c **** * Function Name  : AHBAPB_Init
+  45:libstr91x/src/91x_ahbapb.c **** * Description    : Initializes the AHBAPBx peripheral according to the specified
+  46:libstr91x/src/91x_ahbapb.c **** *                  parameters in the AHBAPB_InitStruct .
+  47:libstr91x/src/91x_ahbapb.c **** * Input          :- AHBAPBx: where x can be 0 or 1 to select the AHBAPB peripheral.
+  48:libstr91x/src/91x_ahbapb.c **** *                 - AHBAPB_InitStruct: pointer to a AHBAPB_InitTypeDef structure that
+  49:libstr91x/src/91x_ahbapb.c **** *                   contains the configuration information for the specified AHBAPB
+  50:libstr91x/src/91x_ahbapb.c **** *                   peripheral.
+  51:libstr91x/src/91x_ahbapb.c **** * Output         : None
+  52:libstr91x/src/91x_ahbapb.c **** * Return         : None
+  53:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+  54:libstr91x/src/91x_ahbapb.c **** void AHBAPB_Init(AHBAPB_TypeDef* AHBAPBx, AHBAPB_InitTypeDef* AHBAPB_InitStruct)
+  55:libstr91x/src/91x_ahbapb.c **** {
+  48              		.loc 1 55 0
+  49              		.cfi_startproc
+  50              		@ args = 0, pretend = 0, frame = 0
+  51              		@ frame_needed = 0, uses_anonymous_args = 0
+  52              		@ link register save eliminated.
+  53              	.LVL1:
+  56:libstr91x/src/91x_ahbapb.c **** 
+  57:libstr91x/src/91x_ahbapb.c ****   if(AHBAPB_InitStruct->AHBAPB_Split == AHBAPB_Split_Enable)
+  54              		.loc 1 57 0
+  55 0010 083091E5 		ldr	r3, [r1, #8]
+  58:libstr91x/src/91x_ahbapb.c ****   {
+  59:libstr91x/src/91x_ahbapb.c ****     /* Set SPLITEN bit;*/
+  60:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_Split_Enable;
+  56              		.loc 1 60 0
+  57 0014 04C090E5 		ldr	ip, [r0, #4]
+  57:libstr91x/src/91x_ahbapb.c ****   if(AHBAPB_InitStruct->AHBAPB_Split == AHBAPB_Split_Enable)
+  58              		.loc 1 57 0
+  59 0018 010453E3 		cmp	r3, #16777216
+  60              		.loc 1 60 0
+  61 001c 01C48C03 		orreq	ip, ip, #16777216
+  62 0020 04C08005 		streq	ip, [r0, #4]
+  61:libstr91x/src/91x_ahbapb.c ****     /*Split_CNT bits[20:16]*/
+  62:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR &= AHBAPB_SplitCounter_Mask;
+  63              		.loc 1 62 0
+  64 0024 04C09005 		ldreq	ip, [r0, #4]
+  63:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |=  (AHBAPB_InitStruct->AHBAPB_SplitCounter)<<16;
+  64:libstr91x/src/91x_ahbapb.c ****   }
+  65:libstr91x/src/91x_ahbapb.c ****   else
+  66:libstr91x/src/91x_ahbapb.c ****   {
+  67:libstr91x/src/91x_ahbapb.c ****     /*/ Clear SPLITEN bit;*/
+  68:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR &= AHBAPB_Split_Disable;
+  65              		.loc 1 68 0
+  66 0028 01C4CC13 		bicne	ip, ip, #16777216
+  62:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR &= AHBAPB_SplitCounter_Mask;
+  67              		.loc 1 62 0
+  68 002c 1FC8CC03 		biceq	ip, ip, #2031616
+  69 0030 04C08005 		streq	ip, [r0, #4]
+  63:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |=  (AHBAPB_InitStruct->AHBAPB_SplitCounter)<<16;
+  70              		.loc 1 63 0
+  71 0034 04C09005 		ldreq	ip, [r0, #4]
+  72 0038 0C20D105 		ldreqb	r2, [r1, #12]	@ zero_extendqisi2
+  73 003c 02C88C01 		orreq	ip, ip, r2, asl #16
+  74              		.loc 1 68 0
+  75 0040 04C080E5 		str	ip, [r0, #4]
+  69:libstr91x/src/91x_ahbapb.c ****   }
+  70:libstr91x/src/91x_ahbapb.c ****   /*APB Time out*/
+  71:libstr91x/src/91x_ahbapb.c ****   if(AHBAPB_InitStruct->AHBAPB_Error == AHBAPB_Error_Enable)
+  76              		.loc 1 71 0
+  77 0044 043091E5 		ldr	r3, [r1, #4]
+  78 0048 010C53E3 		cmp	r3, #256
+  79 004c 0400000A 		beq	.L8
+  72:libstr91x/src/91x_ahbapb.c ****   {
+  73:libstr91x/src/91x_ahbapb.c ****     /* Set ERREN bit*/
+  74:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_Error_Enable;
+  75:libstr91x/src/91x_ahbapb.c ****     /*Time ouit counter*/
+  76:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR &= AHBAPB_SetTimeOut_Mask;
+  77:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_InitStruct->AHBAPB_SetTimeOut;
+  78:libstr91x/src/91x_ahbapb.c ****   }
+  79:libstr91x/src/91x_ahbapb.c ****   else
+  80:libstr91x/src/91x_ahbapb.c ****   {
+  81:libstr91x/src/91x_ahbapb.c ****     /* Clear ERREN bit*/
+  82:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR &= AHBAPB_Error_Disable;
+  80              		.loc 1 82 0
+  81 0050 042090E5 		ldr	r2, [r0, #4]
+  82 0054 0F12C2E3 		bic	r1, r2, #-268435456
+  83              	.LVL2:
+  84 0058 01CCC1E3 		bic	ip, r1, #256
+  85 005c 04C080E5 		str	ip, [r0, #4]
+  86 0060 1EFF2FE1 		bx	lr
+  87              	.LVL3:
+  88              	.L8:
+  74:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_Error_Enable;
+  89              		.loc 1 74 0
+  90 0064 043090E5 		ldr	r3, [r0, #4]
+  77:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_InitStruct->AHBAPB_SetTimeOut;
+  91              		.loc 1 77 0
+  92 0068 00C091E5 		ldr	ip, [r1, #0]
+  74:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_Error_Enable;
+  93              		.loc 1 74 0
+  94 006c 012C83E3 		orr	r2, r3, #256
+  95 0070 042080E5 		str	r2, [r0, #4]
+  76:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR &= AHBAPB_SetTimeOut_Mask;
+  96              		.loc 1 76 0
+  97 0074 041090E5 		ldr	r1, [r0, #4]
+  98              	.LVL4:
+  99 0078 1F30C1E3 		bic	r3, r1, #31
+ 100 007c 043080E5 		str	r3, [r0, #4]
+  77:libstr91x/src/91x_ahbapb.c ****     AHBAPBx->BCR |= AHBAPB_InitStruct->AHBAPB_SetTimeOut;
+ 101              		.loc 1 77 0
+ 102 0080 042090E5 		ldr	r2, [r0, #4]
+ 103 0084 0C1082E1 		orr	r1, r2, ip
+ 104 0088 041080E5 		str	r1, [r0, #4]
+ 105 008c 1EFF2FE1 		bx	lr
+ 106              		.cfi_endproc
+ 107              	.LFE1:
+ 109              		.align	2
+ 110              		.global	AHBAPB_StructInit
+ 112              	AHBAPB_StructInit:
+ 113              	.LFB2:
+  83:libstr91x/src/91x_ahbapb.c ****   }
+  84:libstr91x/src/91x_ahbapb.c **** }
+  85:libstr91x/src/91x_ahbapb.c **** 
+  86:libstr91x/src/91x_ahbapb.c **** /*******************************************************************************
+  87:libstr91x/src/91x_ahbapb.c **** * Function Name  : AHBAPB_StructInit
+  88:libstr91x/src/91x_ahbapb.c **** * Description    : Initialize the AHBAPB Init Structure parameters
+  89:libstr91x/src/91x_ahbapb.c **** * Input          : AHBAPB_InitStruct : pointer to a AHBAPB_InitTypeDef structure
+  90:libstr91x/src/91x_ahbapb.c **** *                  which will be initialized.
+  91:libstr91x/src/91x_ahbapb.c **** * Output         : None
+  92:libstr91x/src/91x_ahbapb.c **** * Return         : None
+  93:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+  94:libstr91x/src/91x_ahbapb.c **** void AHBAPB_StructInit(AHBAPB_InitTypeDef* AHBAPB_InitStruct)
+  95:libstr91x/src/91x_ahbapb.c **** {
+ 114              		.loc 1 95 0
+ 115              		.cfi_startproc
+ 116              		@ args = 0, pretend = 0, frame = 0
+ 117              		@ frame_needed = 0, uses_anonymous_args = 0
+ 118              		@ link register save eliminated.
+ 119              	.LVL5:
+  96:libstr91x/src/91x_ahbapb.c ****   /* Reset AHBAPB init structure parameters values */
+  97:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_Split        = AHBAPB_Split_Enable;
+ 120              		.loc 1 97 0
+ 121 0090 01C4A0E3 		mov	ip, #16777216
+  98:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_SplitCounter = 0xFF;
+ 122              		.loc 1 98 0
+ 123 0094 0020E0E3 		mvn	r2, #0
+  99:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_Error        = AHBAPB_Error_Enable;
+ 124              		.loc 1 99 0
+ 125 0098 011CA0E3 		mov	r1, #256
+ 100:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_SetTimeOut   = 0xFF;
+ 126              		.loc 1 100 0
+ 127 009c FF30A0E3 		mov	r3, #255
+  97:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_Split        = AHBAPB_Split_Enable;
+ 128              		.loc 1 97 0
+ 129 00a0 08C080E5 		str	ip, [r0, #8]
+  98:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_SplitCounter = 0xFF;
+ 130              		.loc 1 98 0
+ 131 00a4 0C20C0E5 		strb	r2, [r0, #12]
+  99:libstr91x/src/91x_ahbapb.c ****   AHBAPB_InitStruct->AHBAPB_Error        = AHBAPB_Error_Enable;
+ 132              		.loc 1 99 0
+ 133 00a8 041080E5 		str	r1, [r0, #4]
+ 134              		.loc 1 100 0
+ 135 00ac 003080E5 		str	r3, [r0, #0]
+ 101:libstr91x/src/91x_ahbapb.c **** 
+ 102:libstr91x/src/91x_ahbapb.c **** }
+ 136              		.loc 1 102 0
+ 137 00b0 1EFF2FE1 		bx	lr
+ 138              		.cfi_endproc
+ 139              	.LFE2:
+ 141              		.align	2
+ 142              		.global	AHBAPB_GetFlagStatus
+ 144              	AHBAPB_GetFlagStatus:
+ 145              	.LFB3:
+ 103:libstr91x/src/91x_ahbapb.c **** 
+ 104:libstr91x/src/91x_ahbapb.c **** /*******************************************************************************
+ 105:libstr91x/src/91x_ahbapb.c **** * Function Name  : AHBAPB_GetFlagStatus
+ 106:libstr91x/src/91x_ahbapb.c **** * Description    : Checks whether the specified AHBAPB flag is set or not.
+ 107:libstr91x/src/91x_ahbapb.c **** * Input          : - AHBAPB: where x can be 0 or 1 to select the AHBAPB peripheral
+ 108:libstr91x/src/91x_ahbapb.c **** *                  - AHBAPB_FLAG: specifies the flag to check.
+ 109:libstr91x/src/91x_ahbapb.c **** *                    This parameter can be one of the following values:
+ 110:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_ERROR: error flag
+ 111:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_OUTM : Out of Memory flag
+ 112:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_APBT : APB Time-out flag
+ 113:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_RW   : Access type flag
+ 114:libstr91x/src/91x_ahbapb.c **** * Output         : None
+ 115:libstr91x/src/91x_ahbapb.c **** * Return         : The new state of AHBAPB_FLAG (SET or RESET).
+ 116:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+ 117:libstr91x/src/91x_ahbapb.c **** FlagStatus AHBAPB_GetFlagStatus(AHBAPB_TypeDef* AHBAPBx, u8 AHBAPB_FLAG)
+ 118:libstr91x/src/91x_ahbapb.c **** {
+ 146              		.loc 1 118 0
+ 147              		.cfi_startproc
+ 148              		@ args = 0, pretend = 0, frame = 0
+ 149              		@ frame_needed = 0, uses_anonymous_args = 0
+ 150              		@ link register save eliminated.
+ 151              	.LVL6:
+ 119:libstr91x/src/91x_ahbapb.c ****   if(AHBAPB_FLAG == AHBAPB_FLAG_RW)
+ 152              		.loc 1 119 0
+ 153 00b4 400051E3 		cmp	r1, #64
+ 154 00b8 0400000A 		beq	.L13
+ 120:libstr91x/src/91x_ahbapb.c ****   {
+ 121:libstr91x/src/91x_ahbapb.c ****     if ((AHBAPBx->PAER & AHBAPB_FLAG_RW_Mask) == RESET)
+ 122:libstr91x/src/91x_ahbapb.c ****     {
+ 123:libstr91x/src/91x_ahbapb.c ****        return RESET;
+ 124:libstr91x/src/91x_ahbapb.c ****     }
+ 125:libstr91x/src/91x_ahbapb.c ****     else
+ 126:libstr91x/src/91x_ahbapb.c ****     {
+ 127:libstr91x/src/91x_ahbapb.c ****       return SET;
+ 128:libstr91x/src/91x_ahbapb.c ****     }
+ 129:libstr91x/src/91x_ahbapb.c ****   }
+ 130:libstr91x/src/91x_ahbapb.c ****   else
+ 131:libstr91x/src/91x_ahbapb.c ****   {
+ 132:libstr91x/src/91x_ahbapb.c ****     if ((AHBAPBx->BSR & AHBAPB_FLAG) == RESET)
+ 155              		.loc 1 132 0
+ 156 00bc 000090E5 		ldr	r0, [r0, #0]
+ 157              	.LVL7:
+ 123:libstr91x/src/91x_ahbapb.c ****        return RESET;
+ 158              		.loc 1 123 0
+ 159 00c0 000011E1 		tst	r1, r0
+ 160 00c4 0000A003 		moveq	r0, #0
+ 161 00c8 0100A013 		movne	r0, #1
+ 133:libstr91x/src/91x_ahbapb.c ****     {
+ 134:libstr91x/src/91x_ahbapb.c ****       return RESET;
+ 135:libstr91x/src/91x_ahbapb.c ****     }
+ 136:libstr91x/src/91x_ahbapb.c ****     else
+ 137:libstr91x/src/91x_ahbapb.c ****     {
+ 138:libstr91x/src/91x_ahbapb.c ****      return SET;
+ 139:libstr91x/src/91x_ahbapb.c ****     }
+ 140:libstr91x/src/91x_ahbapb.c ****   }
+ 141:libstr91x/src/91x_ahbapb.c **** }
+ 162              		.loc 1 141 0
+ 163 00cc 1EFF2FE1 		bx	lr
+ 164              	.LVL8:
+ 165              	.L13:
+ 121:libstr91x/src/91x_ahbapb.c ****     if ((AHBAPBx->PAER & AHBAPB_FLAG_RW_Mask) == RESET)
+ 166              		.loc 1 121 0
+ 167 00d0 083090E5 		ldr	r3, [r0, #8]
+ 123:libstr91x/src/91x_ahbapb.c ****        return RESET;
+ 168              		.loc 1 123 0
+ 169 00d4 010413E3 		tst	r3, #16777216
+ 170 00d8 0000A003 		moveq	r0, #0
+ 171 00dc 0100A013 		movne	r0, #1
+ 172              	.LVL9:
+ 173 00e0 1EFF2FE1 		bx	lr
+ 174              		.cfi_endproc
+ 175              	.LFE3:
+ 177              		.align	2
+ 178              		.global	AHBAPB_ClearFlag
+ 180              	AHBAPB_ClearFlag:
+ 181              	.LFB4:
+ 142:libstr91x/src/91x_ahbapb.c **** /*******************************************************************************
+ 143:libstr91x/src/91x_ahbapb.c **** * Function Name  : AHBAPB_ClearFlag
+ 144:libstr91x/src/91x_ahbapb.c **** * Description    : Clears the AHBAPBx flags.
+ 145:libstr91x/src/91x_ahbapb.c **** * Input          : - AHBAPB: where x can be 0 or 1 to select the AHBAPB peripheral
+ 146:libstr91x/src/91x_ahbapb.c **** *                  - AHBAPB_FLAG: flags to clear. This parameter one of the
+ 147:libstr91x/src/91x_ahbapb.c **** *                    following values:
+ 148:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_ERROR: error flag
+ 149:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_OUTM : Out of Memory flag
+ 150:libstr91x/src/91x_ahbapb.c **** *                      - AHBAPB_FLAG_APBT : APB Time-out flag
+ 151:libstr91x/src/91x_ahbapb.c **** * Output         : None
+ 152:libstr91x/src/91x_ahbapb.c **** * Return         : None
+ 153:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+ 154:libstr91x/src/91x_ahbapb.c **** void AHBAPB_ClearFlag(AHBAPB_TypeDef* AHBAPBx, u8 AHBAPB_FLAG)
+ 155:libstr91x/src/91x_ahbapb.c **** {
+ 182              		.loc 1 155 0
+ 183              		.cfi_startproc
+ 184              		@ args = 0, pretend = 0, frame = 0
+ 185              		@ frame_needed = 0, uses_anonymous_args = 0
+ 186              		@ link register save eliminated.
+ 187              	.LVL10:
+ 156:libstr91x/src/91x_ahbapb.c ****   /* Clear the flag */
+ 157:libstr91x/src/91x_ahbapb.c ****   AHBAPBx->BSR &= ~AHBAPB_FLAG;
+ 188              		.loc 1 157 0
+ 189 00e4 002090E5 		ldr	r2, [r0, #0]
+ 190 00e8 0130C2E1 		bic	r3, r2, r1
+ 191 00ec 003080E5 		str	r3, [r0, #0]
+ 158:libstr91x/src/91x_ahbapb.c **** }
+ 192              		.loc 1 158 0
+ 193 00f0 1EFF2FE1 		bx	lr
+ 194              		.cfi_endproc
+ 195              	.LFE4:
+ 197              		.align	2
+ 198              		.global	AHBAPB_GetPeriphAddrError
+ 200              	AHBAPB_GetPeriphAddrError:
+ 201              	.LFB5:
+ 159:libstr91x/src/91x_ahbapb.c **** /*******************************************************************************
+ 160:libstr91x/src/91x_ahbapb.c **** * Function Name  : AHBAPB_GetPeriphAddrError
+ 161:libstr91x/src/91x_ahbapb.c **** * Description    : Gets the AHBAPB error address peripherals.
+ 162:libstr91x/src/91x_ahbapb.c **** * Input          : - AHBAPB: where x can be 0 or 1 to select the AHBAPB peripheral
+ 163:libstr91x/src/91x_ahbapb.c **** * Output         : None
+ 164:libstr91x/src/91x_ahbapb.c **** * Return         : The Peropheral address error
+ 165:libstr91x/src/91x_ahbapb.c **** *******************************************************************************/
+ 166:libstr91x/src/91x_ahbapb.c **** u32 AHBAPB_GetPeriphAddrError(AHBAPB_TypeDef* AHBAPBx)
+ 167:libstr91x/src/91x_ahbapb.c **** {
+ 202              		.loc 1 167 0
+ 203              		.cfi_startproc
+ 204              		@ args = 0, pretend = 0, frame = 0
+ 205              		@ frame_needed = 0, uses_anonymous_args = 0
+ 206              		@ link register save eliminated.
+ 207              	.LVL11:
+ 168:libstr91x/src/91x_ahbapb.c ****   u32 AHBAPB_Address = 0x00000000;
+ 169:libstr91x/src/91x_ahbapb.c **** 
+ 170:libstr91x/src/91x_ahbapb.c ****   /*Return Oeripheral address without RW bit*/
+ 171:libstr91x/src/91x_ahbapb.c ****   AHBAPB_Address = (AHBAPBx->PAER)& AHBAPB_Address_Mask;
+ 208              		.loc 1 171 0
+ 209 00f4 080090E5 		ldr	r0, [r0, #8]
+ 210              	.LVL12:
+ 172:libstr91x/src/91x_ahbapb.c ****   return (AHBAPB_Address);
+ 173:libstr91x/src/91x_ahbapb.c **** }
+ 211              		.loc 1 173 0
+ 212 00f8 0104C0E3 		bic	r0, r0, #16777216
+ 213              	.LVL13:
+ 214 00fc 1EFF2FE1 		bx	lr
+ 215              		.cfi_endproc
+ 216              	.LFE5:
+ 218              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_ahbapb.c
+     /tmp/ccntF0it.s:21     .text:00000000 $a
+     /tmp/ccntF0it.s:24     .text:00000000 AHBAPB_DeInit
+     /tmp/ccntF0it.s:46     .text:00000010 AHBAPB_Init
+     /tmp/ccntF0it.s:112    .text:00000090 AHBAPB_StructInit
+     /tmp/ccntF0it.s:144    .text:000000b4 AHBAPB_GetFlagStatus
+     /tmp/ccntF0it.s:180    .text:000000e4 AHBAPB_ClearFlag
+     /tmp/ccntF0it.s:200    .text:000000f4 AHBAPB_GetPeriphAddrError
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

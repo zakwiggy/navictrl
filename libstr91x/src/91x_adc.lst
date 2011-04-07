@@ -1,0 +1,1901 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_adc.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	ADC_DeInit
+  24              	ADC_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_adc.c"
+   1:libstr91x/src/91x_adc.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_adc.c **** * File Name          : 91x_adc.c
+   3:libstr91x/src/91x_adc.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_adc.c **** * Version            : V2.1
+   5:libstr91x/src/91x_adc.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_adc.c **** * Description        : This file provides all the ADC firmware functions.
+   7:libstr91x/src/91x_adc.c **** ********************************************************************************
+   8:libstr91x/src/91x_adc.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_adc.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME. AS
+  10:libstr91x/src/91x_adc.c **** * A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_adc.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_adc.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_adc.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_adc.c **** *******************************************************************************/
+  15:libstr91x/src/91x_adc.c **** 
+  16:libstr91x/src/91x_adc.c **** 
+  17:libstr91x/src/91x_adc.c **** /* Standard include ----------------------------------------------------------*/
+  18:libstr91x/src/91x_adc.c **** #include "91x_adc.h"
+  19:libstr91x/src/91x_adc.c **** #include "91x_scu.h"
+  20:libstr91x/src/91x_adc.c **** /* Include of other module interface headers ---------------------------------*/
+  21:libstr91x/src/91x_adc.c **** /* Local includes ------------------------------------------------------------*/
+  22:libstr91x/src/91x_adc.c **** /* Private typedef -----------------------------------------------------------*/
+  23:libstr91x/src/91x_adc.c **** /* Private define ------------------------------------------------------------*/
+  24:libstr91x/src/91x_adc.c **** 
+  25:libstr91x/src/91x_adc.c **** /* ADC mask */
+  26:libstr91x/src/91x_adc.c **** #define   ADC_FLAG_MASK           0x001F     /* ADC Flag Mask           */
+  27:libstr91x/src/91x_adc.c **** #define   ADC_RESULT_MASK         0x03FF     /* ADC Result Mask         */
+  28:libstr91x/src/91x_adc.c **** #define   ADC_SCAN_MODE_MASK      0x0020     /* ADC Sacn Mode Mask      */
+  29:libstr91x/src/91x_adc.c **** #define   ADC_STANDBY_MODE_MASK   0x0008     /* ADC Standby Mode Mask   */
+  30:libstr91x/src/91x_adc.c **** #define   ADC_CMD_MASK            0x0002     /* ADC Command Mask        */
+  31:libstr91x/src/91x_adc.c **** #define   ADC_CHANNEL_MASK        0xFE3F     /* ADC Channel Select Mask */
+  32:libstr91x/src/91x_adc.c **** /* Private macro -------------------------------------------------------------*/
+  33:libstr91x/src/91x_adc.c **** /* Private variables ---------------------------------------------------------*/
+  34:libstr91x/src/91x_adc.c **** /* Private function prototypes -----------------------------------------------*/
+  35:libstr91x/src/91x_adc.c **** /* Interface functions -------------------------------------------------------*/
+  36:libstr91x/src/91x_adc.c **** /* Private functions ---------------------------------------------------------*/
+  37:libstr91x/src/91x_adc.c **** 
+  38:libstr91x/src/91x_adc.c **** /*******************************************************************************
+  39:libstr91x/src/91x_adc.c **** * Function Name  : ADC_DeInit
+  40:libstr91x/src/91x_adc.c **** * Description    : Deinitialize the ADC module registers to their default reset
+  41:libstr91x/src/91x_adc.c **** *                  values
+  42:libstr91x/src/91x_adc.c **** * Input          : None
+  43:libstr91x/src/91x_adc.c **** * Output         : None
+  44:libstr91x/src/91x_adc.c **** * Return         : None
+  45:libstr91x/src/91x_adc.c **** *******************************************************************************/
+  46:libstr91x/src/91x_adc.c **** void ADC_DeInit(void)
+  47:libstr91x/src/91x_adc.c **** {
+  27              		.loc 1 47 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 10402DE9 		stmfd	sp!, {r4, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  48:libstr91x/src/91x_adc.c ****   /* Reset the ADC registers values */
+  49:libstr91x/src/91x_adc.c ****   SCU_APBPeriphReset(__ADC,ENABLE);
+  34              		.loc 1 49 0
+  35 0004 020BA0E3 		mov	r0, #2048
+  36 0008 0110A0E3 		mov	r1, #1
+  37              		.cfi_offset 14, -4
+  38              		.cfi_offset 4, -8
+  39 000c FEFFFFEB 		bl	SCU_APBPeriphReset
+  50:libstr91x/src/91x_adc.c ****   SCU_APBPeriphReset(__ADC,DISABLE);
+  40              		.loc 1 50 0
+  41 0010 020BA0E3 		mov	r0, #2048
+  42 0014 0010A0E3 		mov	r1, #0
+  51:libstr91x/src/91x_adc.c **** }
+  43              		.loc 1 51 0
+  44 0018 1040BDE8 		ldmfd	sp!, {r4, lr}
+  50:libstr91x/src/91x_adc.c ****   SCU_APBPeriphReset(__ADC,DISABLE);
+  45              		.loc 1 50 0
+  46 001c FEFFFFEA 		b	SCU_APBPeriphReset
+  47              		.cfi_endproc
+  48              	.LFE0:
+  50              		.align	2
+  51              		.global	ADC_Init
+  53              	ADC_Init:
+  54              	.LFB1:
+  52:libstr91x/src/91x_adc.c **** 
+  53:libstr91x/src/91x_adc.c **** /*******************************************************************************
+  54:libstr91x/src/91x_adc.c **** * Function Name  : ADC_Init
+  55:libstr91x/src/91x_adc.c **** * Description    : Initializes ADC  peripheral according to the specified
+  56:libstr91x/src/91x_adc.c **** *                  parameters in the ADC_InitTypeDef structure.
+  57:libstr91x/src/91x_adc.c **** * Input          : ADC_InitStruct: pointer to a ADC_InitTypeDef structure that
+  58:libstr91x/src/91x_adc.c **** *                  contains the configuration information for the specified
+  59:libstr91x/src/91x_adc.c **** *                  ADC peripheral.
+  60:libstr91x/src/91x_adc.c **** * Output         : None
+  61:libstr91x/src/91x_adc.c **** * Return         : None
+  62:libstr91x/src/91x_adc.c **** *******************************************************************************/
+  63:libstr91x/src/91x_adc.c **** void ADC_Init(ADC_InitTypeDef* ADC_InitStruct)
+  64:libstr91x/src/91x_adc.c **** {
+  55              		.loc 1 64 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              	.LVL0:
+  65:libstr91x/src/91x_adc.c ****   /* Set the low threshold of the watchdog */
+  66:libstr91x/src/91x_adc.c ****   ADC->LTR = ADC_InitStruct->ADC_WDG_Low_Threshold;
+  61              		.loc 1 66 0
+  62 0020 C4319FE5 		ldr	r3, .L7
+  64:libstr91x/src/91x_adc.c **** {
+  63              		.loc 1 64 0
+  64 0024 F0002DE9 		stmfd	sp!, {r4, r5, r6, r7}
+  65              	.LCFI1:
+  66              		.cfi_def_cfa_offset 16
+  67              		.loc 1 66 0
+  68 0028 B260D0E1 		ldrh	r6, [r0, #2]
+  69              		.cfi_offset 7, -4
+  70              		.cfi_offset 6, -8
+  71              		.cfi_offset 5, -12
+  72              		.cfi_offset 4, -16
+  67:libstr91x/src/91x_adc.c **** 
+  68:libstr91x/src/91x_adc.c ****   /* Set the high threshold of the watchdog */
+  69:libstr91x/src/91x_adc.c ****   ADC->HTR = ADC_InitStruct->ADC_WDG_High_Threshold;
+  70:libstr91x/src/91x_adc.c **** 
+  71:libstr91x/src/91x_adc.c ****     
+  72:libstr91x/src/91x_adc.c ****   /* Channel 0 conversion mode */
+  73:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFFC; 
+  73              		.loc 1 73 0
+  74 002c BC119FE5 		ldr	r1, .L7+4
+  66:libstr91x/src/91x_adc.c ****   ADC->LTR = ADC_InitStruct->ADC_WDG_Low_Threshold;
+  75              		.loc 1 66 0
+  76 0030 BC60C3E1 		strh	r6, [r3, #12]	@ movhi
+  69:libstr91x/src/91x_adc.c ****   ADC->HTR = ADC_InitStruct->ADC_WDG_High_Threshold;
+  77              		.loc 1 69 0
+  78 0034 B020D0E1 		ldrh	r2, [r0, #0]
+  74:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_0_Mode;
+  75:libstr91x/src/91x_adc.c ****   
+  76:libstr91x/src/91x_adc.c ****   /* Channel 1 conversion mode */
+  77:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFF3; 
+  79              		.loc 1 77 0
+  80 0038 B4619FE5 		ldr	r6, .L7+8
+  69:libstr91x/src/91x_adc.c ****   ADC->HTR = ADC_InitStruct->ADC_WDG_High_Threshold;
+  81              		.loc 1 69 0
+  82 003c B820C3E1 		strh	r2, [r3, #8]	@ movhi
+  73:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFFC; 
+  83              		.loc 1 73 0
+  84 0040 B440D3E1 		ldrh	r4, [r3, #4]
+  78:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_1_Mode << 0x2;
+  79:libstr91x/src/91x_adc.c **** 
+  80:libstr91x/src/91x_adc.c ****   /* Channel 2 conversion mode */
+  81:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFCF;
+  85              		.loc 1 81 0
+  86 0044 AC219FE5 		ldr	r2, .L7+12
+  73:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFFC; 
+  87              		.loc 1 73 0
+  88 0048 015004E0 		and	r5, r4, r1
+  89 004c B450C3E1 		strh	r5, [r3, #4]	@ movhi
+  74:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_0_Mode;
+  90              		.loc 1 74 0
+  91 0050 B4C0D3E1 		ldrh	ip, [r3, #4]
+  92 0054 B470D0E1 		ldrh	r7, [r0, #4]
+  82:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_2_Mode << 0x4;
+  83:libstr91x/src/91x_adc.c ****  
+  84:libstr91x/src/91x_adc.c ****   /* Channel 3 conversion mode */
+  85:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFF3F; 
+  93              		.loc 1 85 0
+  94 0058 9C519FE5 		ldr	r5, .L7+16
+  74:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_0_Mode;
+  95              		.loc 1 74 0
+  96 005c 07408CE1 		orr	r4, ip, r7
+  97 0060 B440C3E1 		strh	r4, [r3, #4]	@ movhi
+  77:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFF3; 
+  98              		.loc 1 77 0
+  99 0064 B410D3E1 		ldrh	r1, [r3, #4]
+  86:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_3_Mode << 0x6;
+  87:libstr91x/src/91x_adc.c **** 
+  88:libstr91x/src/91x_adc.c ****   /* Channel 4 conversion mode */
+  89:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFCFF; 
+ 100              		.loc 1 89 0
+ 101 0068 90419FE5 		ldr	r4, .L7+20
+  77:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFF3; 
+ 102              		.loc 1 77 0
+ 103 006c 06C001E0 		and	ip, r1, r6
+ 104 0070 B4C0C3E1 		strh	ip, [r3, #4]	@ movhi
+  78:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_1_Mode << 0x2;
+ 105              		.loc 1 78 0
+ 106 0074 B410D3E1 		ldrh	r1, [r3, #4]
+ 107 0078 B670D0E1 		ldrh	r7, [r0, #6]
+  90:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_4_Mode << 0x8;
+  91:libstr91x/src/91x_adc.c **** 
+  92:libstr91x/src/91x_adc.c ****   /* Channel 5 conversion mode */
+  93:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xF3FF; 
+ 108              		.loc 1 93 0
+ 109 007c 80C19FE5 		ldr	ip, .L7+24
+  78:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_1_Mode << 0x2;
+ 110              		.loc 1 78 0
+ 111 0080 076181E1 		orr	r6, r1, r7, asl #2
+ 112 0084 0678A0E1 		mov	r7, r6, asl #16
+ 113 0088 2718A0E1 		mov	r1, r7, lsr #16
+ 114 008c B410C3E1 		strh	r1, [r3, #4]	@ movhi
+  81:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFCF;
+ 115              		.loc 1 81 0
+ 116 0090 B460D3E1 		ldrh	r6, [r3, #4]
+  94:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_5_Mode << 0xA;
+  95:libstr91x/src/91x_adc.c **** 
+  96:libstr91x/src/91x_adc.c ****   /* Channel 6 conversion mode */
+  97:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xCFFF; 
+ 117              		.loc 1 97 0
+ 118 0094 6C119FE5 		ldr	r1, .L7+28
+  81:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFFCF;
+ 119              		.loc 1 81 0
+ 120 0098 027006E0 		and	r7, r6, r2
+ 121 009c B470C3E1 		strh	r7, [r3, #4]	@ movhi
+  82:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_2_Mode << 0x4;
+ 122              		.loc 1 82 0
+ 123 00a0 B460D3E1 		ldrh	r6, [r3, #4]
+ 124 00a4 B870D0E1 		ldrh	r7, [r0, #8]
+  98:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_6_Mode << 0xC;
+  99:libstr91x/src/91x_adc.c **** 
+ 100:libstr91x/src/91x_adc.c ****   /* Channel 7 conversion mode */
+ 101:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0x3FFF; 
+ 102:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_7_Mode << 0xE;
+ 103:libstr91x/src/91x_adc.c **** 
+ 104:libstr91x/src/91x_adc.c ****   /* Select the channel to be converted */
+ 105:libstr91x/src/91x_adc.c ****   ADC->CR &= ADC_CHANNEL_MASK;
+ 125              		.loc 1 105 0
+ 126 00a8 5C219FE5 		ldr	r2, .L7+32
+  82:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_2_Mode << 0x4;
+ 127              		.loc 1 82 0
+ 128 00ac 076286E1 		orr	r6, r6, r7, asl #4
+ 129 00b0 0668A0E1 		mov	r6, r6, asl #16
+ 130 00b4 2668A0E1 		mov	r6, r6, lsr #16
+ 131 00b8 B460C3E1 		strh	r6, [r3, #4]	@ movhi
+  85:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFF3F; 
+ 132              		.loc 1 85 0
+ 133 00bc B460D3E1 		ldrh	r6, [r3, #4]
+ 134 00c0 056006E0 		and	r6, r6, r5
+ 135 00c4 B460C3E1 		strh	r6, [r3, #4]	@ movhi
+  86:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_3_Mode << 0x6;
+ 136              		.loc 1 86 0
+ 137 00c8 B450D3E1 		ldrh	r5, [r3, #4]
+ 138 00cc BA60D0E1 		ldrh	r6, [r0, #10]
+ 139 00d0 065385E1 		orr	r5, r5, r6, asl #6
+ 140 00d4 0558A0E1 		mov	r5, r5, asl #16
+ 141 00d8 2558A0E1 		mov	r5, r5, lsr #16
+ 142 00dc B450C3E1 		strh	r5, [r3, #4]	@ movhi
+  89:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xFCFF; 
+ 143              		.loc 1 89 0
+ 144 00e0 B450D3E1 		ldrh	r5, [r3, #4]
+ 145 00e4 045005E0 		and	r5, r5, r4
+ 146 00e8 B450C3E1 		strh	r5, [r3, #4]	@ movhi
+  90:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_4_Mode << 0x8;
+ 147              		.loc 1 90 0
+ 148 00ec B440D3E1 		ldrh	r4, [r3, #4]
+ 149 00f0 BC50D0E1 		ldrh	r5, [r0, #12]
+ 150 00f4 054484E1 		orr	r4, r4, r5, asl #8
+ 151 00f8 0448A0E1 		mov	r4, r4, asl #16
+ 152 00fc 2448A0E1 		mov	r4, r4, lsr #16
+ 153 0100 B440C3E1 		strh	r4, [r3, #4]	@ movhi
+  93:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xF3FF; 
+ 154              		.loc 1 93 0
+ 155 0104 B440D3E1 		ldrh	r4, [r3, #4]
+ 156 0108 0CC004E0 		and	ip, r4, ip
+ 157 010c B4C0C3E1 		strh	ip, [r3, #4]	@ movhi
+  94:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_5_Mode << 0xA;
+ 158              		.loc 1 94 0
+ 159 0110 B4C0D3E1 		ldrh	ip, [r3, #4]
+ 160 0114 BE40D0E1 		ldrh	r4, [r0, #14]
+ 161 0118 04458CE1 		orr	r4, ip, r4, asl #10
+ 162 011c 04C8A0E1 		mov	ip, r4, asl #16
+ 163 0120 2C48A0E1 		mov	r4, ip, lsr #16
+ 164 0124 B440C3E1 		strh	r4, [r3, #4]	@ movhi
+  97:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xCFFF; 
+ 165              		.loc 1 97 0
+ 166 0128 B4C0D3E1 		ldrh	ip, [r3, #4]
+ 106:libstr91x/src/91x_adc.c ****   ADC->CR |= ADC_InitStruct->ADC_Select_Channel << 0x6;
+ 107:libstr91x/src/91x_adc.c **** 
+ 108:libstr91x/src/91x_adc.c ****   /* Enable/disable the scan mode */
+ 109:libstr91x/src/91x_adc.c ****   if (ADC_InitStruct->ADC_Scan_Mode == ENABLE)
+ 167              		.loc 1 109 0
+ 168 012c 1640D0E5 		ldrb	r4, [r0, #22]	@ zero_extendqisi2
+  97:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0xCFFF; 
+ 169              		.loc 1 97 0
+ 170 0130 01100CE0 		and	r1, ip, r1
+ 171 0134 B410C3E1 		strh	r1, [r3, #4]	@ movhi
+  98:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_6_Mode << 0xC;
+ 172              		.loc 1 98 0
+ 173 0138 B410D3E1 		ldrh	r1, [r3, #4]
+ 174 013c B0C1D0E1 		ldrh	ip, [r0, #16]
+ 175              		.loc 1 109 0
+ 176 0140 010054E3 		cmp	r4, #1
+  98:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_6_Mode << 0xC;
+ 177              		.loc 1 98 0
+ 178 0144 0CC681E1 		orr	ip, r1, ip, asl #12
+ 179 0148 0C18A0E1 		mov	r1, ip, asl #16
+ 180 014c 21C8A0E1 		mov	ip, r1, lsr #16
+ 181 0150 B4C0C3E1 		strh	ip, [r3, #4]	@ movhi
+ 101:libstr91x/src/91x_adc.c ****   ADC->CCR &= 0x3FFF; 
+ 182              		.loc 1 101 0
+ 183 0154 B410D3E1 		ldrh	r1, [r3, #4]
+ 184 0158 01C9A0E1 		mov	ip, r1, asl #18
+ 185 015c 2C19A0E1 		mov	r1, ip, lsr #18
+ 186 0160 B410C3E1 		strh	r1, [r3, #4]	@ movhi
+ 102:libstr91x/src/91x_adc.c ****   ADC->CCR |= ADC_InitStruct->ADC_Channel_7_Mode << 0xE;
+ 187              		.loc 1 102 0
+ 188 0164 B410D3E1 		ldrh	r1, [r3, #4]
+ 189 0168 B2C1D0E1 		ldrh	ip, [r0, #18]
+ 190 016c 0C1781E1 		orr	r1, r1, ip, asl #14
+ 191 0170 01C8A0E1 		mov	ip, r1, asl #16
+ 192 0174 2C18A0E1 		mov	r1, ip, lsr #16
+ 193 0178 B410C3E1 		strh	r1, [r3, #4]	@ movhi
+ 105:libstr91x/src/91x_adc.c ****   ADC->CR &= ADC_CHANNEL_MASK;
+ 194              		.loc 1 105 0
+ 195 017c B0C0D3E1 		ldrh	ip, [r3, #0]
+ 196 0180 02100CE0 		and	r1, ip, r2
+ 197 0184 B010C3E1 		strh	r1, [r3, #0]	@ movhi
+ 106:libstr91x/src/91x_adc.c ****   ADC->CR |= ADC_InitStruct->ADC_Select_Channel << 0x6;
+ 198              		.loc 1 106 0
+ 199 0188 B0C0D3E1 		ldrh	ip, [r3, #0]
+ 200 018c B411D0E1 		ldrh	r1, [r0, #20]
+ 201 0190 01238CE1 		orr	r2, ip, r1, asl #6
+ 202 0194 02C8A0E1 		mov	ip, r2, asl #16
+ 203 0198 2C28A0E1 		mov	r2, ip, lsr #16
+ 204 019c B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 110:libstr91x/src/91x_adc.c ****   {
+ 111:libstr91x/src/91x_adc.c ****     /* Enable the scan mode */
+ 112:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_SCAN_MODE_MASK;
+ 205              		.loc 1 112 0
+ 206 01a0 B020D301 		ldreqh	r2, [r3, #0]
+ 113:libstr91x/src/91x_adc.c ****   }
+ 114:libstr91x/src/91x_adc.c ****   else
+ 115:libstr91x/src/91x_adc.c ****   {
+ 116:libstr91x/src/91x_adc.c ****     /* Disable the scan mode */
+ 117:libstr91x/src/91x_adc.c ****     ADC->CR &= ~ADC_SCAN_MODE_MASK;
+ 207              		.loc 1 117 0
+ 208 01a4 B010D311 		ldrneh	r1, [r3, #0]
+ 209 01a8 60209F15 		ldrne	r2, .L7+36
+ 112:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_SCAN_MODE_MASK;
+ 210              		.loc 1 112 0
+ 211 01ac 20208203 		orreq	r2, r2, #32
+ 212              		.loc 1 117 0
+ 213 01b0 02200110 		andne	r2, r1, r2
+ 214 01b4 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 118:libstr91x/src/91x_adc.c ****   }
+ 119:libstr91x/src/91x_adc.c **** 
+ 120:libstr91x/src/91x_adc.c ****   /* Configure the conversion mode */
+ 121:libstr91x/src/91x_adc.c ****   if (ADC_InitStruct->ADC_Conversion_Mode == ADC_Continuous_Mode)
+ 215              		.loc 1 121 0
+ 216 01b8 B831D0E1 		ldrh	r3, [r0, #24]
+ 217 01bc 100053E3 		cmp	r3, #16
+ 122:libstr91x/src/91x_adc.c ****   {
+ 123:libstr91x/src/91x_adc.c ****     /* ADC continuous mode */
+ 124:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Continuous_Mode;
+ 218              		.loc 1 124 0
+ 219 01c0 24309F05 		ldreq	r3, .L7
+ 125:libstr91x/src/91x_adc.c ****   }
+ 126:libstr91x/src/91x_adc.c ****   else
+ 127:libstr91x/src/91x_adc.c ****   {
+ 128:libstr91x/src/91x_adc.c ****     /* ADC single mode */
+ 129:libstr91x/src/91x_adc.c ****     ADC->CR &= ADC_Single_Mode;
+ 220              		.loc 1 129 0
+ 221 01c4 20209F15 		ldrne	r2, .L7
+ 124:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Continuous_Mode;
+ 222              		.loc 1 124 0
+ 223 01c8 B020D301 		ldreqh	r2, [r3, #0]
+ 224              		.loc 1 129 0
+ 225 01cc 40309F15 		ldrne	r3, .L7+40
+ 226 01d0 B010D211 		ldrneh	r1, [r2, #0]
+ 124:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Continuous_Mode;
+ 227              		.loc 1 124 0
+ 228 01d4 10208203 		orreq	r2, r2, #16
+ 229              		.loc 1 129 0
+ 230 01d8 03300110 		andne	r3, r1, r3
+ 124:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Continuous_Mode;
+ 231              		.loc 1 124 0
+ 232 01dc B020C301 		streqh	r2, [r3, #0]	@ movhi
+ 233              		.loc 1 129 0
+ 234 01e0 B030C211 		strneh	r3, [r2, #0]	@ movhi
+ 130:libstr91x/src/91x_adc.c ****   }
+ 131:libstr91x/src/91x_adc.c **** }
+ 235              		.loc 1 131 0
+ 236 01e4 F000BDE8 		ldmfd	sp!, {r4, r5, r6, r7}
+ 237 01e8 1EFF2FE1 		bx	lr
+ 238              	.L8:
+ 239              		.align	2
+ 240              	.L7:
+ 241 01ec 00A0005C 		.word	1543544832
+ 242 01f0 FCFF0000 		.word	65532
+ 243 01f4 F3FF0000 		.word	65523
+ 244 01f8 CFFF0000 		.word	65487
+ 245 01fc 3FFF0000 		.word	65343
+ 246 0200 FFFC0000 		.word	64767
+ 247 0204 FFF30000 		.word	62463
+ 248 0208 FFCF0000 		.word	53247
+ 249 020c 3FFE0000 		.word	65087
+ 250 0210 DFFF0000 		.word	65503
+ 251 0214 EFFF0000 		.word	65519
+ 252              		.cfi_endproc
+ 253              	.LFE1:
+ 255              		.align	2
+ 256              		.global	ADC_StructInit
+ 258              	ADC_StructInit:
+ 259              	.LFB2:
+ 132:libstr91x/src/91x_adc.c **** 
+ 133:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 134:libstr91x/src/91x_adc.c **** * Function Name  : ADC_StructInit
+ 135:libstr91x/src/91x_adc.c **** * Description    : Fills each ADC_InitStruct member with its reset value.
+ 136:libstr91x/src/91x_adc.c **** * Input          : ADC_InitStruct : pointer to a ADC_InitTypeDef structure
+ 137:libstr91x/src/91x_adc.c **** *                   which will be initialized.
+ 138:libstr91x/src/91x_adc.c **** * Output         : None
+ 139:libstr91x/src/91x_adc.c **** * Return         : None.
+ 140:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 141:libstr91x/src/91x_adc.c **** void ADC_StructInit(ADC_InitTypeDef* ADC_InitStruct)
+ 142:libstr91x/src/91x_adc.c **** {
+ 260              		.loc 1 142 0
+ 261              		.cfi_startproc
+ 262              		@ args = 0, pretend = 0, frame = 0
+ 263              		@ frame_needed = 0, uses_anonymous_args = 0
+ 264              		@ link register save eliminated.
+ 265              	.LVL1:
+ 143:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_WDG_High_Threshold = 0x0000;
+ 266              		.loc 1 143 0
+ 267 0218 0010A0E3 		mov	r1, #0
+ 144:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_WDG_Low_Threshold  = 0x0000;
+ 145:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_0_Mode     = ADC_No_Conversion;
+ 146:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_1_Mode     = ADC_No_Conversion;
+ 147:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_2_Mode     = ADC_No_Conversion;
+ 148:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_3_Mode     = ADC_No_Conversion;
+ 149:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_4_Mode     = ADC_No_Conversion;
+ 150:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_5_Mode     = ADC_No_Conversion;
+ 151:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_6_Mode     = ADC_No_Conversion;
+ 152:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_7_Mode     = ADC_No_Conversion;
+ 153:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Select_Channel     = ADC_Channel_0;
+ 154:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Scan_Mode          = DISABLE;
+ 155:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Conversion_Mode    = ADC_Single_Mode;
+ 268              		.loc 1 155 0
+ 269 021c 1030E0E3 		mvn	r3, #16	@ movhi
+ 143:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_WDG_High_Threshold = 0x0000;
+ 270              		.loc 1 143 0
+ 271 0220 B010C0E1 		strh	r1, [r0, #0]	@ movhi
+ 144:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_WDG_Low_Threshold  = 0x0000;
+ 272              		.loc 1 144 0
+ 273 0224 B210C0E1 		strh	r1, [r0, #2]	@ movhi
+ 145:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_0_Mode     = ADC_No_Conversion;
+ 274              		.loc 1 145 0
+ 275 0228 B410C0E1 		strh	r1, [r0, #4]	@ movhi
+ 146:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_1_Mode     = ADC_No_Conversion;
+ 276              		.loc 1 146 0
+ 277 022c B610C0E1 		strh	r1, [r0, #6]	@ movhi
+ 147:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_2_Mode     = ADC_No_Conversion;
+ 278              		.loc 1 147 0
+ 279 0230 B810C0E1 		strh	r1, [r0, #8]	@ movhi
+ 148:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_3_Mode     = ADC_No_Conversion;
+ 280              		.loc 1 148 0
+ 281 0234 BA10C0E1 		strh	r1, [r0, #10]	@ movhi
+ 149:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_4_Mode     = ADC_No_Conversion;
+ 282              		.loc 1 149 0
+ 283 0238 BC10C0E1 		strh	r1, [r0, #12]	@ movhi
+ 150:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_5_Mode     = ADC_No_Conversion;
+ 284              		.loc 1 150 0
+ 285 023c BE10C0E1 		strh	r1, [r0, #14]	@ movhi
+ 151:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_6_Mode     = ADC_No_Conversion;
+ 286              		.loc 1 151 0
+ 287 0240 B011C0E1 		strh	r1, [r0, #16]	@ movhi
+ 152:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Channel_7_Mode     = ADC_No_Conversion;
+ 288              		.loc 1 152 0
+ 289 0244 B211C0E1 		strh	r1, [r0, #18]	@ movhi
+ 153:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Select_Channel     = ADC_Channel_0;
+ 290              		.loc 1 153 0
+ 291 0248 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 154:libstr91x/src/91x_adc.c ****   ADC_InitStruct->ADC_Scan_Mode          = DISABLE;
+ 292              		.loc 1 154 0
+ 293 024c 1610C0E5 		strb	r1, [r0, #22]
+ 294              		.loc 1 155 0
+ 295 0250 B831C0E1 		strh	r3, [r0, #24]	@ movhi
+ 156:libstr91x/src/91x_adc.c **** }
+ 296              		.loc 1 156 0
+ 297 0254 1EFF2FE1 		bx	lr
+ 298              		.cfi_endproc
+ 299              	.LFE2:
+ 301              		.align	2
+ 302              		.global	ADC_PrescalerConfig
+ 304              	ADC_PrescalerConfig:
+ 305              	.LFB3:
+ 157:libstr91x/src/91x_adc.c **** 
+ 158:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 159:libstr91x/src/91x_adc.c **** * Function Name  : ADC_PrescalerConfig
+ 160:libstr91x/src/91x_adc.c **** * Description    : This routine is used to configure the ADC prescaler value.
+ 161:libstr91x/src/91x_adc.c **** * Input          : ADC_Prescaler: specifies the prescaler value. This parameter
+ 162:libstr91x/src/91x_adc.c **** *                  can be a value from 0x0 to 0xFF.
+ 163:libstr91x/src/91x_adc.c **** * Output         : None
+ 164:libstr91x/src/91x_adc.c **** * Return         : None
+ 165:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 166:libstr91x/src/91x_adc.c **** void ADC_PrescalerConfig(u8 ADC_Prescaler)
+ 167:libstr91x/src/91x_adc.c **** {
+ 306              		.loc 1 167 0
+ 307              		.cfi_startproc
+ 308              		@ args = 0, pretend = 0, frame = 0
+ 309              		@ frame_needed = 0, uses_anonymous_args = 0
+ 310              		@ link register save eliminated.
+ 311              	.LVL2:
+ 168:libstr91x/src/91x_adc.c ****   ADC->PRS &= 0xFF00;
+ 312              		.loc 1 168 0
+ 313 0258 18309FE5 		ldr	r3, .L11
+ 314 025c B423D3E1 		ldrh	r2, [r3, #52]
+ 315 0260 FFCC02E2 		and	ip, r2, #65280
+ 316 0264 B4C3C3E1 		strh	ip, [r3, #52]	@ movhi
+ 169:libstr91x/src/91x_adc.c ****   ADC->PRS |= ADC_Prescaler;
+ 317              		.loc 1 169 0
+ 318 0268 B413D3E1 		ldrh	r1, [r3, #52]
+ 319 026c 012080E1 		orr	r2, r0, r1
+ 320 0270 B423C3E1 		strh	r2, [r3, #52]	@ movhi
+ 170:libstr91x/src/91x_adc.c **** 
+ 171:libstr91x/src/91x_adc.c **** }
+ 321              		.loc 1 171 0
+ 322 0274 1EFF2FE1 		bx	lr
+ 323              	.L12:
+ 324              		.align	2
+ 325              	.L11:
+ 326 0278 00A0005C 		.word	1543544832
+ 327              		.cfi_endproc
+ 328              	.LFE3:
+ 330              		.align	2
+ 331              		.global	ADC_GetPrescalerValue
+ 333              	ADC_GetPrescalerValue:
+ 334              	.LFB4:
+ 172:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 173:libstr91x/src/91x_adc.c **** * Function Name  : ADC_GetPrescalerValue
+ 174:libstr91x/src/91x_adc.c **** * Description    : This routine is used to get the ADC prescaler value.
+ 175:libstr91x/src/91x_adc.c **** * Input          : None
+ 176:libstr91x/src/91x_adc.c **** * Output         : None
+ 177:libstr91x/src/91x_adc.c **** * Return         : The prescaler value.
+ 178:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 179:libstr91x/src/91x_adc.c **** u8 ADC_GetPrescalerValue(void)
+ 180:libstr91x/src/91x_adc.c **** {
+ 335              		.loc 1 180 0
+ 336              		.cfi_startproc
+ 337              		@ args = 0, pretend = 0, frame = 0
+ 338              		@ frame_needed = 0, uses_anonymous_args = 0
+ 339              		@ link register save eliminated.
+ 181:libstr91x/src/91x_adc.c ****   return ADC->PRS & 0x00FF;
+ 340              		.loc 1 181 0
+ 341 027c 08309FE5 		ldr	r3, .L14
+ 342 0280 B403D3E1 		ldrh	r0, [r3, #52]
+ 182:libstr91x/src/91x_adc.c **** }
+ 343              		.loc 1 182 0
+ 344 0284 FF0000E2 		and	r0, r0, #255
+ 345 0288 1EFF2FE1 		bx	lr
+ 346              	.L15:
+ 347              		.align	2
+ 348              	.L14:
+ 349 028c 00A0005C 		.word	1543544832
+ 350              		.cfi_endproc
+ 351              	.LFE4:
+ 353              		.align	2
+ 354              		.global	ADC_GetFlagStatus
+ 356              	ADC_GetFlagStatus:
+ 357              	.LFB5:
+ 183:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 184:libstr91x/src/91x_adc.c **** * Function Name  : ADC_GetFlagStatus
+ 185:libstr91x/src/91x_adc.c **** * Description    : Checks whether the specified ADC flag is set or not.
+ 186:libstr91x/src/91x_adc.c **** * Input          : ADC_Flag: flag to check.
+ 187:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 188:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_0: Conversion overflow status for 
+ 189:libstr91x/src/91x_adc.c **** *                                         channel 0.
+ 190:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_1: Conversion overflow status for
+ 191:libstr91x/src/91x_adc.c **** *                                         channel 1.
+ 192:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_2: Conversion overflow status for
+ 193:libstr91x/src/91x_adc.c **** *                                         channel 2.
+ 194:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_3: Conversion overflow status for
+ 195:libstr91x/src/91x_adc.c **** *                                         channel 3.
+ 196:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_4: Conversion overflow status for
+ 197:libstr91x/src/91x_adc.c **** *                                         channel 4.
+ 198:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_5: Conversion overflow status for
+ 199:libstr91x/src/91x_adc.c **** *                                         channel 5.
+ 200:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_6: Conversion overflow status for
+ 201:libstr91x/src/91x_adc.c **** *                                         channel 6.
+ 202:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_OV_CH_7: Conversion overflow status for
+ 203:libstr91x/src/91x_adc.c **** *                                         channel 7.
+ 204:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_ECV:     End of conversion status.
+ 205:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_AWD:     Analog watchdog status.
+ 206:libstr91x/src/91x_adc.c **** * Output         : None
+ 207:libstr91x/src/91x_adc.c **** * Return         : The NewState of the ADC_Flag (SET or RESET).
+ 208:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 209:libstr91x/src/91x_adc.c **** FlagStatus ADC_GetFlagStatus(u16 ADC_Flag)
+ 210:libstr91x/src/91x_adc.c **** {
+ 358              		.loc 1 210 0
+ 359              		.cfi_startproc
+ 360              		@ args = 0, pretend = 0, frame = 0
+ 361              		@ frame_needed = 0, uses_anonymous_args = 0
+ 362              		@ link register save eliminated.
+ 363              	.LVL3:
+ 211:libstr91x/src/91x_adc.c ****   u8 AdcReg = 0, FlagPos = 0;
+ 212:libstr91x/src/91x_adc.c ****   
+ 213:libstr91x/src/91x_adc.c ****   /* Get the ADC register index */
+ 214:libstr91x/src/91x_adc.c ****   AdcReg = ADC_Flag >> 5;
+ 364              		.loc 1 214 0
+ 365 0290 A032A0E1 		mov	r3, r0, lsr #5
+ 366 0294 FF3003E2 		and	r3, r3, #255
+ 367              	.LVL4:
+ 215:libstr91x/src/91x_adc.c **** 
+ 216:libstr91x/src/91x_adc.c ****   /* Get the flag position */
+ 217:libstr91x/src/91x_adc.c ****   FlagPos = ADC_Flag & ADC_FLAG_MASK;
+ 218:libstr91x/src/91x_adc.c **** 
+ 219:libstr91x/src/91x_adc.c ****   if(AdcReg == 1) /* The flag to check is in CR register */
+ 368              		.loc 1 219 0
+ 369 0298 010053E3 		cmp	r3, #1
+ 217:libstr91x/src/91x_adc.c ****   FlagPos = ADC_Flag & ADC_FLAG_MASK;
+ 370              		.loc 1 217 0
+ 371 029c 1F0000E2 		and	r0, r0, #31
+ 372              	.LVL5:
+ 373              		.loc 1 219 0
+ 374 02a0 1400000A 		beq	.L27
+ 220:libstr91x/src/91x_adc.c ****   {
+ 221:libstr91x/src/91x_adc.c ****     if((ADC->CR & (1<<FlagPos))!= RESET)
+ 222:libstr91x/src/91x_adc.c ****     {
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 224:libstr91x/src/91x_adc.c ****     }
+ 225:libstr91x/src/91x_adc.c ****     else
+ 226:libstr91x/src/91x_adc.c ****     {
+ 227:libstr91x/src/91x_adc.c ****       return RESET;
+ 228:libstr91x/src/91x_adc.c ****     }
+ 229:libstr91x/src/91x_adc.c ****   }
+ 230:libstr91x/src/91x_adc.c ****   else if(AdcReg == 6) /* The flag to check is in DR0 register */
+ 375              		.loc 1 230 0
+ 376 02a4 060053E3 		cmp	r3, #6
+ 377 02a8 1700000A 		beq	.L28
+ 231:libstr91x/src/91x_adc.c ****   {
+ 232:libstr91x/src/91x_adc.c ****     if((ADC->DR0 & (1<<FlagPos))!= RESET)
+ 233:libstr91x/src/91x_adc.c ****     {
+ 234:libstr91x/src/91x_adc.c ****       return SET;
+ 235:libstr91x/src/91x_adc.c ****     }
+ 236:libstr91x/src/91x_adc.c ****     else
+ 237:libstr91x/src/91x_adc.c ****     {
+ 238:libstr91x/src/91x_adc.c ****       return RESET;
+ 239:libstr91x/src/91x_adc.c ****     }
+ 240:libstr91x/src/91x_adc.c ****   }
+ 241:libstr91x/src/91x_adc.c ****   else if(AdcReg == 7) /* The flag to check is in DR1 register */
+ 378              		.loc 1 241 0
+ 379 02ac 070053E3 		cmp	r3, #7
+ 380 02b0 1A00000A 		beq	.L29
+ 242:libstr91x/src/91x_adc.c ****   {
+ 243:libstr91x/src/91x_adc.c ****     if((ADC->DR1 & (1<<FlagPos))!= RESET)
+ 244:libstr91x/src/91x_adc.c ****     {
+ 245:libstr91x/src/91x_adc.c ****       return SET;
+ 246:libstr91x/src/91x_adc.c ****     }
+ 247:libstr91x/src/91x_adc.c ****     else
+ 248:libstr91x/src/91x_adc.c ****     {
+ 249:libstr91x/src/91x_adc.c ****       return RESET;
+ 250:libstr91x/src/91x_adc.c ****     }
+ 251:libstr91x/src/91x_adc.c ****   }
+ 252:libstr91x/src/91x_adc.c ****   else if(AdcReg == 8) /* The flag to check is in DR2 register */
+ 381              		.loc 1 252 0
+ 382 02b4 080053E3 		cmp	r3, #8
+ 383 02b8 2200000A 		beq	.L30
+ 253:libstr91x/src/91x_adc.c ****   {
+ 254:libstr91x/src/91x_adc.c ****     if((ADC->DR2 & (1<<FlagPos))!= RESET)
+ 255:libstr91x/src/91x_adc.c ****     {
+ 256:libstr91x/src/91x_adc.c ****       return SET;
+ 257:libstr91x/src/91x_adc.c ****     }
+ 258:libstr91x/src/91x_adc.c ****     else
+ 259:libstr91x/src/91x_adc.c ****     {
+ 260:libstr91x/src/91x_adc.c ****       return RESET;
+ 261:libstr91x/src/91x_adc.c ****     }
+ 262:libstr91x/src/91x_adc.c ****   }
+ 263:libstr91x/src/91x_adc.c ****   else if(AdcReg == 9) /* The flag to check is in DR3 register */
+ 384              		.loc 1 263 0
+ 385 02bc 090053E3 		cmp	r3, #9
+ 386 02c0 1B00000A 		beq	.L31
+ 264:libstr91x/src/91x_adc.c ****   {
+ 265:libstr91x/src/91x_adc.c ****     if((ADC->DR3 & (1<<FlagPos))!= RESET)
+ 266:libstr91x/src/91x_adc.c ****     {
+ 267:libstr91x/src/91x_adc.c ****       return SET;
+ 268:libstr91x/src/91x_adc.c ****     }
+ 269:libstr91x/src/91x_adc.c ****     else
+ 270:libstr91x/src/91x_adc.c ****     {
+ 271:libstr91x/src/91x_adc.c ****       return RESET;
+ 272:libstr91x/src/91x_adc.c ****     }
+ 273:libstr91x/src/91x_adc.c ****   }
+ 274:libstr91x/src/91x_adc.c **** 
+ 275:libstr91x/src/91x_adc.c ****   else if(AdcReg == 0xA) /* The flag to check is in DR4 register */
+ 387              		.loc 1 275 0
+ 388 02c4 0A0053E3 		cmp	r3, #10
+ 389 02c8 2300000A 		beq	.L32
+ 276:libstr91x/src/91x_adc.c ****   {
+ 277:libstr91x/src/91x_adc.c ****     if((ADC->DR4 & (1<<FlagPos))!= RESET)
+ 278:libstr91x/src/91x_adc.c ****     {
+ 279:libstr91x/src/91x_adc.c ****       return SET;
+ 280:libstr91x/src/91x_adc.c ****     }
+ 281:libstr91x/src/91x_adc.c ****     else
+ 282:libstr91x/src/91x_adc.c ****     {
+ 283:libstr91x/src/91x_adc.c ****       return RESET;
+ 284:libstr91x/src/91x_adc.c ****     }
+ 285:libstr91x/src/91x_adc.c ****   }
+ 286:libstr91x/src/91x_adc.c ****   else if(AdcReg == 0xB) /* The flag to check is in DR5 register */
+ 390              		.loc 1 286 0
+ 391 02cc 0B0053E3 		cmp	r3, #11
+ 392 02d0 2600000A 		beq	.L33
+ 287:libstr91x/src/91x_adc.c ****   {
+ 288:libstr91x/src/91x_adc.c ****     if((ADC->DR5 & (1<<FlagPos))!= RESET)
+ 289:libstr91x/src/91x_adc.c ****     {
+ 290:libstr91x/src/91x_adc.c ****       return SET;
+ 291:libstr91x/src/91x_adc.c ****     }
+ 292:libstr91x/src/91x_adc.c ****     else
+ 293:libstr91x/src/91x_adc.c ****     {
+ 294:libstr91x/src/91x_adc.c ****       return RESET;
+ 295:libstr91x/src/91x_adc.c ****     }
+ 296:libstr91x/src/91x_adc.c ****   }
+ 297:libstr91x/src/91x_adc.c ****   else if(AdcReg == 0xC) /* The flag to check is in DR6 register */
+ 298:libstr91x/src/91x_adc.c ****   {
+ 299:libstr91x/src/91x_adc.c ****     if((ADC->DR6 & (1<<FlagPos))!= RESET)
+ 393              		.loc 1 299 0
+ 394 02d4 A8209FE5 		ldr	r2, .L34
+ 297:libstr91x/src/91x_adc.c ****   else if(AdcReg == 0xC) /* The flag to check is in DR6 register */
+ 395              		.loc 1 297 0
+ 396 02d8 0C0053E3 		cmp	r3, #12
+ 397              		.loc 1 299 0
+ 398 02dc BC22D201 		ldreqh	r2, [r2, #44]
+ 300:libstr91x/src/91x_adc.c ****     {
+ 301:libstr91x/src/91x_adc.c ****       return SET;
+ 302:libstr91x/src/91x_adc.c ****     }
+ 303:libstr91x/src/91x_adc.c ****     else
+ 304:libstr91x/src/91x_adc.c ****     {
+ 305:libstr91x/src/91x_adc.c ****       return RESET;
+ 306:libstr91x/src/91x_adc.c ****     }
+ 307:libstr91x/src/91x_adc.c ****   }
+ 308:libstr91x/src/91x_adc.c ****   else /* (AdcReg == 0xD), The flag to check is in DR7 register */
+ 309:libstr91x/src/91x_adc.c ****   {
+ 310:libstr91x/src/91x_adc.c ****     if((ADC->DR7 & (1<<FlagPos))!= RESET)
+ 399              		.loc 1 310 0
+ 400 02e0 B023D211 		ldrneh	r2, [r2, #48]
+ 299:libstr91x/src/91x_adc.c ****     if((ADC->DR6 & (1<<FlagPos))!= RESET)
+ 401              		.loc 1 299 0
+ 402 02e4 5200A001 		moveq	r0, r2, asr r0
+ 403              	.LVL6:
+ 404              		.loc 1 310 0
+ 405 02e8 5200A011 		movne	r0, r2, asr r0
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 406              		.loc 1 223 0
+ 407 02ec 01000002 		andeq	r0, r0, #1
+ 408 02f0 01000012 		andne	r0, r0, #1
+ 311:libstr91x/src/91x_adc.c ****     {
+ 312:libstr91x/src/91x_adc.c ****       return SET;
+ 313:libstr91x/src/91x_adc.c ****     }
+ 314:libstr91x/src/91x_adc.c ****     else
+ 315:libstr91x/src/91x_adc.c ****     {
+ 316:libstr91x/src/91x_adc.c ****       return RESET;
+ 317:libstr91x/src/91x_adc.c ****     }
+ 318:libstr91x/src/91x_adc.c ****   }
+ 319:libstr91x/src/91x_adc.c **** }
+ 409              		.loc 1 319 0
+ 410 02f4 1EFF2FE1 		bx	lr
+ 411              	.LVL7:
+ 412              	.L27:
+ 221:libstr91x/src/91x_adc.c ****     if((ADC->CR & (1<<FlagPos))!= RESET)
+ 413              		.loc 1 221 0
+ 414 02f8 84209FE5 		ldr	r2, .L34
+ 415 02fc B010D2E1 		ldrh	r1, [r2, #0]
+ 416 0300 5100A0E1 		mov	r0, r1, asr r0
+ 417              	.LVL8:
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 418              		.loc 1 223 0
+ 419 0304 010000E2 		and	r0, r0, #1
+ 420 0308 1EFF2FE1 		bx	lr
+ 421              	.LVL9:
+ 422              	.L28:
+ 232:libstr91x/src/91x_adc.c ****     if((ADC->DR0 & (1<<FlagPos))!= RESET)
+ 423              		.loc 1 232 0
+ 424 030c 70109FE5 		ldr	r1, .L34
+ 425 0310 B431D1E1 		ldrh	r3, [r1, #20]
+ 426              	.LVL10:
+ 427 0314 53C0A0E1 		mov	ip, r3, asr r0
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 428              		.loc 1 223 0
+ 429 0318 01000CE2 		and	r0, ip, #1
+ 430              	.LVL11:
+ 431 031c 1EFF2FE1 		bx	lr
+ 432              	.LVL12:
+ 433              	.L29:
+ 243:libstr91x/src/91x_adc.c ****     if((ADC->DR1 & (1<<FlagPos))!= RESET)
+ 434              		.loc 1 243 0
+ 435 0320 5CC09FE5 		ldr	ip, .L34
+ 436 0324 B821DCE1 		ldrh	r2, [ip, #24]
+ 437 0328 5200A0E1 		mov	r0, r2, asr r0
+ 438              	.LVL13:
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 439              		.loc 1 223 0
+ 440 032c 010000E2 		and	r0, r0, #1
+ 441 0330 1EFF2FE1 		bx	lr
+ 442              	.LVL14:
+ 443              	.L31:
+ 265:libstr91x/src/91x_adc.c ****     if((ADC->DR3 & (1<<FlagPos))!= RESET)
+ 444              		.loc 1 265 0
+ 445 0334 48309FE5 		ldr	r3, .L34
+ 446              	.LVL15:
+ 447 0338 B0C2D3E1 		ldrh	ip, [r3, #32]
+ 448 033c 5C00A0E1 		mov	r0, ip, asr r0
+ 449              	.LVL16:
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 450              		.loc 1 223 0
+ 451 0340 010000E2 		and	r0, r0, #1
+ 452 0344 1EFF2FE1 		bx	lr
+ 453              	.LVL17:
+ 454              	.L30:
+ 254:libstr91x/src/91x_adc.c ****     if((ADC->DR2 & (1<<FlagPos))!= RESET)
+ 455              		.loc 1 254 0
+ 456 0348 34209FE5 		ldr	r2, .L34
+ 457 034c BC11D2E1 		ldrh	r1, [r2, #28]
+ 458 0350 5130A0E1 		mov	r3, r1, asr r0
+ 459              	.LVL18:
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 460              		.loc 1 223 0
+ 461 0354 010003E2 		and	r0, r3, #1
+ 462              	.LVL19:
+ 463 0358 1EFF2FE1 		bx	lr
+ 464              	.LVL20:
+ 465              	.L32:
+ 277:libstr91x/src/91x_adc.c ****     if((ADC->DR4 & (1<<FlagPos))!= RESET)
+ 466              		.loc 1 277 0
+ 467 035c 20C09FE5 		ldr	ip, .L34
+ 468 0360 B422DCE1 		ldrh	r2, [ip, #36]
+ 469 0364 5210A0E1 		mov	r1, r2, asr r0
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 470              		.loc 1 223 0
+ 471 0368 010001E2 		and	r0, r1, #1
+ 472              	.LVL21:
+ 473 036c 1EFF2FE1 		bx	lr
+ 474              	.LVL22:
+ 475              	.L33:
+ 288:libstr91x/src/91x_adc.c ****     if((ADC->DR5 & (1<<FlagPos))!= RESET)
+ 476              		.loc 1 288 0
+ 477 0370 0C109FE5 		ldr	r1, .L34
+ 478 0374 B832D1E1 		ldrh	r3, [r1, #40]
+ 479              	.LVL23:
+ 480 0378 5300A0E1 		mov	r0, r3, asr r0
+ 481              	.LVL24:
+ 223:libstr91x/src/91x_adc.c ****       return SET;
+ 482              		.loc 1 223 0
+ 483 037c 010000E2 		and	r0, r0, #1
+ 484 0380 1EFF2FE1 		bx	lr
+ 485              	.L35:
+ 486              		.align	2
+ 487              	.L34:
+ 488 0384 00A0005C 		.word	1543544832
+ 489              		.cfi_endproc
+ 490              	.LFE5:
+ 492              		.align	2
+ 493              		.global	ADC_ClearFlag
+ 495              	ADC_ClearFlag:
+ 496              	.LFB6:
+ 320:libstr91x/src/91x_adc.c **** 
+ 321:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 322:libstr91x/src/91x_adc.c **** * Function Name  : ADC_ClearFlag
+ 323:libstr91x/src/91x_adc.c **** * Description    : Clears the ADC Flag passed as a parameter.
+ 324:libstr91x/src/91x_adc.c **** * Input          : ADC_Flag: flag to clear.
+ 325:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 326:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_ECV: End of conversion status.
+ 327:libstr91x/src/91x_adc.c **** *                     - ADC_FLAG_AWD: Analog watchdog status.
+ 328:libstr91x/src/91x_adc.c **** * Output         : None
+ 329:libstr91x/src/91x_adc.c **** * Return         : None
+ 330:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 331:libstr91x/src/91x_adc.c **** void ADC_ClearFlag(u16 ADC_Flag)
+ 332:libstr91x/src/91x_adc.c **** {  
+ 497              		.loc 1 332 0
+ 498              		.cfi_startproc
+ 499              		@ args = 0, pretend = 0, frame = 8
+ 500              		@ frame_needed = 0, uses_anonymous_args = 0
+ 501              		@ link register save eliminated.
+ 502              	.LVL25:
+ 333:libstr91x/src/91x_adc.c ****   vu16 tmp=0;
+ 334:libstr91x/src/91x_adc.c ****   /* Clear the correspondent flag */
+ 335:libstr91x/src/91x_adc.c ****    if (ADC_Flag==ADC_FLAG_ORD) 
+ 336:libstr91x/src/91x_adc.c ****    tmp = ADC->DDR;
+ 503              		.loc 1 336 0
+ 504 0388 38309FE5 		ldr	r3, .L39
+ 332:libstr91x/src/91x_adc.c **** {  
+ 505              		.loc 1 332 0
+ 506 038c 08D04DE2 		sub	sp, sp, #8
+ 507              	.LCFI2:
+ 508              		.cfi_def_cfa_offset 8
+ 333:libstr91x/src/91x_adc.c ****   vu16 tmp=0;
+ 509              		.loc 1 333 0
+ 510 0390 00C0A0E3 		mov	ip, #0	@ movhi
+ 335:libstr91x/src/91x_adc.c ****    if (ADC_Flag==ADC_FLAG_ORD) 
+ 511              		.loc 1 335 0
+ 512 0394 000050E3 		cmp	r0, #0
+ 513              	.LVL26:
+ 333:libstr91x/src/91x_adc.c ****   vu16 tmp=0;
+ 514              		.loc 1 333 0
+ 515 0398 B6C0CDE1 		strh	ip, [sp, #6]	@ movhi
+ 516              	.LVL27:
+ 337:libstr91x/src/91x_adc.c ****    else
+ 338:libstr91x/src/91x_adc.c ****    ADC->CR |= (1<<(ADC_Flag & ADC_FLAG_MASK));
+ 517              		.loc 1 338 0
+ 518 039c B020D311 		ldrneh	r2, [r3, #0]
+ 519 03a0 1F000012 		andne	r0, r0, #31
+ 520 03a4 0110A013 		movne	r1, #1
+ 521 03a8 11008211 		orrne	r0, r2, r1, asl r0
+ 336:libstr91x/src/91x_adc.c ****    tmp = ADC->DDR;
+ 522              		.loc 1 336 0
+ 523 03ac B833D301 		ldreqh	r3, [r3, #56]
+ 524              		.loc 1 338 0
+ 525 03b0 0008A011 		movne	r0, r0, asl #16
+ 526 03b4 2008A011 		movne	r0, r0, lsr #16
+ 336:libstr91x/src/91x_adc.c ****    tmp = ADC->DDR;
+ 527              		.loc 1 336 0
+ 528 03b8 B630CD01 		streqh	r3, [sp, #6]	@ movhi
+ 529              		.loc 1 338 0
+ 530 03bc B000C311 		strneh	r0, [r3, #0]	@ movhi
+ 339:libstr91x/src/91x_adc.c **** }
+ 531              		.loc 1 339 0
+ 532 03c0 08D08DE2 		add	sp, sp, #8
+ 533 03c4 1EFF2FE1 		bx	lr
+ 534              	.L40:
+ 535              		.align	2
+ 536              	.L39:
+ 537 03c8 00A0005C 		.word	1543544832
+ 538              		.cfi_endproc
+ 539              	.LFE6:
+ 541              		.align	2
+ 542              		.global	ADC_GetConversionValue
+ 544              	ADC_GetConversionValue:
+ 545              	.LFB7:
+ 340:libstr91x/src/91x_adc.c **** 
+ 341:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 342:libstr91x/src/91x_adc.c **** * Function Name  : ADC_GetConversionValue
+ 343:libstr91x/src/91x_adc.c **** * Description    : Read the result of conversion from the appropriate data 
+ 344:libstr91x/src/91x_adc.c **** *                  register.
+ 345:libstr91x/src/91x_adc.c **** * Input          : ADC_Channel: the correspondent channel of the ADC peripheral.
+ 346:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 347:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_0: ADC channel 0.
+ 348:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_1: ADC channel 1.
+ 349:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_2: ADC channel 2.
+ 350:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_3: ADC channel 3.
+ 351:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_4: ADC channel 4.
+ 352:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_5: ADC channel 5.
+ 353:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_6: ADC channel 6.
+ 354:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_7: ADC channel 7.
+ 355:libstr91x/src/91x_adc.c **** * Output         : None
+ 356:libstr91x/src/91x_adc.c **** * Return         : The result of the conversion for the specific channel.
+ 357:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 358:libstr91x/src/91x_adc.c **** u16 ADC_GetConversionValue(u16 ADC_Channel)
+ 359:libstr91x/src/91x_adc.c **** {
+ 546              		.loc 1 359 0
+ 547              		.cfi_startproc
+ 548              		@ args = 0, pretend = 0, frame = 0
+ 549              		@ frame_needed = 0, uses_anonymous_args = 0
+ 550              		@ link register save eliminated.
+ 551              	.LVL28:
+ 360:libstr91x/src/91x_adc.c ****   u16 ADC_Conversion_Value = 0;
+ 361:libstr91x/src/91x_adc.c **** 
+ 362:libstr91x/src/91x_adc.c ****   switch (ADC_Channel)
+ 552              		.loc 1 362 0
+ 553 03cc 070050E3 		cmp	r0, #7
+ 554 03d0 00F19F97 		ldrls	pc, [pc, r0, asl #2]
+ 555 03d4 0C0000EA 		b	.L52
+ 556              	.L51:
+ 557 03d8 14040000 		.word	.L43
+ 558 03dc 28040000 		.word	.L44
+ 559 03e0 3C040000 		.word	.L45
+ 560 03e4 50040000 		.word	.L46
+ 561 03e8 64040000 		.word	.L47
+ 562 03ec 78040000 		.word	.L48
+ 563 03f0 8C040000 		.word	.L49
+ 564 03f4 F8030000 		.word	.L50
+ 565              	.L50:
+ 363:libstr91x/src/91x_adc.c ****   {
+ 364:libstr91x/src/91x_adc.c ****     case (ADC_Channel_0):
+ 365:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 0 */
+ 366:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR0 & ADC_RESULT_MASK;
+ 367:libstr91x/src/91x_adc.c ****       break;
+ 368:libstr91x/src/91x_adc.c **** 
+ 369:libstr91x/src/91x_adc.c ****     case (ADC_Channel_1):
+ 370:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 1 */
+ 371:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR1 & ADC_RESULT_MASK;
+ 372:libstr91x/src/91x_adc.c ****       break;
+ 373:libstr91x/src/91x_adc.c **** 
+ 374:libstr91x/src/91x_adc.c ****     case (ADC_Channel_2):
+ 375:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 2 */
+ 376:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR2 & ADC_RESULT_MASK;
+ 377:libstr91x/src/91x_adc.c ****       break;
+ 378:libstr91x/src/91x_adc.c **** 
+ 379:libstr91x/src/91x_adc.c ****     case (ADC_Channel_3):
+ 380:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 3 */
+ 381:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR3 & ADC_RESULT_MASK;
+ 382:libstr91x/src/91x_adc.c ****       break;
+ 383:libstr91x/src/91x_adc.c **** 
+ 384:libstr91x/src/91x_adc.c ****     case (ADC_Channel_4):
+ 385:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 4 */
+ 386:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR4 & ADC_RESULT_MASK;
+ 387:libstr91x/src/91x_adc.c ****       break;
+ 388:libstr91x/src/91x_adc.c **** 
+ 389:libstr91x/src/91x_adc.c ****     case (ADC_Channel_5):
+ 390:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 5 */
+ 391:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR5 & ADC_RESULT_MASK;
+ 392:libstr91x/src/91x_adc.c ****       break;
+ 393:libstr91x/src/91x_adc.c ****  
+ 394:libstr91x/src/91x_adc.c ****     case (ADC_Channel_6):
+ 395:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 6 */
+ 396:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR6 & ADC_RESULT_MASK;
+ 397:libstr91x/src/91x_adc.c ****       break;
+ 398:libstr91x/src/91x_adc.c **** 
+ 399:libstr91x/src/91x_adc.c ****     case (ADC_Channel_7):
+ 400:libstr91x/src/91x_adc.c ****       /* Get the conversion value of the channel 7 */
+ 401:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR7 & ADC_RESULT_MASK;
+ 566              		.loc 1 401 0
+ 567 03f8 A0209FE5 		ldr	r2, .L53
+ 568 03fc B033D2E1 		ldrh	r3, [r2, #48]
+ 569 0400 031BA0E1 		mov	r1, r3, asl #22
+ 570 0404 210BA0E1 		mov	r0, r1, lsr #22
+ 571              	.LVL29:
+ 402:libstr91x/src/91x_adc.c ****       break;
+ 572              		.loc 1 402 0
+ 573 0408 1EFF2FE1 		bx	lr
+ 574              	.LVL30:
+ 575              	.L52:
+ 360:libstr91x/src/91x_adc.c ****   u16 ADC_Conversion_Value = 0;
+ 576              		.loc 1 360 0
+ 577 040c 0000A0E3 		mov	r0, #0
+ 578              	.LVL31:
+ 403:libstr91x/src/91x_adc.c **** 
+ 404:libstr91x/src/91x_adc.c ****     default:
+ 405:libstr91x/src/91x_adc.c ****       break;
+ 406:libstr91x/src/91x_adc.c ****   }
+ 407:libstr91x/src/91x_adc.c **** 
+ 408:libstr91x/src/91x_adc.c ****   return(ADC_Conversion_Value);
+ 409:libstr91x/src/91x_adc.c **** }
+ 579              		.loc 1 409 0
+ 580 0410 1EFF2FE1 		bx	lr
+ 581              	.LVL32:
+ 582              	.L43:
+ 366:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR0 & ADC_RESULT_MASK;
+ 583              		.loc 1 366 0
+ 584 0414 84309FE5 		ldr	r3, .L53
+ 585 0418 B411D3E1 		ldrh	r1, [r3, #20]
+ 586 041c 010BA0E1 		mov	r0, r1, asl #22
+ 587              	.LVL33:
+ 588 0420 200BA0E1 		mov	r0, r0, lsr #22
+ 589              	.LVL34:
+ 367:libstr91x/src/91x_adc.c ****       break;
+ 590              		.loc 1 367 0
+ 591 0424 1EFF2FE1 		bx	lr
+ 592              	.LVL35:
+ 593              	.L44:
+ 371:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR1 & ADC_RESULT_MASK;
+ 594              		.loc 1 371 0
+ 595 0428 70009FE5 		ldr	r0, .L53
+ 596              	.LVL36:
+ 597 042c B8C1D0E1 		ldrh	ip, [r0, #24]
+ 598 0430 0C2BA0E1 		mov	r2, ip, asl #22
+ 599 0434 220BA0E1 		mov	r0, r2, lsr #22
+ 600              	.LVL37:
+ 372:libstr91x/src/91x_adc.c ****       break;
+ 601              		.loc 1 372 0
+ 602 0438 1EFF2FE1 		bx	lr
+ 603              	.LVL38:
+ 604              	.L45:
+ 376:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR2 & ADC_RESULT_MASK;
+ 605              		.loc 1 376 0
+ 606 043c 5C209FE5 		ldr	r2, .L53
+ 607 0440 BC31D2E1 		ldrh	r3, [r2, #28]
+ 608 0444 031BA0E1 		mov	r1, r3, asl #22
+ 609 0448 210BA0E1 		mov	r0, r1, lsr #22
+ 610              	.LVL39:
+ 377:libstr91x/src/91x_adc.c ****       break;
+ 611              		.loc 1 377 0
+ 612 044c 1EFF2FE1 		bx	lr
+ 613              	.LVL40:
+ 614              	.L46:
+ 381:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR3 & ADC_RESULT_MASK;
+ 615              		.loc 1 381 0
+ 616 0450 48109FE5 		ldr	r1, .L53
+ 617 0454 B002D1E1 		ldrh	r0, [r1, #32]
+ 618              	.LVL41:
+ 619 0458 00CBA0E1 		mov	ip, r0, asl #22
+ 620 045c 2C0BA0E1 		mov	r0, ip, lsr #22
+ 621              	.LVL42:
+ 382:libstr91x/src/91x_adc.c ****       break;
+ 622              		.loc 1 382 0
+ 623 0460 1EFF2FE1 		bx	lr
+ 624              	.LVL43:
+ 625              	.L47:
+ 386:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR4 & ADC_RESULT_MASK;
+ 626              		.loc 1 386 0
+ 627 0464 34C09FE5 		ldr	ip, .L53
+ 628 0468 B422DCE1 		ldrh	r2, [ip, #36]
+ 629 046c 023BA0E1 		mov	r3, r2, asl #22
+ 630 0470 230BA0E1 		mov	r0, r3, lsr #22
+ 631              	.LVL44:
+ 387:libstr91x/src/91x_adc.c ****       break;
+ 632              		.loc 1 387 0
+ 633 0474 1EFF2FE1 		bx	lr
+ 634              	.LVL45:
+ 635              	.L48:
+ 391:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR5 & ADC_RESULT_MASK;
+ 636              		.loc 1 391 0
+ 637 0478 20309FE5 		ldr	r3, .L53
+ 638 047c B812D3E1 		ldrh	r1, [r3, #40]
+ 639 0480 010BA0E1 		mov	r0, r1, asl #22
+ 640              	.LVL46:
+ 641 0484 200BA0E1 		mov	r0, r0, lsr #22
+ 642              	.LVL47:
+ 392:libstr91x/src/91x_adc.c ****       break;
+ 643              		.loc 1 392 0
+ 644 0488 1EFF2FE1 		bx	lr
+ 645              	.LVL48:
+ 646              	.L49:
+ 396:libstr91x/src/91x_adc.c ****       ADC_Conversion_Value = ADC->DR6 & ADC_RESULT_MASK;
+ 647              		.loc 1 396 0
+ 648 048c 0C009FE5 		ldr	r0, .L53
+ 649              	.LVL49:
+ 650 0490 BCC2D0E1 		ldrh	ip, [r0, #44]
+ 651 0494 0C2BA0E1 		mov	r2, ip, asl #22
+ 652 0498 220BA0E1 		mov	r0, r2, lsr #22
+ 653              	.LVL50:
+ 397:libstr91x/src/91x_adc.c ****       break;
+ 654              		.loc 1 397 0
+ 655 049c 1EFF2FE1 		bx	lr
+ 656              	.L54:
+ 657              		.align	2
+ 658              	.L53:
+ 659 04a0 00A0005C 		.word	1543544832
+ 660              		.cfi_endproc
+ 661              	.LFE7:
+ 663              		.align	2
+ 664              		.global	ADC_GetAnalogWatchdogResult
+ 666              	ADC_GetAnalogWatchdogResult:
+ 667              	.LFB8:
+ 410:libstr91x/src/91x_adc.c **** 
+ 411:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 412:libstr91x/src/91x_adc.c **** * Function Name  : ADC_GetAnalogWatchdogResult
+ 413:libstr91x/src/91x_adc.c **** * Description    : Return the result of the comparaison on the selected Analog 
+ 414:libstr91x/src/91x_adc.c **** *                  Watchdog.
+ 415:libstr91x/src/91x_adc.c **** * Input          : ADC_Channel: the correspondent channel of the ADC peripheral.
+ 416:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 417:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_0: ADC channel 0.
+ 418:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_1: ADC channel 1.
+ 419:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_2: ADC channel 2.
+ 420:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_3: ADC channel 3.
+ 421:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_4: ADC channel 4.
+ 422:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_5: ADC channel 5.
+ 423:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_6: ADC channel 6.
+ 424:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_7: ADC channel 7.
+ 425:libstr91x/src/91x_adc.c **** * Output         : None
+ 426:libstr91x/src/91x_adc.c **** * Return         : The state of the comparision (SET or RESET).
+ 427:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 428:libstr91x/src/91x_adc.c **** FlagStatus ADC_GetAnalogWatchdogResult(u16 ADC_Channel)
+ 429:libstr91x/src/91x_adc.c **** {
+ 668              		.loc 1 429 0
+ 669              		.cfi_startproc
+ 670              		@ args = 0, pretend = 0, frame = 0
+ 671              		@ frame_needed = 0, uses_anonymous_args = 0
+ 672              		@ link register save eliminated.
+ 673              	.LVL51:
+ 430:libstr91x/src/91x_adc.c ****   if ((ADC->CRR & (1<<ADC_Channel)) != RESET)
+ 674              		.loc 1 430 0
+ 675 04a4 0C109FE5 		ldr	r1, .L56
+ 676 04a8 B031D1E1 		ldrh	r3, [r1, #16]
+ 677 04ac 5300A0E1 		mov	r0, r3, asr r0
+ 678              	.LVL52:
+ 431:libstr91x/src/91x_adc.c ****   {
+ 432:libstr91x/src/91x_adc.c ****       return SET;
+ 433:libstr91x/src/91x_adc.c ****   }
+ 434:libstr91x/src/91x_adc.c ****   else
+ 435:libstr91x/src/91x_adc.c ****   {
+ 436:libstr91x/src/91x_adc.c ****     return RESET;
+ 437:libstr91x/src/91x_adc.c ****   }
+ 438:libstr91x/src/91x_adc.c **** }
+ 679              		.loc 1 438 0
+ 680 04b0 010000E2 		and	r0, r0, #1
+ 681 04b4 1EFF2FE1 		bx	lr
+ 682              	.L57:
+ 683              		.align	2
+ 684              	.L56:
+ 685 04b8 00A0005C 		.word	1543544832
+ 686              		.cfi_endproc
+ 687              	.LFE8:
+ 689              		.align	2
+ 690              		.global	ADC_ClearAnalogWatchdogResult
+ 692              	ADC_ClearAnalogWatchdogResult:
+ 693              	.LFB9:
+ 439:libstr91x/src/91x_adc.c **** 
+ 440:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 441:libstr91x/src/91x_adc.c **** * Function Name  : ADC_ClearAnalogWatchdogResult
+ 442:libstr91x/src/91x_adc.c **** * Description    : Clear the result of the comparaison on the selected Analog 
+ 443:libstr91x/src/91x_adc.c **** *                  Watchdog.
+ 444:libstr91x/src/91x_adc.c **** * Input          : ADC_Channel: the correspondent channel of the ADC peripheral.
+ 445:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 446:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_0: ADC channel 0.
+ 447:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_1: ADC channel 1.
+ 448:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_2: ADC channel 2.
+ 449:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_3: ADC channel 3.
+ 450:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_4: ADC channel 4.
+ 451:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_5: ADC channel 5.
+ 452:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_6: ADC channel 6.
+ 453:libstr91x/src/91x_adc.c **** *                     - ADC_Channel_7: ADC channel 7.
+ 454:libstr91x/src/91x_adc.c **** * Output         : None
+ 455:libstr91x/src/91x_adc.c **** * Return         : None
+ 456:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 457:libstr91x/src/91x_adc.c **** void ADC_ClearAnalogWatchdogResult(u16 ADC_Channel)
+ 458:libstr91x/src/91x_adc.c **** {
+ 694              		.loc 1 458 0
+ 695              		.cfi_startproc
+ 696              		@ args = 0, pretend = 0, frame = 0
+ 697              		@ frame_needed = 0, uses_anonymous_args = 0
+ 698              		@ link register save eliminated.
+ 699              	.LVL53:
+ 459:libstr91x/src/91x_adc.c ****   /* Clear the correspondent watchdog result */
+ 460:libstr91x/src/91x_adc.c ****   ADC->CRR = 1<<ADC_Channel;
+ 700              		.loc 1 460 0
+ 701 04bc 0118A0E3 		mov	r1, #65536
+ 702 04c0 1100A0E1 		mov	r0, r1, asl r0
+ 703              	.LVL54:
+ 704 04c4 08209FE5 		ldr	r2, .L59
+ 705 04c8 2038A0E1 		mov	r3, r0, lsr #16
+ 706 04cc B031C2E1 		strh	r3, [r2, #16]	@ movhi
+ 461:libstr91x/src/91x_adc.c **** }
+ 707              		.loc 1 461 0
+ 708 04d0 1EFF2FE1 		bx	lr
+ 709              	.L60:
+ 710              		.align	2
+ 711              	.L59:
+ 712 04d4 00A0005C 		.word	1543544832
+ 713              		.cfi_endproc
+ 714              	.LFE9:
+ 716              		.align	2
+ 717              		.global	ADC_GetWatchdogThreshold
+ 719              	ADC_GetWatchdogThreshold:
+ 720              	.LFB10:
+ 462:libstr91x/src/91x_adc.c **** 
+ 463:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 464:libstr91x/src/91x_adc.c **** * Function Name  : ADC_GetWatchdogThreshold
+ 465:libstr91x/src/91x_adc.c **** * Description    : Get the higher/lower thresholds values of the watchdog.
+ 466:libstr91x/src/91x_adc.c **** * Input          : ADC_Threshold: the lower or the higher threshold.
+ 467:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 468:libstr91x/src/91x_adc.c **** *                     - ADC_HigherThreshold: The higher threshold.
+ 469:libstr91x/src/91x_adc.c **** *                     - ADC_LowerThreshold: The lower threshold.
+ 470:libstr91x/src/91x_adc.c **** * Output         : None
+ 471:libstr91x/src/91x_adc.c **** * Return         : The selected threshold value.
+ 472:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 473:libstr91x/src/91x_adc.c **** u16 ADC_GetWatchdogThreshold(ADC_ThresholdType ADC_Threshold)
+ 474:libstr91x/src/91x_adc.c **** {
+ 721              		.loc 1 474 0
+ 722              		.cfi_startproc
+ 723              		@ args = 0, pretend = 0, frame = 0
+ 724              		@ frame_needed = 0, uses_anonymous_args = 0
+ 725              		@ link register save eliminated.
+ 726              	.LVL55:
+ 475:libstr91x/src/91x_adc.c ****   u16 ADC_Threshold_Value = 0;
+ 476:libstr91x/src/91x_adc.c **** 
+ 477:libstr91x/src/91x_adc.c ****   switch (ADC_Threshold)
+ 727              		.loc 1 477 0
+ 728 04d8 000050E3 		cmp	r0, #0
+ 729              	.LVL56:
+ 730 04dc 0200001A 		bne	.L67
+ 478:libstr91x/src/91x_adc.c ****   {
+ 479:libstr91x/src/91x_adc.c ****     case ADC_LowThreshold:
+ 480:libstr91x/src/91x_adc.c ****       /* Get the low threshold of the watchdog */
+ 481:libstr91x/src/91x_adc.c ****       ADC_Threshold_Value = ADC->LTR;
+ 482:libstr91x/src/91x_adc.c ****       break;
+ 483:libstr91x/src/91x_adc.c **** 
+ 484:libstr91x/src/91x_adc.c ****     case ADC_HighThreshold:
+ 485:libstr91x/src/91x_adc.c ****       /* Get the high threshol of the watchdog */
+ 486:libstr91x/src/91x_adc.c ****       ADC_Threshold_Value = ADC->HTR;
+ 731              		.loc 1 486 0
+ 732 04e0 20009FE5 		ldr	r0, .L69
+ 733 04e4 B800D0E1 		ldrh	r0, [r0, #8]
+ 734              	.LVL57:
+ 487:libstr91x/src/91x_adc.c ****       break;
+ 735              		.loc 1 487 0
+ 736 04e8 1EFF2FE1 		bx	lr
+ 737              	.LVL58:
+ 738              	.L67:
+ 477:libstr91x/src/91x_adc.c ****   switch (ADC_Threshold)
+ 739              		.loc 1 477 0
+ 740 04ec 010050E3 		cmp	r0, #1
+ 741 04f0 0100000A 		beq	.L68
+ 475:libstr91x/src/91x_adc.c ****   u16 ADC_Threshold_Value = 0;
+ 742              		.loc 1 475 0
+ 743 04f4 0000A0E3 		mov	r0, #0
+ 744              	.LVL59:
+ 488:libstr91x/src/91x_adc.c **** 
+ 489:libstr91x/src/91x_adc.c ****     default:
+ 490:libstr91x/src/91x_adc.c ****       break;
+ 491:libstr91x/src/91x_adc.c ****   }
+ 492:libstr91x/src/91x_adc.c **** 
+ 493:libstr91x/src/91x_adc.c ****   return(ADC_Threshold_Value);
+ 494:libstr91x/src/91x_adc.c **** }
+ 745              		.loc 1 494 0
+ 746 04f8 1EFF2FE1 		bx	lr
+ 747              	.LVL60:
+ 748              	.L68:
+ 481:libstr91x/src/91x_adc.c ****       ADC_Threshold_Value = ADC->LTR;
+ 749              		.loc 1 481 0
+ 750 04fc 04309FE5 		ldr	r3, .L69
+ 751 0500 BC00D3E1 		ldrh	r0, [r3, #12]
+ 752              	.LVL61:
+ 482:libstr91x/src/91x_adc.c ****       break;
+ 753              		.loc 1 482 0
+ 754 0504 1EFF2FE1 		bx	lr
+ 755              	.L70:
+ 756              		.align	2
+ 757              	.L69:
+ 758 0508 00A0005C 		.word	1543544832
+ 759              		.cfi_endproc
+ 760              	.LFE10:
+ 762              		.align	2
+ 763              		.global	ADC_ITConfig
+ 765              	ADC_ITConfig:
+ 766              	.LFB11:
+ 495:libstr91x/src/91x_adc.c **** 
+ 496:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 497:libstr91x/src/91x_adc.c **** * Function Name  : ADC_ITConfig
+ 498:libstr91x/src/91x_adc.c **** * Description    : Enables or disables the specified ADC interrupts.
+ 499:libstr91x/src/91x_adc.c **** * Input          : - ADC_IT: specifies the ADC interrupts sources to be enabled 
+ 500:libstr91x/src/91x_adc.c **** *                    or disabled.
+ 501:libstr91x/src/91x_adc.c **** *                    This parameter can be one of the following values:
+ 502:libstr91x/src/91x_adc.c **** *                       - ADC_IT_EndOfConversion: End of conversion interrupt.
+ 503:libstr91x/src/91x_adc.c **** *                       - ADC_IT_AnalogWDG: Analog watchdog interrupt.
+ 504:libstr91x/src/91x_adc.c **** *                  - ADC_NewState: new state of the specified ADC interrupts.
+ 505:libstr91x/src/91x_adc.c **** *                    (ADC_Newstate can be ENABLE or DISABLE).
+ 506:libstr91x/src/91x_adc.c **** * Output         : None
+ 507:libstr91x/src/91x_adc.c **** * Return         : None
+ 508:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 509:libstr91x/src/91x_adc.c **** void ADC_ITConfig(u16 ADC_IT, FunctionalState ADC_NewState)
+ 510:libstr91x/src/91x_adc.c **** {
+ 767              		.loc 1 510 0
+ 768              		.cfi_startproc
+ 769              		@ args = 0, pretend = 0, frame = 0
+ 770              		@ frame_needed = 0, uses_anonymous_args = 0
+ 771              		@ link register save eliminated.
+ 772              	.LVL62:
+ 511:libstr91x/src/91x_adc.c ****  if (ADC_IT==ADC_IT_ORD) 
+ 773              		.loc 1 511 0
+ 774 050c 100050E3 		cmp	r0, #16
+ 775 0510 0600000A 		beq	.L76
+ 512:libstr91x/src/91x_adc.c ****   {
+ 513:libstr91x/src/91x_adc.c ****    if (ADC_NewState == ENABLE)
+ 514:libstr91x/src/91x_adc.c ****   
+ 515:libstr91x/src/91x_adc.c ****     /* Enable the interrupt */
+ 516:libstr91x/src/91x_adc.c ****      ADC->CR2 |= ADC_IT;
+ 517:libstr91x/src/91x_adc.c ****  
+ 518:libstr91x/src/91x_adc.c ****   else
+ 519:libstr91x/src/91x_adc.c **** 
+ 520:libstr91x/src/91x_adc.c ****     /* Disable the interrupt */
+ 521:libstr91x/src/91x_adc.c ****     ADC->CR2 &= ~ADC_IT;
+ 522:libstr91x/src/91x_adc.c ****  
+ 523:libstr91x/src/91x_adc.c ****   }
+ 524:libstr91x/src/91x_adc.c ****   else{
+ 525:libstr91x/src/91x_adc.c ****   
+ 526:libstr91x/src/91x_adc.c ****    if (ADC_NewState == ENABLE)
+ 527:libstr91x/src/91x_adc.c ****   
+ 528:libstr91x/src/91x_adc.c ****     /* Enable the interrupt */
+ 529:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_IT;
+ 776              		.loc 1 529 0
+ 777 0514 40309FE5 		ldr	r3, .L77
+ 526:libstr91x/src/91x_adc.c ****    if (ADC_NewState == ENABLE)
+ 778              		.loc 1 526 0
+ 779 0518 010051E3 		cmp	r1, #1
+ 780              		.loc 1 529 0
+ 781 051c B020D3E1 		ldrh	r2, [r3, #0]
+ 782 0520 02008001 		orreq	r0, r0, r2
+ 783              	.LVL63:
+ 530:libstr91x/src/91x_adc.c ****  
+ 531:libstr91x/src/91x_adc.c ****   else
+ 532:libstr91x/src/91x_adc.c ****   
+ 533:libstr91x/src/91x_adc.c ****     /* Disable the interrupt */
+ 534:libstr91x/src/91x_adc.c ****     ADC->CR &= ~ADC_IT;
+ 784              		.loc 1 534 0
+ 785 0524 0000C211 		bicne	r0, r2, r0
+ 786 0528 B000C3E1 		strh	r0, [r3, #0]	@ movhi
+ 787 052c 1EFF2FE1 		bx	lr
+ 788              	.LVL64:
+ 789              	.L76:
+ 513:libstr91x/src/91x_adc.c ****    if (ADC_NewState == ENABLE)
+ 790              		.loc 1 513 0
+ 791 0530 010051E3 		cmp	r1, #1
+ 516:libstr91x/src/91x_adc.c ****      ADC->CR2 |= ADC_IT;
+ 792              		.loc 1 516 0
+ 793 0534 20309F05 		ldreq	r3, .L77
+ 521:libstr91x/src/91x_adc.c ****     ADC->CR2 &= ~ADC_IT;
+ 794              		.loc 1 521 0
+ 795 0538 1C209F15 		ldrne	r2, .L77
+ 516:libstr91x/src/91x_adc.c ****      ADC->CR2 |= ADC_IT;
+ 796              		.loc 1 516 0
+ 797 053c BC23D301 		ldreqh	r2, [r3, #60]
+ 521:libstr91x/src/91x_adc.c ****     ADC->CR2 &= ~ADC_IT;
+ 798              		.loc 1 521 0
+ 799 0540 18309F15 		ldrne	r3, .L77+4
+ 800 0544 BC13D211 		ldrneh	r1, [r2, #60]
+ 801              	.LVL65:
+ 516:libstr91x/src/91x_adc.c ****      ADC->CR2 |= ADC_IT;
+ 802              		.loc 1 516 0
+ 803 0548 10208203 		orreq	r2, r2, #16
+ 521:libstr91x/src/91x_adc.c ****     ADC->CR2 &= ~ADC_IT;
+ 804              		.loc 1 521 0
+ 805 054c 03300110 		andne	r3, r1, r3
+ 516:libstr91x/src/91x_adc.c ****      ADC->CR2 |= ADC_IT;
+ 806              		.loc 1 516 0
+ 807 0550 BC23C301 		streqh	r2, [r3, #60]	@ movhi
+ 521:libstr91x/src/91x_adc.c ****     ADC->CR2 &= ~ADC_IT;
+ 808              		.loc 1 521 0
+ 809 0554 BC33C211 		strneh	r3, [r2, #60]	@ movhi
+ 810 0558 1EFF2FE1 		bx	lr
+ 811              	.L78:
+ 812              		.align	2
+ 813              	.L77:
+ 814 055c 00A0005C 		.word	1543544832
+ 815 0560 EFFF0000 		.word	65519
+ 816              		.cfi_endproc
+ 817              	.LFE11:
+ 819              		.align	2
+ 820              		.global	ADC_StandbyModeCmd
+ 822              	ADC_StandbyModeCmd:
+ 823              	.LFB12:
+ 535:libstr91x/src/91x_adc.c ****   
+ 536:libstr91x/src/91x_adc.c ****   }
+ 537:libstr91x/src/91x_adc.c ****   }
+ 538:libstr91x/src/91x_adc.c **** 
+ 539:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 540:libstr91x/src/91x_adc.c **** * Function Name  : ADC_StandbyModeCmd
+ 541:libstr91x/src/91x_adc.c **** * Description    : Enable or disable the standby mode.
+ 542:libstr91x/src/91x_adc.c **** * Input          : ADC_NewState: new state of the ADC standby mode.
+ 543:libstr91x/src/91x_adc.c **** *                  (ADC_Newstate can be ENABLE or DISABLE).
+ 544:libstr91x/src/91x_adc.c **** * Output         : None
+ 545:libstr91x/src/91x_adc.c **** * Return         : None
+ 546:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 547:libstr91x/src/91x_adc.c **** void ADC_StandbyModeCmd(FunctionalState ADC_NewState)
+ 548:libstr91x/src/91x_adc.c **** {
+ 824              		.loc 1 548 0
+ 825              		.cfi_startproc
+ 826              		@ args = 0, pretend = 0, frame = 0
+ 827              		@ frame_needed = 0, uses_anonymous_args = 0
+ 828              		@ link register save eliminated.
+ 829              	.LVL66:
+ 549:libstr91x/src/91x_adc.c ****   if (ADC_NewState == ENABLE)
+ 830              		.loc 1 549 0
+ 831 0564 010050E3 		cmp	r0, #1
+ 550:libstr91x/src/91x_adc.c ****   {
+ 551:libstr91x/src/91x_adc.c ****     /* Enable the standby mode */
+ 552:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_STANDBY_MODE_MASK;
+ 832              		.loc 1 552 0
+ 833 0568 20309F05 		ldreq	r3, .L82
+ 553:libstr91x/src/91x_adc.c ****   }
+ 554:libstr91x/src/91x_adc.c ****   else
+ 555:libstr91x/src/91x_adc.c ****   {
+ 556:libstr91x/src/91x_adc.c ****     /* Disable the standby mode */
+ 557:libstr91x/src/91x_adc.c ****     ADC->CR &= ~ADC_STANDBY_MODE_MASK;
+ 834              		.loc 1 557 0
+ 835 056c 1C209F15 		ldrne	r2, .L82
+ 552:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_STANDBY_MODE_MASK;
+ 836              		.loc 1 552 0
+ 837 0570 B020D301 		ldreqh	r2, [r3, #0]
+ 838              		.loc 1 557 0
+ 839 0574 18309F15 		ldrne	r3, .L82+4
+ 840 0578 B010D211 		ldrneh	r1, [r2, #0]
+ 552:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_STANDBY_MODE_MASK;
+ 841              		.loc 1 552 0
+ 842 057c 08208203 		orreq	r2, r2, #8
+ 843              		.loc 1 557 0
+ 844 0580 03300110 		andne	r3, r1, r3
+ 552:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_STANDBY_MODE_MASK;
+ 845              		.loc 1 552 0
+ 846 0584 B020C301 		streqh	r2, [r3, #0]	@ movhi
+ 847              		.loc 1 557 0
+ 848 0588 B030C211 		strneh	r3, [r2, #0]	@ movhi
+ 849 058c 1EFF2FE1 		bx	lr
+ 850              	.L83:
+ 851              		.align	2
+ 852              	.L82:
+ 853 0590 00A0005C 		.word	1543544832
+ 854 0594 F7FF0000 		.word	65527
+ 855              		.cfi_endproc
+ 856              	.LFE12:
+ 858              		.align	2
+ 859              		.global	ADC_Cmd
+ 861              	ADC_Cmd:
+ 862              	.LFB13:
+ 558:libstr91x/src/91x_adc.c ****   }
+ 559:libstr91x/src/91x_adc.c **** }
+ 560:libstr91x/src/91x_adc.c **** 
+ 561:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 562:libstr91x/src/91x_adc.c **** * Function Name  : ADC_Cmd
+ 563:libstr91x/src/91x_adc.c **** * Description    : Power on or put in reset mode the ADC peripheral.
+ 564:libstr91x/src/91x_adc.c **** * Input          : ADC_NewState: new state of the ADC peripheral.
+ 565:libstr91x/src/91x_adc.c **** *                  (ADC_Newstate can be ENABLE or DISABLE).
+ 566:libstr91x/src/91x_adc.c **** * Output         : None
+ 567:libstr91x/src/91x_adc.c **** * Return         : None
+ 568:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 569:libstr91x/src/91x_adc.c **** void ADC_Cmd(FunctionalState ADC_NewState)
+ 570:libstr91x/src/91x_adc.c **** {
+ 863              		.loc 1 570 0
+ 864              		.cfi_startproc
+ 865              		@ args = 0, pretend = 0, frame = 0
+ 866              		@ frame_needed = 0, uses_anonymous_args = 0
+ 867              		@ link register save eliminated.
+ 868              	.LVL67:
+ 571:libstr91x/src/91x_adc.c ****   if (ADC_NewState == ENABLE)
+ 869              		.loc 1 571 0
+ 870 0598 010050E3 		cmp	r0, #1
+ 572:libstr91x/src/91x_adc.c ****   {
+ 573:libstr91x/src/91x_adc.c ****     /* Enable the ADC */
+ 574:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_CMD_MASK;
+ 871              		.loc 1 574 0
+ 872 059c 20309F05 		ldreq	r3, .L87
+ 575:libstr91x/src/91x_adc.c ****   }
+ 576:libstr91x/src/91x_adc.c ****   else
+ 577:libstr91x/src/91x_adc.c ****   {
+ 578:libstr91x/src/91x_adc.c ****     /* Disable the ADC */
+ 579:libstr91x/src/91x_adc.c ****     ADC->CR &= ~ADC_CMD_MASK;
+ 873              		.loc 1 579 0
+ 874 05a0 1C209F15 		ldrne	r2, .L87
+ 574:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_CMD_MASK;
+ 875              		.loc 1 574 0
+ 876 05a4 B020D301 		ldreqh	r2, [r3, #0]
+ 877              		.loc 1 579 0
+ 878 05a8 18309F15 		ldrne	r3, .L87+4
+ 879 05ac B010D211 		ldrneh	r1, [r2, #0]
+ 574:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_CMD_MASK;
+ 880              		.loc 1 574 0
+ 881 05b0 02208203 		orreq	r2, r2, #2
+ 882              		.loc 1 579 0
+ 883 05b4 03300110 		andne	r3, r1, r3
+ 574:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_CMD_MASK;
+ 884              		.loc 1 574 0
+ 885 05b8 B020C301 		streqh	r2, [r3, #0]	@ movhi
+ 886              		.loc 1 579 0
+ 887 05bc B030C211 		strneh	r3, [r2, #0]	@ movhi
+ 888 05c0 1EFF2FE1 		bx	lr
+ 889              	.L88:
+ 890              		.align	2
+ 891              	.L87:
+ 892 05c4 00A0005C 		.word	1543544832
+ 893 05c8 FDFF0000 		.word	65533
+ 894              		.cfi_endproc
+ 895              	.LFE13:
+ 897              		.align	2
+ 898              		.global	ADC_ConversionCmd
+ 900              	ADC_ConversionCmd:
+ 901              	.LFB14:
+ 580:libstr91x/src/91x_adc.c ****   }
+ 581:libstr91x/src/91x_adc.c **** }
+ 582:libstr91x/src/91x_adc.c **** 
+ 583:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 584:libstr91x/src/91x_adc.c **** * Function Name  : ADC_ConversionCmd
+ 585:libstr91x/src/91x_adc.c **** * Description    : Start or stop the ADC conversion in the selected mode.
+ 586:libstr91x/src/91x_adc.c **** * Input          : ADC_Conversion: the conversion command.
+ 587:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 588:libstr91x/src/91x_adc.c **** *                     - ADC_Conversion_Start: Start the conversion.
+ 589:libstr91x/src/91x_adc.c **** *                     - ADC_Conversion_Stop: Stop the Conversion.
+ 590:libstr91x/src/91x_adc.c **** * Output         : None
+ 591:libstr91x/src/91x_adc.c **** * Return         : None
+ 592:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 593:libstr91x/src/91x_adc.c **** void ADC_ConversionCmd(u16 ADC_Conversion)
+ 594:libstr91x/src/91x_adc.c **** {
+ 902              		.loc 1 594 0
+ 903              		.cfi_startproc
+ 904              		@ args = 0, pretend = 0, frame = 0
+ 905              		@ frame_needed = 0, uses_anonymous_args = 0
+ 906              		@ link register save eliminated.
+ 907              	.LVL68:
+ 595:libstr91x/src/91x_adc.c ****   if (ADC_Conversion == ADC_Conversion_Start)
+ 908              		.loc 1 595 0
+ 909 05cc 010050E3 		cmp	r0, #1
+ 596:libstr91x/src/91x_adc.c ****   {
+ 597:libstr91x/src/91x_adc.c ****     /* Start the ADC conversion */
+ 598:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Conversion_Start;
+ 910              		.loc 1 598 0
+ 911 05d0 20309F05 		ldreq	r3, .L92
+ 599:libstr91x/src/91x_adc.c ****   }
+ 600:libstr91x/src/91x_adc.c ****   else
+ 601:libstr91x/src/91x_adc.c ****   {
+ 602:libstr91x/src/91x_adc.c ****     /* Stop the ADC conversion */
+ 603:libstr91x/src/91x_adc.c ****     ADC->CR &= ADC_Conversion_Stop;
+ 912              		.loc 1 603 0
+ 913 05d4 1C209F15 		ldrne	r2, .L92
+ 598:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Conversion_Start;
+ 914              		.loc 1 598 0
+ 915 05d8 B020D301 		ldreqh	r2, [r3, #0]
+ 916              		.loc 1 603 0
+ 917 05dc 18309F15 		ldrne	r3, .L92+4
+ 918 05e0 B010D211 		ldrneh	r1, [r2, #0]
+ 598:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Conversion_Start;
+ 919              		.loc 1 598 0
+ 920 05e4 01208203 		orreq	r2, r2, #1
+ 921              		.loc 1 603 0
+ 922 05e8 03300110 		andne	r3, r1, r3
+ 598:libstr91x/src/91x_adc.c ****     ADC->CR |= ADC_Conversion_Start;
+ 923              		.loc 1 598 0
+ 924 05ec B020C301 		streqh	r2, [r3, #0]	@ movhi
+ 925              		.loc 1 603 0
+ 926 05f0 B030C211 		strneh	r3, [r2, #0]	@ movhi
+ 927 05f4 1EFF2FE1 		bx	lr
+ 928              	.L93:
+ 929              		.align	2
+ 930              	.L92:
+ 931 05f8 00A0005C 		.word	1543544832
+ 932 05fc FEFF0000 		.word	65534
+ 933              		.cfi_endproc
+ 934              	.LFE14:
+ 936              		.align	2
+ 937              		.global	ADC_ExternalTrigConfig
+ 939              	ADC_ExternalTrigConfig:
+ 940              	.LFB15:
+ 604:libstr91x/src/91x_adc.c ****   }
+ 605:libstr91x/src/91x_adc.c **** }
+ 606:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 607:libstr91x/src/91x_adc.c **** * Function Name  : ADC_ExternalTrigConfig
+ 608:libstr91x/src/91x_adc.c **** * Description    : source and edge selection of external trigg
+ 609:libstr91x/src/91x_adc.c **** * Input          : -ADC_ExtTrig_Src
+ 610:libstr91x/src/91x_adc.c **** *                  This parameter can be one of the following values:
+ 611:libstr91x/src/91x_adc.c **** *                     ADC_PWM_Trig    : PWM Trigger 
+ 612:libstr91x/src/91x_adc.c **** *                     ADC_TIM_Trig    : Timer Trigger 
+ 613:libstr91x/src/91x_adc.c **** *                     ADC_PIN_Trig    : External Trigger Pin 
+ 614:libstr91x/src/91x_adc.c **** *                
+ 615:libstr91x/src/91x_adc.c **** *                  -ADC_ExtTrig_Edge
+ 616:libstr91x/src/91x_adc.c **** *                   This parameter can be one of the following values:
+ 617:libstr91x/src/91x_adc.c **** *                   Falling_ETE        :Falling edge
+ 618:libstr91x/src/91x_adc.c **** *                   Rising_ETE         :Rising edge
+ 619:libstr91x/src/91x_adc.c **** * Output         : None
+ 620:libstr91x/src/91x_adc.c **** * Return         : None
+ 621:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 622:libstr91x/src/91x_adc.c **** 
+ 623:libstr91x/src/91x_adc.c **** void ADC_ExternalTrigConfig(u16 ADC_ExtTrig_Src ,  u16 ADC_ExtTrig_Edge)
+ 624:libstr91x/src/91x_adc.c ****   {
+ 941              		.loc 1 624 0
+ 942              		.cfi_startproc
+ 943              		@ args = 0, pretend = 0, frame = 0
+ 944              		@ frame_needed = 0, uses_anonymous_args = 0
+ 945              		@ link register save eliminated.
+ 946              	.LVL69:
+ 625:libstr91x/src/91x_adc.c ****    ADC->CR2 &= 0x3C;
+ 947              		.loc 1 625 0
+ 948 0600 34309FE5 		ldr	r3, .L97
+ 626:libstr91x/src/91x_adc.c ****    ADC->CR2 |= ADC_ExtTrig_Src;
+ 627:libstr91x/src/91x_adc.c **** 
+ 628:libstr91x/src/91x_adc.c ****    if (ADC_ExtTrig_Edge== Falling_ETE)
+ 949              		.loc 1 628 0
+ 950 0604 000051E3 		cmp	r1, #0
+ 625:libstr91x/src/91x_adc.c ****    ADC->CR2 &= 0x3C;
+ 951              		.loc 1 625 0
+ 952 0608 BCC3D3E1 		ldrh	ip, [r3, #60]
+ 953 060c 3C200CE2 		and	r2, ip, #60
+ 954 0610 BC23C3E1 		strh	r2, [r3, #60]	@ movhi
+ 626:libstr91x/src/91x_adc.c ****    ADC->CR2 |= ADC_ExtTrig_Src;
+ 955              		.loc 1 626 0
+ 956 0614 BCC3D3E1 		ldrh	ip, [r3, #60]
+ 957 0618 0C2080E1 		orr	r2, r0, ip
+ 958 061c BC23C3E1 		strh	r2, [r3, #60]	@ movhi
+ 629:libstr91x/src/91x_adc.c ****    ADC->CR2 |= 0x20;
+ 959              		.loc 1 629 0
+ 960 0620 BC23D301 		ldreqh	r2, [r3, #60]
+ 630:libstr91x/src/91x_adc.c ****    else
+ 631:libstr91x/src/91x_adc.c ****    ADC->CR2 &=~0x20; ;
+ 961              		.loc 1 631 0
+ 962 0624 BC13D311 		ldrneh	r1, [r3, #60]
+ 963              	.LVL70:
+ 964 0628 10209F15 		ldrne	r2, .L97+4
+ 629:libstr91x/src/91x_adc.c ****    ADC->CR2 |= 0x20;
+ 965              		.loc 1 629 0
+ 966 062c 20208203 		orreq	r2, r2, #32
+ 967              		.loc 1 631 0
+ 968 0630 02200110 		andne	r2, r1, r2
+ 969 0634 BC23C3E1 		strh	r2, [r3, #60]	@ movhi
+ 970 0638 1EFF2FE1 		bx	lr
+ 971              	.L98:
+ 972              		.align	2
+ 973              	.L97:
+ 974 063c 00A0005C 		.word	1543544832
+ 975 0640 DFFF0000 		.word	65503
+ 976              		.cfi_endproc
+ 977              	.LFE15:
+ 979              		.align	2
+ 980              		.global	ADC_ExternalTrigCmd
+ 982              	ADC_ExternalTrigCmd:
+ 983              	.LFB16:
+ 632:libstr91x/src/91x_adc.c ****   
+ 633:libstr91x/src/91x_adc.c ****   }
+ 634:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 635:libstr91x/src/91x_adc.c **** * Function Name  :  ADC_ExternalTrigCmd
+ 636:libstr91x/src/91x_adc.c **** * Description    : Enable or disable the external trigg feature.
+ 637:libstr91x/src/91x_adc.c **** * Input          : ADC_NewState:  Can be ENABLE or DISABLE
+ 638:libstr91x/src/91x_adc.c **** * Output         : None
+ 639:libstr91x/src/91x_adc.c **** * Return         : None
+ 640:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 641:libstr91x/src/91x_adc.c **** 
+ 642:libstr91x/src/91x_adc.c **** void ADC_ExternalTrigCmd(FunctionalState ADC_NewState)
+ 643:libstr91x/src/91x_adc.c **** {
+ 984              		.loc 1 643 0
+ 985              		.cfi_startproc
+ 986              		@ args = 0, pretend = 0, frame = 0
+ 987              		@ frame_needed = 0, uses_anonymous_args = 0
+ 988              		@ link register save eliminated.
+ 989              	.LVL71:
+ 644:libstr91x/src/91x_adc.c **** if (ADC_NewState==ENABLE)
+ 990              		.loc 1 644 0
+ 991 0644 010050E3 		cmp	r0, #1
+ 645:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x04;                    
+ 992              		.loc 1 645 0
+ 993 0648 20309F05 		ldreq	r3, .L102
+ 646:libstr91x/src/91x_adc.c ****   else
+ 647:libstr91x/src/91x_adc.c ****   ADC->CR2  &=~0x04;  
+ 994              		.loc 1 647 0
+ 995 064c 1C209F15 		ldrne	r2, .L102
+ 645:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x04;                    
+ 996              		.loc 1 645 0
+ 997 0650 BC23D301 		ldreqh	r2, [r3, #60]
+ 998              		.loc 1 647 0
+ 999 0654 18309F15 		ldrne	r3, .L102+4
+ 1000 0658 BC13D211 		ldrneh	r1, [r2, #60]
+ 645:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x04;                    
+ 1001              		.loc 1 645 0
+ 1002 065c 04208203 		orreq	r2, r2, #4
+ 1003              		.loc 1 647 0
+ 1004 0660 03300110 		andne	r3, r1, r3
+ 645:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x04;                    
+ 1005              		.loc 1 645 0
+ 1006 0664 BC23C301 		streqh	r2, [r3, #60]	@ movhi
+ 1007              		.loc 1 647 0
+ 1008 0668 BC33C211 		strneh	r3, [r2, #60]	@ movhi
+ 1009 066c 1EFF2FE1 		bx	lr
+ 1010              	.L103:
+ 1011              		.align	2
+ 1012              	.L102:
+ 1013 0670 00A0005C 		.word	1543544832
+ 1014 0674 FBFF0000 		.word	65531
+ 1015              		.cfi_endproc
+ 1016              	.LFE16:
+ 1018              		.align	2
+ 1019              		.global	ADC_DMACmd
+ 1021              	ADC_DMACmd:
+ 1022              	.LFB17:
+ 648:libstr91x/src/91x_adc.c **** 
+ 649:libstr91x/src/91x_adc.c **** }
+ 650:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 651:libstr91x/src/91x_adc.c **** * Function Name  : ADC_DMACmd
+ 652:libstr91x/src/91x_adc.c **** * Description    : Enable or disable the DMA request for ADC
+ 653:libstr91x/src/91x_adc.c **** * Input          : ADC_NewState:  Can be ENABLE or DISABLE
+ 654:libstr91x/src/91x_adc.c **** * Output         : None
+ 655:libstr91x/src/91x_adc.c **** * Return         : None
+ 656:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 657:libstr91x/src/91x_adc.c ****  
+ 658:libstr91x/src/91x_adc.c **** void ADC_DMACmd(FunctionalState ADC_NewState)
+ 659:libstr91x/src/91x_adc.c **** {
+ 1023              		.loc 1 659 0
+ 1024              		.cfi_startproc
+ 1025              		@ args = 0, pretend = 0, frame = 0
+ 1026              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1027              		@ link register save eliminated.
+ 1028              	.LVL72:
+ 660:libstr91x/src/91x_adc.c **** if (ADC_NewState==ENABLE)
+ 1029              		.loc 1 660 0
+ 1030 0678 010050E3 		cmp	r0, #1
+ 661:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x08;                    
+ 1031              		.loc 1 661 0
+ 1032 067c 20309F05 		ldreq	r3, .L107
+ 662:libstr91x/src/91x_adc.c ****   else
+ 663:libstr91x/src/91x_adc.c ****   ADC->CR2  &=~0x08;  
+ 1033              		.loc 1 663 0
+ 1034 0680 1C209F15 		ldrne	r2, .L107
+ 661:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x08;                    
+ 1035              		.loc 1 661 0
+ 1036 0684 BC23D301 		ldreqh	r2, [r3, #60]
+ 1037              		.loc 1 663 0
+ 1038 0688 18309F15 		ldrne	r3, .L107+4
+ 1039 068c BC13D211 		ldrneh	r1, [r2, #60]
+ 661:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x08;                    
+ 1040              		.loc 1 661 0
+ 1041 0690 08208203 		orreq	r2, r2, #8
+ 1042              		.loc 1 663 0
+ 1043 0694 03300110 		andne	r3, r1, r3
+ 661:libstr91x/src/91x_adc.c ****   ADC->CR2 |= 0x08;                    
+ 1044              		.loc 1 661 0
+ 1045 0698 BC23C301 		streqh	r2, [r3, #60]	@ movhi
+ 1046              		.loc 1 663 0
+ 1047 069c BC33C211 		strneh	r3, [r2, #60]	@ movhi
+ 1048 06a0 1EFF2FE1 		bx	lr
+ 1049              	.L108:
+ 1050              		.align	2
+ 1051              	.L107:
+ 1052 06a4 00A0005C 		.word	1543544832
+ 1053 06a8 F7FF0000 		.word	65527
+ 1054              		.cfi_endproc
+ 1055              	.LFE17:
+ 1057              		.align	2
+ 1058              		.global	ADC_AutomaticClockGatedCmd
+ 1060              	ADC_AutomaticClockGatedCmd:
+ 1061              	.LFB18:
+ 664:libstr91x/src/91x_adc.c **** }
+ 665:libstr91x/src/91x_adc.c **** 
+ 666:libstr91x/src/91x_adc.c **** /*******************************************************************************
+ 667:libstr91x/src/91x_adc.c **** * Function Name  : ADC_AutomaticClockGatedCmd
+ 668:libstr91x/src/91x_adc.c **** * Description    : Enables or disables the Automatic clock gated mode for Fast
+ 669:libstr91x/src/91x_adc.c **** *                  Trigger mode (only in Rev H).
+ 670:libstr91x/src/91x_adc.c **** * Input          : ADC_NewState:  Can be ENABLE or DISABLE
+ 671:libstr91x/src/91x_adc.c **** * Output         : None
+ 672:libstr91x/src/91x_adc.c **** * Return         : None
+ 673:libstr91x/src/91x_adc.c **** *******************************************************************************/
+ 674:libstr91x/src/91x_adc.c ****  
+ 675:libstr91x/src/91x_adc.c **** void ADC_AutomaticClockGatedCmd(FunctionalState ADC_NewState)
+ 676:libstr91x/src/91x_adc.c **** {
+ 1062              		.loc 1 676 0
+ 1063              		.cfi_startproc
+ 1064              		@ args = 0, pretend = 0, frame = 0
+ 1065              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1066              		@ link register save eliminated.
+ 1067              	.LVL73:
+ 677:libstr91x/src/91x_adc.c **** if (ADC_NewState==ENABLE)
+ 678:libstr91x/src/91x_adc.c ****   SCU->GPIOANA |= 0x100;                    
+ 1068              		.loc 1 678 0
+ 1069 06ac 14309FE5 		ldr	r3, .L112
+ 677:libstr91x/src/91x_adc.c **** if (ADC_NewState==ENABLE)
+ 1070              		.loc 1 677 0
+ 1071 06b0 010050E3 		cmp	r0, #1
+ 1072              		.loc 1 678 0
+ 1073 06b4 BC2093E5 		ldr	r2, [r3, #188]
+ 1074 06b8 012C8203 		orreq	r2, r2, #256
+ 679:libstr91x/src/91x_adc.c ****   else
+ 680:libstr91x/src/91x_adc.c ****   SCU->GPIOANA  &=~0x100;  
+ 1075              		.loc 1 680 0
+ 1076 06bc 012CC213 		bicne	r2, r2, #256
+ 1077 06c0 BC2083E5 		str	r2, [r3, #188]
+ 1078 06c4 1EFF2FE1 		bx	lr
+ 1079              	.L113:
+ 1080              		.align	2
+ 1081              	.L112:
+ 1082 06c8 0020005C 		.word	1543512064
+ 1083              		.cfi_endproc
+ 1084              	.LFE18:
+ 1086              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_adc.c
+     /tmp/ccR47Rkk.s:21     .text:00000000 $a
+     /tmp/ccR47Rkk.s:24     .text:00000000 ADC_DeInit
+     /tmp/ccR47Rkk.s:53     .text:00000020 ADC_Init
+     /tmp/ccR47Rkk.s:241    .text:000001ec $d
+     /tmp/ccR47Rkk.s:255    .text:00000218 $a
+     /tmp/ccR47Rkk.s:258    .text:00000218 ADC_StructInit
+     /tmp/ccR47Rkk.s:304    .text:00000258 ADC_PrescalerConfig
+     /tmp/ccR47Rkk.s:326    .text:00000278 $d
+     /tmp/ccR47Rkk.s:330    .text:0000027c $a
+     /tmp/ccR47Rkk.s:333    .text:0000027c ADC_GetPrescalerValue
+     /tmp/ccR47Rkk.s:349    .text:0000028c $d
+     /tmp/ccR47Rkk.s:353    .text:00000290 $a
+     /tmp/ccR47Rkk.s:356    .text:00000290 ADC_GetFlagStatus
+     /tmp/ccR47Rkk.s:488    .text:00000384 $d
+     /tmp/ccR47Rkk.s:492    .text:00000388 $a
+     /tmp/ccR47Rkk.s:495    .text:00000388 ADC_ClearFlag
+     /tmp/ccR47Rkk.s:537    .text:000003c8 $d
+     /tmp/ccR47Rkk.s:541    .text:000003cc $a
+     /tmp/ccR47Rkk.s:544    .text:000003cc ADC_GetConversionValue
+     /tmp/ccR47Rkk.s:557    .text:000003d8 $d
+     /tmp/ccR47Rkk.s:567    .text:000003f8 $a
+     /tmp/ccR47Rkk.s:659    .text:000004a0 $d
+     /tmp/ccR47Rkk.s:663    .text:000004a4 $a
+     /tmp/ccR47Rkk.s:666    .text:000004a4 ADC_GetAnalogWatchdogResult
+     /tmp/ccR47Rkk.s:685    .text:000004b8 $d
+     /tmp/ccR47Rkk.s:689    .text:000004bc $a
+     /tmp/ccR47Rkk.s:692    .text:000004bc ADC_ClearAnalogWatchdogResult
+     /tmp/ccR47Rkk.s:712    .text:000004d4 $d
+     /tmp/ccR47Rkk.s:716    .text:000004d8 $a
+     /tmp/ccR47Rkk.s:719    .text:000004d8 ADC_GetWatchdogThreshold
+     /tmp/ccR47Rkk.s:758    .text:00000508 $d
+     /tmp/ccR47Rkk.s:762    .text:0000050c $a
+     /tmp/ccR47Rkk.s:765    .text:0000050c ADC_ITConfig
+     /tmp/ccR47Rkk.s:814    .text:0000055c $d
+     /tmp/ccR47Rkk.s:819    .text:00000564 $a
+     /tmp/ccR47Rkk.s:822    .text:00000564 ADC_StandbyModeCmd
+     /tmp/ccR47Rkk.s:853    .text:00000590 $d
+     /tmp/ccR47Rkk.s:858    .text:00000598 $a
+     /tmp/ccR47Rkk.s:861    .text:00000598 ADC_Cmd
+     /tmp/ccR47Rkk.s:892    .text:000005c4 $d
+     /tmp/ccR47Rkk.s:897    .text:000005cc $a
+     /tmp/ccR47Rkk.s:900    .text:000005cc ADC_ConversionCmd
+     /tmp/ccR47Rkk.s:931    .text:000005f8 $d
+     /tmp/ccR47Rkk.s:936    .text:00000600 $a
+     /tmp/ccR47Rkk.s:939    .text:00000600 ADC_ExternalTrigConfig
+     /tmp/ccR47Rkk.s:974    .text:0000063c $d
+     /tmp/ccR47Rkk.s:979    .text:00000644 $a
+     /tmp/ccR47Rkk.s:982    .text:00000644 ADC_ExternalTrigCmd
+     /tmp/ccR47Rkk.s:1013   .text:00000670 $d
+     /tmp/ccR47Rkk.s:1018   .text:00000678 $a
+     /tmp/ccR47Rkk.s:1021   .text:00000678 ADC_DMACmd
+     /tmp/ccR47Rkk.s:1052   .text:000006a4 $d
+     /tmp/ccR47Rkk.s:1057   .text:000006ac $a
+     /tmp/ccR47Rkk.s:1060   .text:000006ac ADC_AutomaticClockGatedCmd
+     /tmp/ccR47Rkk.s:1082   .text:000006c8 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset

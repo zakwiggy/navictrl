@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc
+END
+usb_regs.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_regs.h
+END
+usb_type.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_type.h
+END
+usb_init.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_init.h
+END
+usb_lib.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_lib.h
+END
+usb_core.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_core.h
+END
+usb_int.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_int.h
+END
+usb_def.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_def.h
+END
+usb_mem.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usblibrary/inc/usb_mem.h
+END

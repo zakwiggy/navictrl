@@ -1,0 +1,1673 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_tim.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	TIM_DeInit
+  24              	TIM_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_tim.c"
+   1:libstr91x/src/91x_tim.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_tim.c **** * File Name          : 91x_tim.c
+   3:libstr91x/src/91x_tim.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_tim.c **** * Version            : V2.1
+   5:libstr91x/src/91x_tim.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_tim.c **** * Description        : This file provides all the TIM firmware functions.
+   7:libstr91x/src/91x_tim.c **** ********************************************************************************
+   8:libstr91x/src/91x_tim.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_tim.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME. AS
+  10:libstr91x/src/91x_tim.c **** * A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_tim.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_tim.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_tim.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_tim.c **** *******************************************************************************/
+  15:libstr91x/src/91x_tim.c **** 
+  16:libstr91x/src/91x_tim.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_tim.c **** #include "91x_tim.h"
+  18:libstr91x/src/91x_tim.c **** 
+  19:libstr91x/src/91x_tim.c **** /* Include of other module interface headers ---------------------------------*/
+  20:libstr91x/src/91x_tim.c **** /* Local includes ------------------------------------------------------------*/
+  21:libstr91x/src/91x_tim.c **** /* Private typedef -----------------------------------------------------------*/
+  22:libstr91x/src/91x_tim.c **** /* Private define ------------------------------------------------------------*/
+  23:libstr91x/src/91x_tim.c **** 
+  24:libstr91x/src/91x_tim.c **** /* TIM Bits Masks */
+  25:libstr91x/src/91x_tim.c **** 
+  26:libstr91x/src/91x_tim.c **** #define TIM_PWM_MASK          0x0010
+  27:libstr91x/src/91x_tim.c **** #define TIM_OPM_MASK          0x0020
+  28:libstr91x/src/91x_tim.c **** #define TIM_OC1_ENABLE_MASK   0x0040
+  29:libstr91x/src/91x_tim.c **** #define TIM_OC1_DISABLE_MASK  0xFFBF
+  30:libstr91x/src/91x_tim.c **** #define TIM_OC2_ENABLE_MASK   0x0080
+  31:libstr91x/src/91x_tim.c **** #define TIM_OC2_DISABLE_MASK  0xFF7F
+  32:libstr91x/src/91x_tim.c **** 
+  33:libstr91x/src/91x_tim.c **** #define TIM_OLVL1_SET_MASK    0x0100
+  34:libstr91x/src/91x_tim.c **** #define TIM_OLVL1_RESET_MASK  0xFEFF
+  35:libstr91x/src/91x_tim.c **** 
+  36:libstr91x/src/91x_tim.c **** #define TIM_OLVL2_SET_MASK    0x0200
+  37:libstr91x/src/91x_tim.c **** #define TIM_OLVL2_RESET_MASK  0xFDFF
+  38:libstr91x/src/91x_tim.c **** 
+  39:libstr91x/src/91x_tim.c **** #define TIM_ENABLE_MASK       0x8000
+  40:libstr91x/src/91x_tim.c **** #define TIM_DISABLE_MASK      0x7FFF
+  41:libstr91x/src/91x_tim.c **** 
+  42:libstr91x/src/91x_tim.c **** #define TIM_DMA_CLEAR_MASK    0xCFFF
+  43:libstr91x/src/91x_tim.c **** 
+  44:libstr91x/src/91x_tim.c **** /* Private macro -------------------------------------------------------------*/
+  45:libstr91x/src/91x_tim.c **** /* Private variables ---------------------------------------------------------*/
+  46:libstr91x/src/91x_tim.c **** /* Private function prototypes -----------------------------------------------*/
+  47:libstr91x/src/91x_tim.c **** /* Interface functions -------------------------------------------------------*/
+  48:libstr91x/src/91x_tim.c **** /* Private functions ---------------------------------------------------------*/
+  49:libstr91x/src/91x_tim.c **** /*******************************************************************************
+  50:libstr91x/src/91x_tim.c **** * Function Name  : TIM_DeInit
+  51:libstr91x/src/91x_tim.c **** * Description    : Initializes TIM peripheral control and registers to their
+  52:libstr91x/src/91x_tim.c **** *                : default reset values.
+  53:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+  54:libstr91x/src/91x_tim.c **** *                  peripheral.
+  55:libstr91x/src/91x_tim.c **** * Output         : None
+  56:libstr91x/src/91x_tim.c **** * Return         : None
+  57:libstr91x/src/91x_tim.c **** *******************************************************************************/
+  58:libstr91x/src/91x_tim.c **** void TIM_DeInit(TIM_TypeDef *TIMx)
+  59:libstr91x/src/91x_tim.c **** { 
+  27              		.loc 1 59 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  32 0000 10402DE9 		stmfd	sp!, {r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  60:libstr91x/src/91x_tim.c ****   if((TIMx == TIM0)||(TIMx == TIM1))
+  35              		.loc 1 60 0
+  36 0004 54309FE5 		ldr	r3, .L4
+  37 0008 54E09FE5 		ldr	lr, .L4+4
+  38              		.cfi_offset 14, -4
+  39              		.cfi_offset 4, -8
+  59:libstr91x/src/91x_tim.c **** { 
+  40              		.loc 1 59 0
+  41 000c 0040A0E1 		mov	r4, r0
+  42              		.loc 1 60 0
+  43 0010 030050E1 		cmp	r0, r3
+  44 0014 0E005011 		cmpne	r0, lr
+  45 0018 0010A013 		movne	r1, #0
+  46 001c 0110A003 		moveq	r1, #1
+  61:libstr91x/src/91x_tim.c ****   {
+  62:libstr91x/src/91x_tim.c ****     SCU_APBPeriphReset(__TIM01, DISABLE);    /* TIM0 & TIM1 Reset's off */
+  47              		.loc 1 62 0
+  48 0020 0100A003 		moveq	r0, #1
+  49              	.LVL1:
+  50 0024 0010A003 		moveq	r1, #0
+  63:libstr91x/src/91x_tim.c ****   }
+  64:libstr91x/src/91x_tim.c ****   else
+  65:libstr91x/src/91x_tim.c ****   {
+  66:libstr91x/src/91x_tim.c ****     SCU_APBPeriphReset(__TIM23, DISABLE);    /* TIM2 & TIM3 Reset's off */
+  51              		.loc 1 66 0
+  52 0028 0200A013 		movne	r0, #2
+  53 002c FEFFFFEB 		bl	SCU_APBPeriphReset
+  67:libstr91x/src/91x_tim.c ****   }
+  68:libstr91x/src/91x_tim.c ****   
+  69:libstr91x/src/91x_tim.c ****   /* Set all the TIMx registers to thier default values */ 
+  70:libstr91x/src/91x_tim.c ****   TIMx->OC1R = 0x8000;
+  71:libstr91x/src/91x_tim.c ****   TIMx->OC2R = 0x8000;
+  72:libstr91x/src/91x_tim.c ****   TIMx->CR1  = 0x0;
+  73:libstr91x/src/91x_tim.c ****   TIMx->CR2  = 0x1;
+  74:libstr91x/src/91x_tim.c ****   TIMx->CNTR = 0x1234;
+  54              		.loc 1 74 0
+  55 0030 30009FE5 		ldr	r0, .L4+8
+  70:libstr91x/src/91x_tim.c ****   TIMx->OC1R = 0x8000;
+  56              		.loc 1 70 0
+  57 0034 02C9A0E3 		mov	ip, #32768
+  72:libstr91x/src/91x_tim.c ****   TIMx->CR1  = 0x0;
+  58              		.loc 1 72 0
+  59 0038 0020A0E3 		mov	r2, #0	@ movhi
+  73:libstr91x/src/91x_tim.c ****   TIMx->CR2  = 0x1;
+  60              		.loc 1 73 0
+  61 003c 0110A0E3 		mov	r1, #1	@ movhi
+  75:libstr91x/src/91x_tim.c ****   TIMx->SR   = 0x0;
+  62              		.loc 1 75 0
+  63 0040 0030A0E3 		mov	r3, #0	@ movhi
+  70:libstr91x/src/91x_tim.c ****   TIMx->OC1R = 0x8000;
+  64              		.loc 1 70 0
+  65 0044 B8C0C4E1 		strh	ip, [r4, #8]	@ movhi
+  71:libstr91x/src/91x_tim.c ****   TIMx->OC2R = 0x8000;
+  66              		.loc 1 71 0
+  67 0048 BCC0C4E1 		strh	ip, [r4, #12]	@ movhi
+  72:libstr91x/src/91x_tim.c ****   TIMx->CR1  = 0x0;
+  68              		.loc 1 72 0
+  69 004c B421C4E1 		strh	r2, [r4, #20]	@ movhi
+  73:libstr91x/src/91x_tim.c ****   TIMx->CR2  = 0x1;
+  70              		.loc 1 73 0
+  71 0050 B811C4E1 		strh	r1, [r4, #24]	@ movhi
+  74:libstr91x/src/91x_tim.c ****   TIMx->CNTR = 0x1234;
+  72              		.loc 1 74 0
+  73 0054 B001C4E1 		strh	r0, [r4, #16]	@ movhi
+  74              		.loc 1 75 0
+  75 0058 BC31C4E1 		strh	r3, [r4, #28]	@ movhi
+  76:libstr91x/src/91x_tim.c **** }
+  76              		.loc 1 76 0
+  77 005c 1080BDE8 		ldmfd	sp!, {r4, pc}
+  78              	.L5:
+  79              		.align	2
+  80              	.L4:
+  81 0060 00200058 		.word	1476403200
+  82 0064 00300058 		.word	1476407296
+  83 0068 34120000 		.word	4660
+  84              		.cfi_endproc
+  85              	.LFE0:
+  87              		.align	2
+  88              		.global	TIM_StructInit
+  90              	TIM_StructInit:
+  91              	.LFB1:
+  77:libstr91x/src/91x_tim.c **** 
+  78:libstr91x/src/91x_tim.c **** /*******************************************************************************
+  79:libstr91x/src/91x_tim.c **** * Function Name  : TIM_StructInit
+  80:libstr91x/src/91x_tim.c **** * Description    : Fills in a TIM_InitTypeDef structure with the reset value of
+  81:libstr91x/src/91x_tim.c **** *                  each parameter.
+  82:libstr91x/src/91x_tim.c **** * Input          : TIM_InitStruct : pointer to a TIM_InitTypeDef structure
+  83:libstr91x/src/91x_tim.c ****                    which will be initialized.
+  84:libstr91x/src/91x_tim.c **** * Output         : None
+  85:libstr91x/src/91x_tim.c **** * Return         : None.
+  86:libstr91x/src/91x_tim.c **** *******************************************************************************/
+  87:libstr91x/src/91x_tim.c **** void TIM_StructInit(TIM_InitTypeDef *TIM_InitStruct)
+  88:libstr91x/src/91x_tim.c **** {
+  92              		.loc 1 88 0
+  93              		.cfi_startproc
+  94              		@ args = 0, pretend = 0, frame = 0
+  95              		@ frame_needed = 0, uses_anonymous_args = 0
+  96              		@ link register save eliminated.
+  97              	.LVL2:
+  89:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Mode           = 0x0000;
+  98              		.loc 1 89 0
+  99 006c 0030A0E3 		mov	r3, #0
+ 100 0070 B030C0E1 		strh	r3, [r0, #0]	@ movhi
+  90:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_OC1_Modes      = 0x0000;
+ 101              		.loc 1 90 0
+ 102 0074 B230C0E1 		strh	r3, [r0, #2]	@ movhi
+  91:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_OC2_Modes      = 0x0000;
+ 103              		.loc 1 91 0
+ 104 0078 B430C0E1 		strh	r3, [r0, #4]	@ movhi
+  92:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Clock_Source   = 0x0000;
+ 105              		.loc 1 92 0
+ 106 007c B630C0E1 		strh	r3, [r0, #6]	@ movhi
+  93:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Clock_Edge     = 0x0000;
+ 107              		.loc 1 93 0
+ 108 0080 B830C0E1 		strh	r3, [r0, #8]	@ movhi
+  94:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_OPM_INPUT_Edge = 0x0000;
+ 109              		.loc 1 94 0
+ 110 0084 BA30C0E1 		strh	r3, [r0, #10]	@ movhi
+  95:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_ICAP1_Edge     = 0x0000;
+ 111              		.loc 1 95 0
+ 112 0088 BC30C0E1 		strh	r3, [r0, #12]	@ movhi
+  96:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_ICAP2_Edge     = 0x0000;
+ 113              		.loc 1 96 0
+ 114 008c BE30C0E1 		strh	r3, [r0, #14]	@ movhi
+  97:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Prescaler      = 0x0000;
+ 115              		.loc 1 97 0
+ 116 0090 1030C0E5 		strb	r3, [r0, #16]
+  98:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Pulse_Level_1  = 0x0000;
+ 117              		.loc 1 98 0
+ 118 0094 B231C0E1 		strh	r3, [r0, #18]	@ movhi
+  99:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Pulse_Level_2  = 0x0000;
+ 119              		.loc 1 99 0
+ 120 0098 B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 100:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Period_Level   = 0x0000;
+ 121              		.loc 1 100 0
+ 122 009c B631C0E1 		strh	r3, [r0, #22]	@ movhi
+ 101:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Pulse_Length_1 = 0x0000;
+ 123              		.loc 1 101 0
+ 124 00a0 B831C0E1 		strh	r3, [r0, #24]	@ movhi
+ 102:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Pulse_Length_2 = 0x0000;
+ 125              		.loc 1 102 0
+ 126 00a4 BA31C0E1 		strh	r3, [r0, #26]	@ movhi
+ 103:libstr91x/src/91x_tim.c ****   TIM_InitStruct->TIM_Full_Period    = 0x0000;
+ 127              		.loc 1 103 0
+ 128 00a8 BC31C0E1 		strh	r3, [r0, #28]	@ movhi
+ 104:libstr91x/src/91x_tim.c **** }
+ 129              		.loc 1 104 0
+ 130 00ac 1EFF2FE1 		bx	lr
+ 131              		.cfi_endproc
+ 132              	.LFE1:
+ 134              		.align	2
+ 135              		.global	TIM_Init
+ 137              	TIM_Init:
+ 138              	.LFB2:
+ 105:libstr91x/src/91x_tim.c **** 
+ 106:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 107:libstr91x/src/91x_tim.c **** * Function Name  : TIM_Init
+ 108:libstr91x/src/91x_tim.c **** * Description    : Initializes TIM  peripheral according to the specified
+ 109:libstr91x/src/91x_tim.c **** *                  parameters in the TIM_InitTypeDef structure.
+ 110:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 111:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 112:libstr91x/src/91x_tim.c **** * Input2         : TIM_InitStruct: pointer to a TIM_InitTypeDef structure that
+ 113:libstr91x/src/91x_tim.c **** *                  contains the configuration information for the specified
+ 114:libstr91x/src/91x_tim.c **** *                  TIM peripheral.
+ 115:libstr91x/src/91x_tim.c **** * Output         : None
+ 116:libstr91x/src/91x_tim.c **** * Return         : None
+ 117:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 118:libstr91x/src/91x_tim.c **** 
+ 119:libstr91x/src/91x_tim.c **** void TIM_Init(TIM_TypeDef *TIMx, TIM_InitTypeDef *TIM_InitStruct)
+ 120:libstr91x/src/91x_tim.c **** {
+ 139              		.loc 1 120 0
+ 140              		.cfi_startproc
+ 141              		@ args = 0, pretend = 0, frame = 0
+ 142              		@ frame_needed = 0, uses_anonymous_args = 0
+ 143              		@ link register save eliminated.
+ 144              	.LVL3:
+ 121:libstr91x/src/91x_tim.c **** /***************************** Clock configuration ****************************/
+ 122:libstr91x/src/91x_tim.c **** 
+ 123:libstr91x/src/91x_tim.c ****   if (TIM_InitStruct->TIM_Clock_Source == TIM_CLK_APB)
+ 145              		.loc 1 123 0
+ 146 00b0 B630D1E1 		ldrh	r3, [r1, #6]
+ 147 00b4 78239FE5 		ldr	r2, .L58
+ 148 00b8 020053E1 		cmp	r3, r2
+ 149 00bc 4600000A 		beq	.L53
+ 124:libstr91x/src/91x_tim.c ****   {
+ 125:libstr91x/src/91x_tim.c ****     /* APB clock */
+ 126:libstr91x/src/91x_tim.c ****     TIMx->CR1 &= TIM_CLK_APB;
+ 127:libstr91x/src/91x_tim.c ****   }
+ 128:libstr91x/src/91x_tim.c ****   else
+ 129:libstr91x/src/91x_tim.c ****   {
+ 130:libstr91x/src/91x_tim.c ****     /* External clock */
+ 131:libstr91x/src/91x_tim.c ****     TIMx->CR1 |= TIM_CLK_EXTERNAL;
+ 150              		.loc 1 131 0
+ 151 00c0 B431D0E1 		ldrh	r3, [r0, #20]
+ 132:libstr91x/src/91x_tim.c ****     if (TIM_InitStruct->TIM_Clock_Edge == TIM_CLK_EDGE_RISING)
+ 152              		.loc 1 132 0
+ 153 00c4 B820D1E1 		ldrh	r2, [r1, #8]
+ 131:libstr91x/src/91x_tim.c ****     TIMx->CR1 |= TIM_CLK_EXTERNAL;
+ 154              		.loc 1 131 0
+ 155 00c8 01C083E3 		orr	ip, r3, #1
+ 156 00cc B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 157              		.loc 1 132 0
+ 158 00d0 020052E3 		cmp	r2, #2
+ 133:libstr91x/src/91x_tim.c ****     {
+ 134:libstr91x/src/91x_tim.c ****       /* Clock rising edge */
+ 135:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_CLK_EDGE_RISING;
+ 159              		.loc 1 135 0
+ 160 00d4 B4C1D001 		ldreqh	ip, [r0, #20]
+ 136:libstr91x/src/91x_tim.c ****     }
+ 137:libstr91x/src/91x_tim.c ****     else
+ 138:libstr91x/src/91x_tim.c ****     {
+ 139:libstr91x/src/91x_tim.c ****       /* Clock falling edge */
+ 140:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_CLK_EDGE_FALLING;
+ 161              		.loc 1 140 0
+ 162 00d8 B421D011 		ldrneh	r2, [r0, #20]
+ 163 00dc 54C39F15 		ldrne	ip, .L58+4
+ 135:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_CLK_EDGE_RISING;
+ 164              		.loc 1 135 0
+ 165 00e0 02C08C03 		orreq	ip, ip, #2
+ 166              		.loc 1 140 0
+ 167 00e4 0CC00210 		andne	ip, r2, ip
+ 168 00e8 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 141:libstr91x/src/91x_tim.c ****     }
+ 142:libstr91x/src/91x_tim.c ****   }
+ 143:libstr91x/src/91x_tim.c **** 
+ 144:libstr91x/src/91x_tim.c **** /************************** Prescaler configuration ***************************/
+ 145:libstr91x/src/91x_tim.c **** 
+ 146:libstr91x/src/91x_tim.c ****   TIMx->CR2 =( TIMx->CR2 & 0xFF00 )|TIM_InitStruct->TIM_Prescaler ;
+ 169              		.loc 1 146 0
+ 170 00ec B821D0E1 		ldrh	r2, [r0, #24]
+ 171 00f0 10C0D1E5 		ldrb	ip, [r1, #16]	@ zero_extendqisi2
+ 147:libstr91x/src/91x_tim.c ****   
+ 148:libstr91x/src/91x_tim.c **** /********************************** TIM Modes *********************************/
+ 149:libstr91x/src/91x_tim.c **** 
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 172              		.loc 1 150 0
+ 173 00f4 B030D1E1 		ldrh	r3, [r1, #0]
+ 146:libstr91x/src/91x_tim.c ****   TIMx->CR2 =( TIMx->CR2 & 0xFF00 )|TIM_InitStruct->TIM_Prescaler ;
+ 174              		.loc 1 146 0
+ 175 00f8 FF2C02E2 		and	r2, r2, #65280
+ 176 00fc 0C2082E1 		orr	r2, r2, ip
+ 177              		.loc 1 150 0
+ 178 0100 C00053E3 		cmp	r3, #192
+ 146:libstr91x/src/91x_tim.c ****   TIMx->CR2 =( TIMx->CR2 & 0xFF00 )|TIM_InitStruct->TIM_Prescaler ;
+ 179              		.loc 1 146 0
+ 180 0104 B821C0E1 		strh	r2, [r0, #24]	@ movhi
+ 181              		.loc 1 150 0
+ 182 0108 3F00000A 		beq	.L16
+ 183              	.L57:
+ 184 010c 1800009A 		bls	.L54
+ 185 0110 050C53E3 		cmp	r3, #1280
+ 186 0114 9200000A 		beq	.L18
+ 187 0118 6000009A 		bls	.L55
+ 188 011c 060C53E3 		cmp	r3, #1536
+ 189 0120 8600000A 		beq	.L19
+ 190 0124 010953E3 		cmp	r3, #16384
+ 191 0128 1EFF2F11 		bxne	lr
+ 151:libstr91x/src/91x_tim.c ****   {
+ 152:libstr91x/src/91x_tim.c **** /******************************* PWM Input mode *******************************/
+ 153:libstr91x/src/91x_tim.c **** 
+ 154:libstr91x/src/91x_tim.c ****     case TIM_PWMI:
+ 155:libstr91x/src/91x_tim.c **** 
+ 156:libstr91x/src/91x_tim.c ****       /* Set the PWMI Bit */
+ 157:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_PWMI;
+ 192              		.loc 1 157 0
+ 193 012c B421D0E1 		ldrh	r2, [r0, #20]
+ 158:libstr91x/src/91x_tim.c **** 
+ 159:libstr91x/src/91x_tim.c ****       /* Set the first edge Level */
+ 160:libstr91x/src/91x_tim.c ****       if ( TIM_InitStruct->TIM_ICAP1_Edge == TIM_ICAP1_EDGE_RISING)
+ 194              		.loc 1 160 0
+ 195 0130 BCC0D1E1 		ldrh	ip, [r1, #12]
+ 157:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_PWMI;
+ 196              		.loc 1 157 0
+ 197 0134 011982E3 		orr	r1, r2, #16384
+ 198              	.LVL4:
+ 199 0138 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 200              		.loc 1 160 0
+ 201 013c 04005CE3 		cmp	ip, #4
+ 161:libstr91x/src/91x_tim.c ****       {
+ 162:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP1_EDGE_RISING;
+ 202              		.loc 1 162 0
+ 203 0140 B431D0E1 		ldrh	r3, [r0, #20]
+ 163:libstr91x/src/91x_tim.c ****       }
+ 164:libstr91x/src/91x_tim.c ****       else
+ 165:libstr91x/src/91x_tim.c ****       {
+ 166:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP1_EDGE_FALLING;
+ 204              		.loc 1 166 0
+ 205 0144 F0129F15 		ldrne	r1, .L58+8
+ 162:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP1_EDGE_RISING;
+ 206              		.loc 1 162 0
+ 207 0148 04308303 		orreq	r3, r3, #4
+ 208              		.loc 1 166 0
+ 209 014c 01100310 		andne	r1, r3, r1
+ 210 0150 B411C011 		strneh	r1, [r0, #20]	@ movhi
+ 162:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP1_EDGE_RISING;
+ 211              		.loc 1 162 0
+ 212 0154 B431C001 		streqh	r3, [r0, #20]	@ movhi
+ 167:libstr91x/src/91x_tim.c ****       }
+ 168:libstr91x/src/91x_tim.c **** 
+ 169:libstr91x/src/91x_tim.c ****       /* Set the Second edge Level ( Opposite of the first level ) */
+ 170:libstr91x/src/91x_tim.c ****       if ( TIM_InitStruct->TIM_ICAP1_Edge == TIM_ICAP1_EDGE_RISING)
+ 171:libstr91x/src/91x_tim.c ****       {
+ 172:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 213              		.loc 1 172 0
+ 214 0158 E0129F05 		ldreq	r1, .L58+12
+ 215 015c B431D001 		ldreqh	r3, [r0, #20]
+ 173:libstr91x/src/91x_tim.c ****       }
+ 174:libstr91x/src/91x_tim.c ****       else
+ 175:libstr91x/src/91x_tim.c ****       {
+ 176:libstr91x/src/91x_tim.c ****       	TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 216              		.loc 1 176 0
+ 217 0160 B411D011 		ldrneh	r1, [r0, #20]
+ 172:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 218              		.loc 1 172 0
+ 219 0164 01100300 		andeq	r1, r3, r1
+ 220              		.loc 1 176 0
+ 221 0168 08108113 		orrne	r1, r1, #8
+ 222 016c B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 223 0170 1EFF2FE1 		bx	lr
+ 224              	.LVL5:
+ 225              	.L54:
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 226              		.loc 1 150 0
+ 227 0174 200053E3 		cmp	r3, #32
+ 228 0178 9500000A 		beq	.L13
+ 229 017c 5200009A 		bls	.L56
+ 230 0180 400053E3 		cmp	r3, #64
+ 231 0184 7F00000A 		beq	.L14
+ 232 0188 800053E3 		cmp	r3, #128
+ 233 018c 1EFF2F11 		bxne	lr
+ 177:libstr91x/src/91x_tim.c ****       }
+ 178:libstr91x/src/91x_tim.c **** 
+ 179:libstr91x/src/91x_tim.c ****       break;
+ 180:libstr91x/src/91x_tim.c **** 
+ 181:libstr91x/src/91x_tim.c **** /************************** Output compare channel 1 **************************/
+ 182:libstr91x/src/91x_tim.c **** 
+ 183:libstr91x/src/91x_tim.c ****     case TIM_OCM_CHANNEL_1:
+ 184:libstr91x/src/91x_tim.c **** 
+ 185:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 186:libstr91x/src/91x_tim.c ****       {
+ 187:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 188:libstr91x/src/91x_tim.c ****       }
+ 189:libstr91x/src/91x_tim.c ****       else
+ 190:libstr91x/src/91x_tim.c ****       {
+ 191:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 192:libstr91x/src/91x_tim.c ****       }
+ 193:libstr91x/src/91x_tim.c ****       
+ 194:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 195:libstr91x/src/91x_tim.c **** 
+ 196:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OC1_Modes == TIM_TIMING)
+ 197:libstr91x/src/91x_tim.c ****       {
+ 198:libstr91x/src/91x_tim.c ****       	TIMx->CR1 &= TIM_OC1_DISABLE_MASK;
+ 199:libstr91x/src/91x_tim.c ****       }
+ 200:libstr91x/src/91x_tim.c ****       else
+ 201:libstr91x/src/91x_tim.c ****       {
+ 202:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 203:libstr91x/src/91x_tim.c ****       }
+ 204:libstr91x/src/91x_tim.c **** 
+ 205:libstr91x/src/91x_tim.c ****       break;
+ 206:libstr91x/src/91x_tim.c **** 
+ 207:libstr91x/src/91x_tim.c **** /************************** Output compare channel 2 **************************/
+ 208:libstr91x/src/91x_tim.c **** 
+ 209:libstr91x/src/91x_tim.c ****     case TIM_OCM_CHANNEL_2:
+ 210:libstr91x/src/91x_tim.c **** 
+ 211:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Pulse_Level_2 == TIM_HIGH)
+ 234              		.loc 1 211 0
+ 235 0190 B431D1E1 		ldrh	r3, [r1, #20]
+ 236 0194 020C53E3 		cmp	r3, #512
+ 212:libstr91x/src/91x_tim.c ****       {
+ 213:libstr91x/src/91x_tim.c ****       	TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 214:libstr91x/src/91x_tim.c ****       }
+ 215:libstr91x/src/91x_tim.c ****       else
+ 216:libstr91x/src/91x_tim.c ****       {
+ 217:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL2_RESET_MASK;
+ 237              		.loc 1 217 0
+ 238 0198 B421D011 		ldrneh	r2, [r0, #20]
+ 213:libstr91x/src/91x_tim.c ****       	TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 239              		.loc 1 213 0
+ 240 019c B431D001 		ldreqh	r3, [r0, #20]
+ 241              		.loc 1 217 0
+ 242 01a0 9C329F15 		ldrne	r3, .L58+16
+ 213:libstr91x/src/91x_tim.c ****       	TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 243              		.loc 1 213 0
+ 244 01a4 023C8303 		orreq	r3, r3, #512
+ 245              		.loc 1 217 0
+ 246 01a8 03300210 		andne	r3, r2, r3
+ 247 01ac B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 218:libstr91x/src/91x_tim.c ****       }
+ 219:libstr91x/src/91x_tim.c ****        
+ 220:libstr91x/src/91x_tim.c ****       TIMx->OC2R = TIM_InitStruct->TIM_Pulse_Length_2;
+ 221:libstr91x/src/91x_tim.c **** 
+ 222:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OC2_Modes == TIM_TIMING)
+ 248              		.loc 1 222 0
+ 249 01b0 B420D1E1 		ldrh	r2, [r1, #4]
+ 220:libstr91x/src/91x_tim.c ****       TIMx->OC2R = TIM_InitStruct->TIM_Pulse_Length_2;
+ 250              		.loc 1 220 0
+ 251 01b4 BA11D1E1 		ldrh	r1, [r1, #26]
+ 252              	.LVL6:
+ 253              		.loc 1 222 0
+ 254 01b8 020052E3 		cmp	r2, #2
+ 220:libstr91x/src/91x_tim.c ****       TIMx->OC2R = TIM_InitStruct->TIM_Pulse_Length_2;
+ 255              		.loc 1 220 0
+ 256 01bc BC10C0E1 		strh	r1, [r0, #12]	@ movhi
+ 223:libstr91x/src/91x_tim.c ****       {
+ 224:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OC2_DISABLE_MASK;
+ 257              		.loc 1 224 0
+ 258 01c0 B421D001 		ldreqh	r2, [r0, #20]
+ 259 01c4 7C129F05 		ldreq	r1, .L58+20
+ 225:libstr91x/src/91x_tim.c ****       }
+ 226:libstr91x/src/91x_tim.c ****       else
+ 227:libstr91x/src/91x_tim.c ****       {
+ 228:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OC2_ENABLE_MASK;
+ 260              		.loc 1 228 0
+ 261 01c8 B411D011 		ldrneh	r1, [r0, #20]
+ 224:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OC2_DISABLE_MASK;
+ 262              		.loc 1 224 0
+ 263 01cc 01100200 		andeq	r1, r2, r1
+ 264              		.loc 1 228 0
+ 265 01d0 80108113 		orrne	r1, r1, #128
+ 266 01d4 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 267 01d8 1EFF2FE1 		bx	lr
+ 268              	.LVL7:
+ 269              	.L53:
+ 126:libstr91x/src/91x_tim.c ****     TIMx->CR1 &= TIM_CLK_APB;
+ 270              		.loc 1 126 0
+ 271 01dc B421D0E1 		ldrh	r2, [r0, #20]
+ 272 01e0 4C329FE5 		ldr	r3, .L58
+ 273 01e4 03C002E0 		and	ip, r2, r3
+ 274 01e8 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 146:libstr91x/src/91x_tim.c ****   TIMx->CR2 =( TIMx->CR2 & 0xFF00 )|TIM_InitStruct->TIM_Prescaler ;
+ 275              		.loc 1 146 0
+ 276 01ec B821D0E1 		ldrh	r2, [r0, #24]
+ 277 01f0 10C0D1E5 		ldrb	ip, [r1, #16]	@ zero_extendqisi2
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 278              		.loc 1 150 0
+ 279 01f4 B030D1E1 		ldrh	r3, [r1, #0]
+ 146:libstr91x/src/91x_tim.c ****   TIMx->CR2 =( TIMx->CR2 & 0xFF00 )|TIM_InitStruct->TIM_Prescaler ;
+ 280              		.loc 1 146 0
+ 281 01f8 FF2C02E2 		and	r2, r2, #65280
+ 282 01fc 0C2082E1 		orr	r2, r2, ip
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 283              		.loc 1 150 0
+ 284 0200 C00053E3 		cmp	r3, #192
+ 146:libstr91x/src/91x_tim.c ****   TIMx->CR2 =( TIMx->CR2 & 0xFF00 )|TIM_InitStruct->TIM_Prescaler ;
+ 285              		.loc 1 146 0
+ 286 0204 B821C0E1 		strh	r2, [r0, #24]	@ movhi
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 287              		.loc 1 150 0
+ 288 0208 BFFFFF1A 		bne	.L57
+ 289              	.L16:
+ 229:libstr91x/src/91x_tim.c ****       }
+ 230:libstr91x/src/91x_tim.c **** 
+ 231:libstr91x/src/91x_tim.c ****       break;
+ 232:libstr91x/src/91x_tim.c **** 
+ 233:libstr91x/src/91x_tim.c **** /************************ Output compare channel 1 & 2 ************************/
+ 234:libstr91x/src/91x_tim.c **** 
+ 235:libstr91x/src/91x_tim.c ****    case TIM_OCM_CHANNEL_12:
+ 236:libstr91x/src/91x_tim.c **** 
+ 237:libstr91x/src/91x_tim.c ****     TIMx->OC2R = TIM_InitStruct->TIM_Pulse_Length_2;
+ 290              		.loc 1 237 0
+ 291 020c BA21D1E1 		ldrh	r2, [r1, #26]
+ 238:libstr91x/src/91x_tim.c ****     TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 292              		.loc 1 238 0
+ 293 0210 B831D1E1 		ldrh	r3, [r1, #24]
+ 239:libstr91x/src/91x_tim.c **** 
+ 240:libstr91x/src/91x_tim.c ****     if (TIM_InitStruct->TIM_OC2_Modes == TIM_TIMING)
+ 294              		.loc 1 240 0
+ 295 0214 B4C0D1E1 		ldrh	ip, [r1, #4]
+ 237:libstr91x/src/91x_tim.c ****     TIMx->OC2R = TIM_InitStruct->TIM_Pulse_Length_2;
+ 296              		.loc 1 237 0
+ 297 0218 BC20C0E1 		strh	r2, [r0, #12]	@ movhi
+ 298              		.loc 1 240 0
+ 299 021c 02005CE3 		cmp	ip, #2
+ 238:libstr91x/src/91x_tim.c ****     TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 300              		.loc 1 238 0
+ 301 0220 B830C0E1 		strh	r3, [r0, #8]	@ movhi
+ 241:libstr91x/src/91x_tim.c ****     {
+ 242:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OC2_DISABLE_MASK;
+ 302              		.loc 1 242 0
+ 303 0224 B421D001 		ldreqh	r2, [r0, #20]
+ 243:libstr91x/src/91x_tim.c ****     }
+ 244:libstr91x/src/91x_tim.c ****     else
+ 245:libstr91x/src/91x_tim.c ****     {
+ 246:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC2_ENABLE_MASK;
+ 304              		.loc 1 246 0
+ 305 0228 B431D011 		ldrneh	r3, [r0, #20]
+ 242:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OC2_DISABLE_MASK;
+ 306              		.loc 1 242 0
+ 307 022c 14329F05 		ldreq	r3, .L58+20
+ 308              		.loc 1 246 0
+ 309 0230 80308313 		orrne	r3, r3, #128
+ 242:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OC2_DISABLE_MASK;
+ 310              		.loc 1 242 0
+ 311 0234 03300200 		andeq	r3, r2, r3
+ 312              		.loc 1 246 0
+ 313 0238 B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 247:libstr91x/src/91x_tim.c ****     }
+ 248:libstr91x/src/91x_tim.c **** 
+ 249:libstr91x/src/91x_tim.c ****     if (TIM_InitStruct->TIM_OC1_Modes == TIM_TIMING)
+ 314              		.loc 1 249 0
+ 315 023c B2C0D1E1 		ldrh	ip, [r1, #2]
+ 316 0240 02005CE3 		cmp	ip, #2
+ 250:libstr91x/src/91x_tim.c ****     {
+ 251:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OC1_DISABLE_MASK;
+ 317              		.loc 1 251 0
+ 318 0244 B421D001 		ldreqh	r2, [r0, #20]
+ 252:libstr91x/src/91x_tim.c ****     }
+ 253:libstr91x/src/91x_tim.c ****     else
+ 254:libstr91x/src/91x_tim.c ****     {
+ 255:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 319              		.loc 1 255 0
+ 320 0248 B4C1D011 		ldrneh	ip, [r0, #20]
+ 251:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OC1_DISABLE_MASK;
+ 321              		.loc 1 251 0
+ 322 024c F8C19F05 		ldreq	ip, .L58+24
+ 323              		.loc 1 255 0
+ 324 0250 40C08C13 		orrne	ip, ip, #64
+ 251:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OC1_DISABLE_MASK;
+ 325              		.loc 1 251 0
+ 326 0254 0CC00200 		andeq	ip, r2, ip
+ 327              		.loc 1 255 0
+ 328 0258 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 256:libstr91x/src/91x_tim.c ****     }
+ 257:libstr91x/src/91x_tim.c ****     
+ 258:libstr91x/src/91x_tim.c ****     if (TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 329              		.loc 1 258 0
+ 330 025c B231D1E1 		ldrh	r3, [r1, #18]
+ 331 0260 020C53E3 		cmp	r3, #512
+ 259:libstr91x/src/91x_tim.c ****     {
+ 260:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 261:libstr91x/src/91x_tim.c ****     }
+ 262:libstr91x/src/91x_tim.c ****     else
+ 263:libstr91x/src/91x_tim.c ****     {
+ 264:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 332              		.loc 1 264 0
+ 333 0264 B421D011 		ldrneh	r2, [r0, #20]
+ 260:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 334              		.loc 1 260 0
+ 335 0268 B431D001 		ldreqh	r3, [r0, #20]
+ 336              		.loc 1 264 0
+ 337 026c DC319F15 		ldrne	r3, .L58+28
+ 260:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 338              		.loc 1 260 0
+ 339 0270 013C8303 		orreq	r3, r3, #256
+ 340              		.loc 1 264 0
+ 341 0274 03300210 		andne	r3, r2, r3
+ 342 0278 B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 265:libstr91x/src/91x_tim.c ****     }
+ 266:libstr91x/src/91x_tim.c **** 
+ 267:libstr91x/src/91x_tim.c ****     if (TIM_InitStruct->TIM_Pulse_Level_2 == TIM_HIGH)
+ 343              		.loc 1 267 0
+ 344 027c B4C1D1E1 		ldrh	ip, [r1, #20]
+ 345 0280 020C5CE3 		cmp	ip, #512
+ 268:libstr91x/src/91x_tim.c ****     {
+ 269:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 346              		.loc 1 269 0
+ 347 0284 B4C1D001 		ldreqh	ip, [r0, #20]
+ 270:libstr91x/src/91x_tim.c ****     }
+ 271:libstr91x/src/91x_tim.c ****     else
+ 272:libstr91x/src/91x_tim.c ****     {
+ 273:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_OLVL2_RESET_MASK;
+ 348              		.loc 1 273 0
+ 349 0288 B421D011 		ldrneh	r2, [r0, #20]
+ 350 028c B0C19F15 		ldrne	ip, .L58+16
+ 269:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 351              		.loc 1 269 0
+ 352 0290 02CC8C03 		orreq	ip, ip, #512
+ 353              		.loc 1 273 0
+ 354 0294 0CC00210 		andne	ip, r2, ip
+ 355 0298 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 356 029c 1EFF2FE1 		bx	lr
+ 357              	.L55:
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 358              		.loc 1 150 0
+ 359 02a0 010B53E3 		cmp	r3, #1024
+ 360 02a4 1EFF2F11 		bxne	lr
+ 361              	.L48:
+ 274:libstr91x/src/91x_tim.c ****     }
+ 275:libstr91x/src/91x_tim.c **** 
+ 276:libstr91x/src/91x_tim.c ****     break;
+ 277:libstr91x/src/91x_tim.c **** 
+ 278:libstr91x/src/91x_tim.c **** /********************************** PWM mode **********************************/
+ 279:libstr91x/src/91x_tim.c **** 
+ 280:libstr91x/src/91x_tim.c ****     case TIM_PWM:
+ 281:libstr91x/src/91x_tim.c **** 
+ 282:libstr91x/src/91x_tim.c ****       /* Set the Level During the pulse */
+ 283:libstr91x/src/91x_tim.c ****       if ( TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 284:libstr91x/src/91x_tim.c ****       {
+ 285:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 286:libstr91x/src/91x_tim.c ****       }
+ 287:libstr91x/src/91x_tim.c ****       else
+ 288:libstr91x/src/91x_tim.c ****       {
+ 289:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL2_RESET_MASK;
+ 290:libstr91x/src/91x_tim.c ****       }
+ 291:libstr91x/src/91x_tim.c **** 
+ 292:libstr91x/src/91x_tim.c ****       /* Set the Level after the pulse */
+ 293:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Period_Level == TIM_HIGH)
+ 294:libstr91x/src/91x_tim.c ****       {
+ 295:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 296:libstr91x/src/91x_tim.c ****       }
+ 297:libstr91x/src/91x_tim.c ****       else
+ 298:libstr91x/src/91x_tim.c ****       {
+ 299:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 300:libstr91x/src/91x_tim.c ****       }
+ 301:libstr91x/src/91x_tim.c ****       
+ 302:libstr91x/src/91x_tim.c ****       /* Set the OCAE */
+ 303:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 304:libstr91x/src/91x_tim.c **** 
+ 305:libstr91x/src/91x_tim.c ****       /* Set the PWM Bit */
+ 306:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_PWM_MASK;
+ 307:libstr91x/src/91x_tim.c **** 
+ 308:libstr91x/src/91x_tim.c ****       /* Set the Duty Cycle value */
+ 309:libstr91x/src/91x_tim.c ****       
+ 310:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1 ;
+ 311:libstr91x/src/91x_tim.c **** 
+ 312:libstr91x/src/91x_tim.c ****       /* Set the Full Period */
+ 313:libstr91x/src/91x_tim.c ****       
+ 314:libstr91x/src/91x_tim.c ****       TIMx->OC2R = TIM_InitStruct->TIM_Full_Period ;
+ 315:libstr91x/src/91x_tim.c **** 
+ 316:libstr91x/src/91x_tim.c ****       break;
+ 317:libstr91x/src/91x_tim.c **** 
+ 318:libstr91x/src/91x_tim.c **** /******************************* One pulse mode *******************************/
+ 319:libstr91x/src/91x_tim.c **** 
+ 320:libstr91x/src/91x_tim.c ****     case TIM_OPM:
+ 321:libstr91x/src/91x_tim.c **** 
+ 322:libstr91x/src/91x_tim.c ****       /* Set the Level During the pulse */
+ 323:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 324:libstr91x/src/91x_tim.c ****       {
+ 325:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 326:libstr91x/src/91x_tim.c ****       }
+ 327:libstr91x/src/91x_tim.c **** 
+ 328:libstr91x/src/91x_tim.c ****       /* Set the Level after the pulse  */
+ 329:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Period_Level == TIM_HIGH)
+ 330:libstr91x/src/91x_tim.c ****       {
+ 331:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 332:libstr91x/src/91x_tim.c ****       }
+ 333:libstr91x/src/91x_tim.c ****       
+ 334:libstr91x/src/91x_tim.c ****       /* Set the Activation Edge on the ICAP 1 */
+ 335:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OPM_INPUT_Edge == TIM_OPM_EDGE_RISING)
+ 336:libstr91x/src/91x_tim.c ****       {
+ 337:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OPM_EDGE_RISING;
+ 338:libstr91x/src/91x_tim.c ****       }
+ 339:libstr91x/src/91x_tim.c **** 
+ 340:libstr91x/src/91x_tim.c ****       /* Set the Output Compare Function  */
+ 341:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 342:libstr91x/src/91x_tim.c **** 
+ 343:libstr91x/src/91x_tim.c ****       /* Set the One pulse mode */
+ 344:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OPM_MASK;
+ 345:libstr91x/src/91x_tim.c **** 
+ 346:libstr91x/src/91x_tim.c ****       /* Set the Pulse length  */
+ 347:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 348:libstr91x/src/91x_tim.c **** 
+ 349:libstr91x/src/91x_tim.c ****       break;
+ 350:libstr91x/src/91x_tim.c **** 
+ 351:libstr91x/src/91x_tim.c **** /*************************** Input capture channel 1 **************************/
+ 352:libstr91x/src/91x_tim.c **** 
+ 353:libstr91x/src/91x_tim.c ****     case TIM_ICAP_CHANNEL_1:
+ 354:libstr91x/src/91x_tim.c **** 
+ 355:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_ICAP1_Edge == TIM_ICAP1_EDGE_RISING)
+ 356:libstr91x/src/91x_tim.c ****       {
+ 357:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP1_EDGE_RISING;
+ 358:libstr91x/src/91x_tim.c ****       }
+ 359:libstr91x/src/91x_tim.c ****       else
+ 360:libstr91x/src/91x_tim.c ****       {
+ 361:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP1_EDGE_FALLING;
+ 362:libstr91x/src/91x_tim.c ****       }
+ 363:libstr91x/src/91x_tim.c **** 
+ 364:libstr91x/src/91x_tim.c ****       break;
+ 365:libstr91x/src/91x_tim.c **** 
+ 366:libstr91x/src/91x_tim.c **** /*************************** Input capture channel 2 **************************/
+ 367:libstr91x/src/91x_tim.c **** 
+ 368:libstr91x/src/91x_tim.c ****     case TIM_ICAP_CHANNEL_2:
+ 369:libstr91x/src/91x_tim.c **** 
+ 370:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_ICAP2_Edge == TIM_ICAP2_EDGE_RISING)
+ 371:libstr91x/src/91x_tim.c ****       {
+ 372:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 373:libstr91x/src/91x_tim.c ****       }
+ 374:libstr91x/src/91x_tim.c ****       else
+ 375:libstr91x/src/91x_tim.c ****       {
+ 376:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 377:libstr91x/src/91x_tim.c ****       }
+ 378:libstr91x/src/91x_tim.c **** 
+ 379:libstr91x/src/91x_tim.c ****       break;
+ 380:libstr91x/src/91x_tim.c **** 
+ 381:libstr91x/src/91x_tim.c **** /************************* Input capture channel 1 & 2 ************************/
+ 382:libstr91x/src/91x_tim.c **** 
+ 383:libstr91x/src/91x_tim.c ****     case TIM_ICAP_CHANNEL_12:
+ 384:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_ICAP2_Edge == TIM_ICAP2_EDGE_RISING)
+ 385:libstr91x/src/91x_tim.c ****       {
+ 386:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 387:libstr91x/src/91x_tim.c ****       }
+ 388:libstr91x/src/91x_tim.c ****       else
+ 389:libstr91x/src/91x_tim.c ****       {
+ 390:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 391:libstr91x/src/91x_tim.c ****       }
+ 392:libstr91x/src/91x_tim.c **** 
+ 393:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_ICAP1_Edge == TIM_ICAP1_EDGE_RISING)
+ 362              		.loc 1 393 0
+ 363 02a8 BCC0D1E1 		ldrh	ip, [r1, #12]
+ 364 02ac 04005CE3 		cmp	ip, #4
+ 394:libstr91x/src/91x_tim.c ****       {
+ 395:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP1_EDGE_RISING;
+ 365              		.loc 1 395 0
+ 366 02b0 B4C1D001 		ldreqh	ip, [r0, #20]
+ 396:libstr91x/src/91x_tim.c ****       }
+ 397:libstr91x/src/91x_tim.c ****       else
+ 398:libstr91x/src/91x_tim.c ****       {
+ 399:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP1_EDGE_FALLING;
+ 367              		.loc 1 399 0
+ 368 02b4 B421D011 		ldrneh	r2, [r0, #20]
+ 369 02b8 7CC19F15 		ldrne	ip, .L58+8
+ 395:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP1_EDGE_RISING;
+ 370              		.loc 1 395 0
+ 371 02bc 04C08C03 		orreq	ip, ip, #4
+ 372              		.loc 1 399 0
+ 373 02c0 0CC00210 		andne	ip, r2, ip
+ 374 02c4 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 375 02c8 1EFF2FE1 		bx	lr
+ 376              	.L56:
+ 150:libstr91x/src/91x_tim.c ****   switch ( TIM_InitStruct->TIM_Mode)
+ 377              		.loc 1 150 0
+ 378 02cc 100053E3 		cmp	r3, #16
+ 379 02d0 1EFF2F11 		bxne	lr
+ 283:libstr91x/src/91x_tim.c ****       if ( TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 380              		.loc 1 283 0
+ 381 02d4 B2C1D1E1 		ldrh	ip, [r1, #18]
+ 382 02d8 020C5CE3 		cmp	ip, #512
+ 289:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL2_RESET_MASK;
+ 383              		.loc 1 289 0
+ 384 02dc B421D011 		ldrneh	r2, [r0, #20]
+ 285:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 385              		.loc 1 285 0
+ 386 02e0 B4C1D001 		ldreqh	ip, [r0, #20]
+ 289:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL2_RESET_MASK;
+ 387              		.loc 1 289 0
+ 388 02e4 58C19F15 		ldrne	ip, .L58+16
+ 285:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 389              		.loc 1 285 0
+ 390 02e8 02CC8C03 		orreq	ip, ip, #512
+ 289:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL2_RESET_MASK;
+ 391              		.loc 1 289 0
+ 392 02ec 0CC00210 		andne	ip, r2, ip
+ 393 02f0 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 293:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Period_Level == TIM_HIGH)
+ 394              		.loc 1 293 0
+ 395 02f4 B631D1E1 		ldrh	r3, [r1, #22]
+ 396 02f8 020C53E3 		cmp	r3, #512
+ 295:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 397              		.loc 1 295 0
+ 398 02fc B431D001 		ldreqh	r3, [r0, #20]
+ 299:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 399              		.loc 1 299 0
+ 400 0300 B421D011 		ldrneh	r2, [r0, #20]
+ 401 0304 44319F15 		ldrne	r3, .L58+28
+ 295:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 402              		.loc 1 295 0
+ 403 0308 013C8303 		orreq	r3, r3, #256
+ 299:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 404              		.loc 1 299 0
+ 405 030c 03300210 		andne	r3, r2, r3
+ 406 0310 B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 303:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 407              		.loc 1 303 0
+ 408 0314 B4C1D0E1 		ldrh	ip, [r0, #20]
+ 310:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1 ;
+ 409              		.loc 1 310 0
+ 410 0318 B821D1E1 		ldrh	r2, [r1, #24]
+ 303:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 411              		.loc 1 303 0
+ 412 031c 40308CE3 		orr	r3, ip, #64
+ 413 0320 B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 306:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_PWM_MASK;
+ 414              		.loc 1 306 0
+ 415 0324 B4C1D0E1 		ldrh	ip, [r0, #20]
+ 314:libstr91x/src/91x_tim.c ****       TIMx->OC2R = TIM_InitStruct->TIM_Full_Period ;
+ 416              		.loc 1 314 0
+ 417 0328 BC31D1E1 		ldrh	r3, [r1, #28]
+ 306:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_PWM_MASK;
+ 418              		.loc 1 306 0
+ 419 032c 10108CE3 		orr	r1, ip, #16
+ 420              	.LVL8:
+ 421 0330 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 310:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1 ;
+ 422              		.loc 1 310 0
+ 423 0334 B820C0E1 		strh	r2, [r0, #8]	@ movhi
+ 314:libstr91x/src/91x_tim.c ****       TIMx->OC2R = TIM_InitStruct->TIM_Full_Period ;
+ 424              		.loc 1 314 0
+ 425 0338 BC30C0E1 		strh	r3, [r0, #12]	@ movhi
+ 316:libstr91x/src/91x_tim.c ****       break;
+ 426              		.loc 1 316 0
+ 427 033c 1EFF2FE1 		bx	lr
+ 428              	.LVL9:
+ 429              	.L19:
+ 384:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_ICAP2_Edge == TIM_ICAP2_EDGE_RISING)
+ 430              		.loc 1 384 0
+ 431 0340 BE30D1E1 		ldrh	r3, [r1, #14]
+ 432 0344 080053E3 		cmp	r3, #8
+ 386:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 433              		.loc 1 386 0
+ 434 0348 B431D001 		ldreqh	r3, [r0, #20]
+ 390:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 435              		.loc 1 390 0
+ 436 034c B421D011 		ldrneh	r2, [r0, #20]
+ 437 0350 E8309F15 		ldrne	r3, .L58+12
+ 386:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 438              		.loc 1 386 0
+ 439 0354 08308303 		orreq	r3, r3, #8
+ 390:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 440              		.loc 1 390 0
+ 441 0358 03300210 		andne	r3, r2, r3
+ 442 035c B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 443 0360 D0FFFFEA 		b	.L48
+ 444              	.L18:
+ 370:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_ICAP2_Edge == TIM_ICAP2_EDGE_RISING)
+ 445              		.loc 1 370 0
+ 446 0364 BE10D1E1 		ldrh	r1, [r1, #14]
+ 447              	.LVL10:
+ 448 0368 080051E3 		cmp	r1, #8
+ 372:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 449              		.loc 1 372 0
+ 450 036c B411D001 		ldreqh	r1, [r0, #20]
+ 376:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 451              		.loc 1 376 0
+ 452 0370 B421D011 		ldrneh	r2, [r0, #20]
+ 453 0374 C4109F15 		ldrne	r1, .L58+12
+ 372:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_ICAP2_EDGE_RISING;
+ 454              		.loc 1 372 0
+ 455 0378 08108103 		orreq	r1, r1, #8
+ 376:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_ICAP2_EDGE_FALLING;
+ 456              		.loc 1 376 0
+ 457 037c 01100210 		andne	r1, r2, r1
+ 458 0380 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 459 0384 1EFF2FE1 		bx	lr
+ 460              	.LVL11:
+ 461              	.L14:
+ 185:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 462              		.loc 1 185 0
+ 463 0388 B2C1D1E1 		ldrh	ip, [r1, #18]
+ 464 038c 020C5CE3 		cmp	ip, #512
+ 187:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 465              		.loc 1 187 0
+ 466 0390 B4C1D001 		ldreqh	ip, [r0, #20]
+ 191:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 467              		.loc 1 191 0
+ 468 0394 B421D011 		ldrneh	r2, [r0, #20]
+ 469 0398 B0C09F15 		ldrne	ip, .L58+28
+ 187:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 470              		.loc 1 187 0
+ 471 039c 01CC8C03 		orreq	ip, ip, #256
+ 191:libstr91x/src/91x_tim.c ****         TIMx->CR1 &= TIM_OLVL1_RESET_MASK;
+ 472              		.loc 1 191 0
+ 473 03a0 0CC00210 		andne	ip, r2, ip
+ 474 03a4 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 196:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OC1_Modes == TIM_TIMING)
+ 475              		.loc 1 196 0
+ 476 03a8 B230D1E1 		ldrh	r3, [r1, #2]
+ 194:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 477              		.loc 1 194 0
+ 478 03ac B811D1E1 		ldrh	r1, [r1, #24]
+ 479              	.LVL12:
+ 196:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OC1_Modes == TIM_TIMING)
+ 480              		.loc 1 196 0
+ 481 03b0 020053E3 		cmp	r3, #2
+ 194:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 482              		.loc 1 194 0
+ 483 03b4 B810C0E1 		strh	r1, [r0, #8]	@ movhi
+ 198:libstr91x/src/91x_tim.c ****       	TIMx->CR1 &= TIM_OC1_DISABLE_MASK;
+ 484              		.loc 1 198 0
+ 485 03b8 B431D001 		ldreqh	r3, [r0, #20]
+ 486 03bc 88109F05 		ldreq	r1, .L58+24
+ 202:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 487              		.loc 1 202 0
+ 488 03c0 B411D011 		ldrneh	r1, [r0, #20]
+ 198:libstr91x/src/91x_tim.c ****       	TIMx->CR1 &= TIM_OC1_DISABLE_MASK;
+ 489              		.loc 1 198 0
+ 490 03c4 01100300 		andeq	r1, r3, r1
+ 202:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 491              		.loc 1 202 0
+ 492 03c8 40108113 		orrne	r1, r1, #64
+ 493 03cc B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 494 03d0 1EFF2FE1 		bx	lr
+ 495              	.LVL13:
+ 496              	.L13:
+ 323:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 497              		.loc 1 323 0
+ 498 03d4 B221D1E1 		ldrh	r2, [r1, #18]
+ 329:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Period_Level == TIM_HIGH)
+ 499              		.loc 1 329 0
+ 500 03d8 B6C1D1E1 		ldrh	ip, [r1, #22]
+ 323:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Pulse_Level_1 == TIM_HIGH)
+ 501              		.loc 1 323 0
+ 502 03dc 020C52E3 		cmp	r2, #512
+ 325:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 503              		.loc 1 325 0
+ 504 03e0 B421D001 		ldreqh	r2, [r0, #20]
+ 335:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OPM_INPUT_Edge == TIM_OPM_EDGE_RISING)
+ 505              		.loc 1 335 0
+ 506 03e4 BA30D1E1 		ldrh	r3, [r1, #10]
+ 325:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL2_SET_MASK;
+ 507              		.loc 1 325 0
+ 508 03e8 022C8203 		orreq	r2, r2, #512
+ 509 03ec B421C001 		streqh	r2, [r0, #20]	@ movhi
+ 329:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_Period_Level == TIM_HIGH)
+ 510              		.loc 1 329 0
+ 511 03f0 020C5CE3 		cmp	ip, #512
+ 331:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 512              		.loc 1 331 0
+ 513 03f4 B4C1D001 		ldreqh	ip, [r0, #20]
+ 347:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 514              		.loc 1 347 0
+ 515 03f8 B811D1E1 		ldrh	r1, [r1, #24]
+ 516              	.LVL14:
+ 331:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OLVL1_SET_MASK;
+ 517              		.loc 1 331 0
+ 518 03fc 01CC8C03 		orreq	ip, ip, #256
+ 519 0400 B4C1C001 		streqh	ip, [r0, #20]	@ movhi
+ 335:libstr91x/src/91x_tim.c ****       if (TIM_InitStruct->TIM_OPM_INPUT_Edge == TIM_OPM_EDGE_RISING)
+ 520              		.loc 1 335 0
+ 521 0404 040053E3 		cmp	r3, #4
+ 337:libstr91x/src/91x_tim.c ****         TIMx->CR1 |= TIM_OPM_EDGE_RISING;
+ 522              		.loc 1 337 0
+ 523 0408 B431D001 		ldreqh	r3, [r0, #20]
+ 524 040c 04308303 		orreq	r3, r3, #4
+ 525 0410 B431C001 		streqh	r3, [r0, #20]	@ movhi
+ 341:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OC1_ENABLE_MASK;
+ 526              		.loc 1 341 0
+ 527 0414 B421D0E1 		ldrh	r2, [r0, #20]
+ 528 0418 40C082E3 		orr	ip, r2, #64
+ 529 041c B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 344:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_OPM_MASK;
+ 530              		.loc 1 344 0
+ 531 0420 B431D0E1 		ldrh	r3, [r0, #20]
+ 532 0424 202083E3 		orr	r2, r3, #32
+ 533 0428 B421C0E1 		strh	r2, [r0, #20]	@ movhi
+ 347:libstr91x/src/91x_tim.c ****       TIMx->OC1R = TIM_InitStruct->TIM_Pulse_Length_1;
+ 534              		.loc 1 347 0
+ 535 042c B810C0E1 		strh	r1, [r0, #8]	@ movhi
+ 349:libstr91x/src/91x_tim.c ****       break;
+ 536              		.loc 1 349 0
+ 537 0430 1EFF2FE1 		bx	lr
+ 538              	.L59:
+ 539              		.align	2
+ 540              	.L58:
+ 541 0434 FEFF0000 		.word	65534
+ 542 0438 FDFF0000 		.word	65533
+ 543 043c FBFF0000 		.word	65531
+ 544 0440 F7FF0000 		.word	65527
+ 545 0444 FFFD0000 		.word	65023
+ 546 0448 7FFF0000 		.word	65407
+ 547 044c BFFF0000 		.word	65471
+ 548 0450 FFFE0000 		.word	65279
+ 549              		.cfi_endproc
+ 550              	.LFE2:
+ 552              		.align	2
+ 553              		.global	TIM_CounterCmd
+ 555              	TIM_CounterCmd:
+ 556              	.LFB3:
+ 400:libstr91x/src/91x_tim.c ****       }
+ 401:libstr91x/src/91x_tim.c **** 
+ 402:libstr91x/src/91x_tim.c ****       break;
+ 403:libstr91x/src/91x_tim.c **** 
+ 404:libstr91x/src/91x_tim.c ****     default:
+ 405:libstr91x/src/91x_tim.c ****       break;
+ 406:libstr91x/src/91x_tim.c ****   }
+ 407:libstr91x/src/91x_tim.c **** }
+ 408:libstr91x/src/91x_tim.c **** 
+ 409:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 410:libstr91x/src/91x_tim.c **** * Function Name  : TIM_CounterCmd
+ 411:libstr91x/src/91x_tim.c **** * Description    : Enables or disables TIMx Counter peripheral.
+ 412:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 413:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 414:libstr91x/src/91x_tim.c **** * Input2         : TIM_operation: specifies the new state of the TIMx Counter.
+ 415:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 416:libstr91x/src/91x_tim.c **** *                       - TIM_START: Start the timer counter.
+ 417:libstr91x/src/91x_tim.c **** *                       - TIM_STOP : Stop the timer counter.
+ 418:libstr91x/src/91x_tim.c **** *                       - TIM_CLEAR: Clear the timer counter.
+ 419:libstr91x/src/91x_tim.c **** * Output         : None
+ 420:libstr91x/src/91x_tim.c **** * Return         : None
+ 421:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 422:libstr91x/src/91x_tim.c **** void TIM_CounterCmd(TIM_TypeDef *TIMx, TIM_CounterOperations TIM_operation)
+ 423:libstr91x/src/91x_tim.c **** {
+ 557              		.loc 1 423 0
+ 558              		.cfi_startproc
+ 559              		@ args = 0, pretend = 0, frame = 0
+ 560              		@ frame_needed = 0, uses_anonymous_args = 0
+ 561              		@ link register save eliminated.
+ 562              	.LVL15:
+ 424:libstr91x/src/91x_tim.c ****   switch (TIM_operation)
+ 563              		.loc 1 424 0
+ 564 0454 010051E3 		cmp	r1, #1
+ 565 0458 0B00000A 		beq	.L63
+ 566 045c 0600002A 		bcs	.L65
+ 425:libstr91x/src/91x_tim.c ****   {
+ 426:libstr91x/src/91x_tim.c ****     case TIM_START:
+ 427:libstr91x/src/91x_tim.c ****       TIMx->CR1 |= TIM_ENABLE_MASK;
+ 567              		.loc 1 427 0
+ 568 0460 B431D0E1 		ldrh	r3, [r0, #20]
+ 569 0464 83C8E0E1 		mvn	ip, r3, asl #17
+ 570 0468 AC28E0E1 		mvn	r2, ip, lsr #17
+ 571 046c 0218A0E1 		mov	r1, r2, asl #16
+ 572              	.LVL16:
+ 573 0470 2138A0E1 		mov	r3, r1, lsr #16
+ 574 0474 B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 428:libstr91x/src/91x_tim.c ****       break;
+ 575              		.loc 1 428 0
+ 576 0478 1EFF2FE1 		bx	lr
+ 577              	.LVL17:
+ 578              	.L65:
+ 424:libstr91x/src/91x_tim.c ****   switch (TIM_operation)
+ 579              		.loc 1 424 0
+ 580 047c 020051E3 		cmp	r1, #2
+ 429:libstr91x/src/91x_tim.c **** 
+ 430:libstr91x/src/91x_tim.c ****     case TIM_STOP:
+ 431:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_DISABLE_MASK;
+ 432:libstr91x/src/91x_tim.c ****       break;
+ 433:libstr91x/src/91x_tim.c **** 
+ 434:libstr91x/src/91x_tim.c ****     case TIM_CLEAR:
+ 435:libstr91x/src/91x_tim.c ****       TIMx->CNTR = 0x1234;
+ 581              		.loc 1 435 0
+ 582 0480 18309F05 		ldreq	r3, .L66
+ 583 0484 B031C001 		streqh	r3, [r0, #16]	@ movhi
+ 584 0488 1EFF2FE1 		bx	lr
+ 585              	.L63:
+ 431:libstr91x/src/91x_tim.c ****       TIMx->CR1 &= TIM_DISABLE_MASK;
+ 586              		.loc 1 431 0
+ 587 048c B4C1D0E1 		ldrh	ip, [r0, #20]
+ 588 0490 8C28A0E1 		mov	r2, ip, asl #17
+ 589 0494 A218A0E1 		mov	r1, r2, lsr #17
+ 590              	.LVL18:
+ 591 0498 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 432:libstr91x/src/91x_tim.c ****       break;
+ 592              		.loc 1 432 0
+ 593 049c 1EFF2FE1 		bx	lr
+ 594              	.L67:
+ 595              		.align	2
+ 596              	.L66:
+ 597 04a0 34120000 		.word	4660
+ 598              		.cfi_endproc
+ 599              	.LFE3:
+ 601              		.align	2
+ 602              		.global	TIM_PrescalerConfig
+ 604              	TIM_PrescalerConfig:
+ 605              	.LFB4:
+ 436:libstr91x/src/91x_tim.c ****       break;
+ 437:libstr91x/src/91x_tim.c ****     
+ 438:libstr91x/src/91x_tim.c ****     default:
+ 439:libstr91x/src/91x_tim.c ****       break;
+ 440:libstr91x/src/91x_tim.c ****   }
+ 441:libstr91x/src/91x_tim.c **** }
+ 442:libstr91x/src/91x_tim.c **** 
+ 443:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 444:libstr91x/src/91x_tim.c **** * Function Name  : TIM_PrescalerConfig
+ 445:libstr91x/src/91x_tim.c **** * Description    : This routine is used to configure the TIMx prescaler value
+ 446:libstr91x/src/91x_tim.c **** *                  (when using the APB clock).
+ 447:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 448:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 449:libstr91x/src/91x_tim.c **** * Input2         : TIM_Prescaler: specifies the prescaler value. This parameter
+ 450:libstr91x/src/91x_tim.c **** *                  can be a value from 0x0 to 0xFF.
+ 451:libstr91x/src/91x_tim.c **** * Output         : None
+ 452:libstr91x/src/91x_tim.c **** * Return         : None
+ 453:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 454:libstr91x/src/91x_tim.c **** void TIM_PrescalerConfig(TIM_TypeDef *TIMx, u8 TIM_Prescaler)
+ 455:libstr91x/src/91x_tim.c **** {
+ 606              		.loc 1 455 0
+ 607              		.cfi_startproc
+ 608              		@ args = 0, pretend = 0, frame = 0
+ 609              		@ frame_needed = 0, uses_anonymous_args = 0
+ 610              		@ link register save eliminated.
+ 611              	.LVL19:
+ 456:libstr91x/src/91x_tim.c ****   TIMx->CR2 &= 0xFF00;
+ 612              		.loc 1 456 0
+ 613 04a4 B831D0E1 		ldrh	r3, [r0, #24]
+ 614 04a8 FFCC03E2 		and	ip, r3, #65280
+ 615 04ac B8C1C0E1 		strh	ip, [r0, #24]	@ movhi
+ 457:libstr91x/src/91x_tim.c ****   TIMx->CR2 |= TIM_Prescaler;
+ 616              		.loc 1 457 0
+ 617 04b0 B821D0E1 		ldrh	r2, [r0, #24]
+ 618 04b4 023081E1 		orr	r3, r1, r2
+ 619 04b8 B831C0E1 		strh	r3, [r0, #24]	@ movhi
+ 458:libstr91x/src/91x_tim.c **** 
+ 459:libstr91x/src/91x_tim.c **** }
+ 620              		.loc 1 459 0
+ 621 04bc 1EFF2FE1 		bx	lr
+ 622              		.cfi_endproc
+ 623              	.LFE4:
+ 625              		.align	2
+ 626              		.global	TIM_GetPrescalerValue
+ 628              	TIM_GetPrescalerValue:
+ 629              	.LFB5:
+ 460:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 461:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetPrescalerValue
+ 462:libstr91x/src/91x_tim.c **** * Description    : This routine is used to get the TIMx prescaler value
+ 463:libstr91x/src/91x_tim.c **** *                  (when using the APB clock).
+ 464:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+ 465:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 466:libstr91x/src/91x_tim.c **** * Output         : None
+ 467:libstr91x/src/91x_tim.c **** * Return         : The prescaler value.
+ 468:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 469:libstr91x/src/91x_tim.c **** u8 TIM_GetPrescalerValue(TIM_TypeDef *TIMx)
+ 470:libstr91x/src/91x_tim.c **** {
+ 630              		.loc 1 470 0
+ 631              		.cfi_startproc
+ 632              		@ args = 0, pretend = 0, frame = 0
+ 633              		@ frame_needed = 0, uses_anonymous_args = 0
+ 634              		@ link register save eliminated.
+ 635              	.LVL20:
+ 471:libstr91x/src/91x_tim.c ****   return TIMx->CR2 & 0x00FF;
+ 636              		.loc 1 471 0
+ 637 04c0 B801D0E1 		ldrh	r0, [r0, #24]
+ 638              	.LVL21:
+ 472:libstr91x/src/91x_tim.c **** }
+ 639              		.loc 1 472 0
+ 640 04c4 FF0000E2 		and	r0, r0, #255
+ 641 04c8 1EFF2FE1 		bx	lr
+ 642              		.cfi_endproc
+ 643              	.LFE5:
+ 645              		.align	2
+ 646              		.global	TIM_GetCounterValue
+ 648              	TIM_GetCounterValue:
+ 649              	.LFB6:
+ 473:libstr91x/src/91x_tim.c **** 
+ 474:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 475:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetCounterValue
+ 476:libstr91x/src/91x_tim.c **** * Description    : This routine is used to get the TIMx counter value.
+ 477:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+ 478:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 479:libstr91x/src/91x_tim.c **** * Output         : None
+ 480:libstr91x/src/91x_tim.c **** * Return         : The counter value.
+ 481:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 482:libstr91x/src/91x_tim.c **** u16 TIM_GetCounterValue(TIM_TypeDef *TIMx)
+ 483:libstr91x/src/91x_tim.c **** {
+ 650              		.loc 1 483 0
+ 651              		.cfi_startproc
+ 652              		@ args = 0, pretend = 0, frame = 0
+ 653              		@ frame_needed = 0, uses_anonymous_args = 0
+ 654              		@ link register save eliminated.
+ 655              	.LVL22:
+ 484:libstr91x/src/91x_tim.c ****   return TIMx->CNTR;
+ 656              		.loc 1 484 0
+ 657 04cc B001D0E1 		ldrh	r0, [r0, #16]
+ 658              	.LVL23:
+ 485:libstr91x/src/91x_tim.c **** }
+ 659              		.loc 1 485 0
+ 660 04d0 1EFF2FE1 		bx	lr
+ 661              		.cfi_endproc
+ 662              	.LFE6:
+ 664              		.align	2
+ 665              		.global	TIM_GetICAP1Value
+ 667              	TIM_GetICAP1Value:
+ 668              	.LFB7:
+ 486:libstr91x/src/91x_tim.c **** 
+ 487:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 488:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetICAP1Value
+ 489:libstr91x/src/91x_tim.c **** * Description    : This routine is used to get the Input Capture 1 value.
+ 490:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+ 491:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 492:libstr91x/src/91x_tim.c **** * Output         : None
+ 493:libstr91x/src/91x_tim.c **** * Return         : The Input Capture 1 value.
+ 494:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 495:libstr91x/src/91x_tim.c **** u16 TIM_GetICAP1Value(TIM_TypeDef *TIMx)
+ 496:libstr91x/src/91x_tim.c **** {
+ 669              		.loc 1 496 0
+ 670              		.cfi_startproc
+ 671              		@ args = 0, pretend = 0, frame = 0
+ 672              		@ frame_needed = 0, uses_anonymous_args = 0
+ 673              		@ link register save eliminated.
+ 674              	.LVL24:
+ 497:libstr91x/src/91x_tim.c ****   return TIMx->IC1R;
+ 675              		.loc 1 497 0
+ 676 04d4 B000D0E1 		ldrh	r0, [r0, #0]
+ 677              	.LVL25:
+ 498:libstr91x/src/91x_tim.c **** }
+ 678              		.loc 1 498 0
+ 679 04d8 1EFF2FE1 		bx	lr
+ 680              		.cfi_endproc
+ 681              	.LFE7:
+ 683              		.align	2
+ 684              		.global	TIM_GetICAP2Value
+ 686              	TIM_GetICAP2Value:
+ 687              	.LFB8:
+ 499:libstr91x/src/91x_tim.c **** 
+ 500:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 501:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetICAP2Value
+ 502:libstr91x/src/91x_tim.c **** * Description    : This routine is used to get the Input Capture 2 value.
+ 503:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+ 504:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 505:libstr91x/src/91x_tim.c **** * Output         : None
+ 506:libstr91x/src/91x_tim.c **** * Return         : The Input Capture 2 value.
+ 507:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 508:libstr91x/src/91x_tim.c **** u16 TIM_GetICAP2Value(TIM_TypeDef *TIMx)
+ 509:libstr91x/src/91x_tim.c **** {
+ 688              		.loc 1 509 0
+ 689              		.cfi_startproc
+ 690              		@ args = 0, pretend = 0, frame = 0
+ 691              		@ frame_needed = 0, uses_anonymous_args = 0
+ 692              		@ link register save eliminated.
+ 693              	.LVL26:
+ 510:libstr91x/src/91x_tim.c ****   return TIMx->IC2R;
+ 694              		.loc 1 510 0
+ 695 04dc B400D0E1 		ldrh	r0, [r0, #4]
+ 696              	.LVL27:
+ 511:libstr91x/src/91x_tim.c **** }
+ 697              		.loc 1 511 0
+ 698 04e0 1EFF2FE1 		bx	lr
+ 699              		.cfi_endproc
+ 700              	.LFE8:
+ 702              		.align	2
+ 703              		.global	TIM_SetPulse
+ 705              	TIM_SetPulse:
+ 706              	.LFB9:
+ 512:libstr91x/src/91x_tim.c **** 
+ 513:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 514:libstr91x/src/91x_tim.c **** * Function Name  : TIM_SetPulse
+ 515:libstr91x/src/91x_tim.c **** * Description    : This routine is used to set the pulse value.
+ 516:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 517:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 518:libstr91x/src/91x_tim.c **** * Input2         : TIM_Channel: specifies the needed channel.
+ 519:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 520:libstr91x/src/91x_tim.c **** *                       - TIM_PWM_OC1_Channel: PWM/Output Compare 1 Channel
+ 521:libstr91x/src/91x_tim.c **** *                       - TIM_OC2_Channel    : Output Compare 2 Channel
+ 522:libstr91x/src/91x_tim.c **** * Input3         : TIM_Pulse: specifies the new pulse value.
+ 523:libstr91x/src/91x_tim.c **** * Output         : None
+ 524:libstr91x/src/91x_tim.c **** * Return         : None
+ 525:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 526:libstr91x/src/91x_tim.c **** void TIM_SetPulse(TIM_TypeDef *TIMx,u16 TIM_Channel ,u16 TIM_Pulse)
+ 527:libstr91x/src/91x_tim.c **** {
+ 707              		.loc 1 527 0
+ 708              		.cfi_startproc
+ 709              		@ args = 0, pretend = 0, frame = 0
+ 710              		@ frame_needed = 0, uses_anonymous_args = 0
+ 711              		@ link register save eliminated.
+ 712              	.LVL28:
+ 528:libstr91x/src/91x_tim.c ****   if (TIM_Channel == TIM_PWM_OC1_Channel)
+ 713              		.loc 1 528 0
+ 714 04e4 010051E3 		cmp	r1, #1
+ 529:libstr91x/src/91x_tim.c ****   {
+ 530:libstr91x/src/91x_tim.c ****     TIMx->OC1R = TIM_Pulse;
+ 715              		.loc 1 530 0
+ 716 04e8 B820C001 		streqh	r2, [r0, #8]	@ movhi
+ 531:libstr91x/src/91x_tim.c ****   }
+ 532:libstr91x/src/91x_tim.c ****   else
+ 533:libstr91x/src/91x_tim.c ****   {
+ 534:libstr91x/src/91x_tim.c ****     TIMx->OC2R = TIM_Pulse;
+ 717              		.loc 1 534 0
+ 718 04ec BC20C011 		strneh	r2, [r0, #12]	@ movhi
+ 719 04f0 1EFF2FE1 		bx	lr
+ 720              		.cfi_endproc
+ 721              	.LFE9:
+ 723              		.align	2
+ 724              		.global	TIM_GetFlagStatus
+ 726              	TIM_GetFlagStatus:
+ 727              	.LFB10:
+ 535:libstr91x/src/91x_tim.c ****   }
+ 536:libstr91x/src/91x_tim.c **** }
+ 537:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 538:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetFlagStatus
+ 539:libstr91x/src/91x_tim.c **** * Description    : Checks whether the specified TIMx flag is set or not.
+ 540:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 541:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 542:libstr91x/src/91x_tim.c **** * Input2         : TIM_Flag: specifies the flag to check.
+ 543:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 544:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_IC1: Input Capture Channel 1 Flag
+ 545:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_IC2: Input Capture Channel 2 Flag
+ 546:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_TO : Timer Overflow Flag 
+ 547:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_OC1: Output Compare Channel 1 Flag
+ 548:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_OC2: Output Compare Channel 2 Flag
+ 549:libstr91x/src/91x_tim.c **** * Output         : None
+ 550:libstr91x/src/91x_tim.c **** * Return         : The NewState of the TIM_Flag (SET or RESET).
+ 551:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 552:libstr91x/src/91x_tim.c **** FlagStatus TIM_GetFlagStatus(TIM_TypeDef *TIMx, u16 TIM_Flag)
+ 553:libstr91x/src/91x_tim.c **** {
+ 728              		.loc 1 553 0
+ 729              		.cfi_startproc
+ 730              		@ args = 0, pretend = 0, frame = 0
+ 731              		@ frame_needed = 0, uses_anonymous_args = 0
+ 732              		@ link register save eliminated.
+ 733              	.LVL29:
+ 554:libstr91x/src/91x_tim.c ****   if((TIMx->SR & TIM_Flag) == RESET)
+ 734              		.loc 1 554 0
+ 735 04f4 BC31D0E1 		ldrh	r3, [r0, #28]
+ 555:libstr91x/src/91x_tim.c ****   {
+ 556:libstr91x/src/91x_tim.c ****     return RESET;
+ 736              		.loc 1 556 0
+ 737 04f8 030011E1 		tst	r1, r3
+ 557:libstr91x/src/91x_tim.c ****   }
+ 558:libstr91x/src/91x_tim.c ****   else
+ 559:libstr91x/src/91x_tim.c ****   {
+ 560:libstr91x/src/91x_tim.c ****     return SET;
+ 561:libstr91x/src/91x_tim.c ****   }
+ 562:libstr91x/src/91x_tim.c **** }
+ 738              		.loc 1 562 0
+ 739 04fc 0000A003 		moveq	r0, #0
+ 740 0500 0100A013 		movne	r0, #1
+ 741              	.LVL30:
+ 742 0504 1EFF2FE1 		bx	lr
+ 743              		.cfi_endproc
+ 744              	.LFE10:
+ 746              		.align	2
+ 747              		.global	TIM_ClearFlag
+ 749              	TIM_ClearFlag:
+ 750              	.LFB11:
+ 563:libstr91x/src/91x_tim.c **** 
+ 564:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 565:libstr91x/src/91x_tim.c **** * Function Name  : TIM_ClearFlag
+ 566:libstr91x/src/91x_tim.c **** * Description    : Clears the TIM Flag passed as a parameter.
+ 567:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 568:libstr91x/src/91x_tim.c **** *                    peripheral.
+ 569:libstr91x/src/91x_tim.c **** * Input2         : TIM_Flag: specifies the flag to clear.
+ 570:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 571:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_IC1: Input Capture Channel 1 Flag
+ 572:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_IC2: Input Capture Channel 2 Flag
+ 573:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_TO : Timer Overflow Flag
+ 574:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_OC1: Output Compare Channel 1 Flag
+ 575:libstr91x/src/91x_tim.c **** *                       - TIM_FLAG_OC2: Output Compare Channel 2 Flag
+ 576:libstr91x/src/91x_tim.c **** * Output         : None
+ 577:libstr91x/src/91x_tim.c **** * Return         : None
+ 578:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 579:libstr91x/src/91x_tim.c **** void TIM_ClearFlag(TIM_TypeDef *TIMx, u16 TIM_Flag)
+ 580:libstr91x/src/91x_tim.c **** {
+ 751              		.loc 1 580 0
+ 752              		.cfi_startproc
+ 753              		@ args = 0, pretend = 0, frame = 0
+ 754              		@ frame_needed = 0, uses_anonymous_args = 0
+ 755              		@ link register save eliminated.
+ 756              	.LVL31:
+ 581:libstr91x/src/91x_tim.c ****   /* Clear TIM_Flag */
+ 582:libstr91x/src/91x_tim.c ****   TIMx->SR &= ~TIM_Flag;
+ 757              		.loc 1 582 0
+ 758 0508 BC21D0E1 		ldrh	r2, [r0, #28]
+ 759 050c 0130C2E1 		bic	r3, r2, r1
+ 760 0510 BC31C0E1 		strh	r3, [r0, #28]	@ movhi
+ 583:libstr91x/src/91x_tim.c **** }
+ 761              		.loc 1 583 0
+ 762 0514 1EFF2FE1 		bx	lr
+ 763              		.cfi_endproc
+ 764              	.LFE11:
+ 766              		.align	2
+ 767              		.global	TIM_GetPWMIPulse
+ 769              	TIM_GetPWMIPulse:
+ 770              	.LFB12:
+ 584:libstr91x/src/91x_tim.c **** 
+ 585:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 586:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetPWMIPulse
+ 587:libstr91x/src/91x_tim.c **** * Description    : This routine is used to get the Pulse value in PWMI Mode.
+ 588:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+ 589:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 590:libstr91x/src/91x_tim.c **** * Output         : None
+ 591:libstr91x/src/91x_tim.c **** * Return         : The pulse value.
+ 592:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 593:libstr91x/src/91x_tim.c **** u16 TIM_GetPWMIPulse(TIM_TypeDef *TIMx)
+ 594:libstr91x/src/91x_tim.c **** {
+ 771              		.loc 1 594 0
+ 772              		.cfi_startproc
+ 773              		@ args = 0, pretend = 0, frame = 0
+ 774              		@ frame_needed = 0, uses_anonymous_args = 0
+ 775              		@ link register save eliminated.
+ 776              	.LVL32:
+ 595:libstr91x/src/91x_tim.c ****   return TIMx->IC2R;
+ 777              		.loc 1 595 0
+ 778 0518 B400D0E1 		ldrh	r0, [r0, #4]
+ 779              	.LVL33:
+ 596:libstr91x/src/91x_tim.c **** }
+ 780              		.loc 1 596 0
+ 781 051c 1EFF2FE1 		bx	lr
+ 782              		.cfi_endproc
+ 783              	.LFE12:
+ 785              		.align	2
+ 786              		.global	TIM_GetPWMIPeriod
+ 788              	TIM_GetPWMIPeriod:
+ 789              	.LFB13:
+ 597:libstr91x/src/91x_tim.c **** 
+ 598:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 599:libstr91x/src/91x_tim.c **** * Function Name  : TIM_GetPWMIPeriod
+ 600:libstr91x/src/91x_tim.c **** * Description    : This routine is used to get the Period value in PWMI Mode.
+ 601:libstr91x/src/91x_tim.c **** * Input          : TIMx: where x can be from 0 to 3 to select the TIM
+ 602:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 603:libstr91x/src/91x_tim.c **** * Output         : None
+ 604:libstr91x/src/91x_tim.c **** * Return         : The period value.
+ 605:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 606:libstr91x/src/91x_tim.c **** u16 TIM_GetPWMIPeriod(TIM_TypeDef *TIMx)
+ 607:libstr91x/src/91x_tim.c **** {
+ 790              		.loc 1 607 0
+ 791              		.cfi_startproc
+ 792              		@ args = 0, pretend = 0, frame = 0
+ 793              		@ frame_needed = 0, uses_anonymous_args = 0
+ 794              		@ link register save eliminated.
+ 795              	.LVL34:
+ 608:libstr91x/src/91x_tim.c ****   return TIMx->IC1R;
+ 796              		.loc 1 608 0
+ 797 0520 B000D0E1 		ldrh	r0, [r0, #0]
+ 798              	.LVL35:
+ 609:libstr91x/src/91x_tim.c **** }
+ 799              		.loc 1 609 0
+ 800 0524 1EFF2FE1 		bx	lr
+ 801              		.cfi_endproc
+ 802              	.LFE13:
+ 804              		.align	2
+ 805              		.global	TIM_ITConfig
+ 807              	TIM_ITConfig:
+ 808              	.LFB14:
+ 610:libstr91x/src/91x_tim.c **** 
+ 611:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 612:libstr91x/src/91x_tim.c **** * Function Name  : TIM_ITConfig
+ 613:libstr91x/src/91x_tim.c **** * Description    : Configures the Timer interrupt source.
+ 614:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 615:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 616:libstr91x/src/91x_tim.c **** * Input2         : TIM_IT: specifies the TIM interrupt source to be enabled.
+ 617:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 618:libstr91x/src/91x_tim.c **** *                       - TIM_IT_IC1: Input Capture 1 Interrupt source.
+ 619:libstr91x/src/91x_tim.c **** *                       - TIM_IT_OC1: Output Compare 1 Interrupt source.
+ 620:libstr91x/src/91x_tim.c **** *                       - TIM_IT_TO : Timer Overflow Interrupt source.
+ 621:libstr91x/src/91x_tim.c **** *                       - TIM_IT_IC2: Input Capture 2 Interrupt source.
+ 622:libstr91x/src/91x_tim.c **** *                       - TIM_IT_OC2: Output Compare 2 Interrupt source.
+ 623:libstr91x/src/91x_tim.c **** * Input3         : TIM_Newstate: specifies the new state of the  TIMx IT.
+ 624:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 625:libstr91x/src/91x_tim.c **** *                       - ENABLE : Enable the needed interrupt.
+ 626:libstr91x/src/91x_tim.c **** *                       - DISABLE: Disable the needed interrupt.
+ 627:libstr91x/src/91x_tim.c **** * Output         : None
+ 628:libstr91x/src/91x_tim.c **** * Return         : None
+ 629:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 630:libstr91x/src/91x_tim.c **** void TIM_ITConfig(TIM_TypeDef *TIMx, u16 TIM_IT, FunctionalState TIM_Newstate)
+ 631:libstr91x/src/91x_tim.c **** {
+ 809              		.loc 1 631 0
+ 810              		.cfi_startproc
+ 811              		@ args = 0, pretend = 0, frame = 0
+ 812              		@ frame_needed = 0, uses_anonymous_args = 0
+ 813              		@ link register save eliminated.
+ 814              	.LVL36:
+ 632:libstr91x/src/91x_tim.c ****   if(TIM_Newstate == ENABLE)
+ 633:libstr91x/src/91x_tim.c ****   {
+ 634:libstr91x/src/91x_tim.c ****     TIMx->CR2 = (TIMx->CR2 & 0x00FF) | TIM_IT; 
+ 815              		.loc 1 634 0
+ 816 0528 B831D0E1 		ldrh	r3, [r0, #24]
+ 632:libstr91x/src/91x_tim.c ****   if(TIM_Newstate == ENABLE)
+ 817              		.loc 1 632 0
+ 818 052c 010052E3 		cmp	r2, #1
+ 819              		.loc 1 634 0
+ 820 0530 FF300302 		andeq	r3, r3, #255
+ 821 0534 03108101 		orreq	r1, r1, r3
+ 822              	.LVL37:
+ 635:libstr91x/src/91x_tim.c ****   }
+ 636:libstr91x/src/91x_tim.c ****   else
+ 637:libstr91x/src/91x_tim.c ****   {
+ 638:libstr91x/src/91x_tim.c ****     TIMx->CR2 &= ~TIM_IT;
+ 823              		.loc 1 638 0
+ 824 0538 0110C311 		bicne	r1, r3, r1
+ 825 053c B811C0E1 		strh	r1, [r0, #24]	@ movhi
+ 826 0540 1EFF2FE1 		bx	lr
+ 827              		.cfi_endproc
+ 828              	.LFE14:
+ 830              		.align	2
+ 831              		.global	TIM_DMAConfig
+ 833              	TIM_DMAConfig:
+ 834              	.LFB15:
+ 639:libstr91x/src/91x_tim.c ****   }
+ 640:libstr91x/src/91x_tim.c **** }
+ 641:libstr91x/src/91x_tim.c **** 
+ 642:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 643:libstr91x/src/91x_tim.c **** * Function Name  : TIM_DMAConfig
+ 644:libstr91x/src/91x_tim.c **** * Description    : Configures the Timer DMA source.
+ 645:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 646:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 647:libstr91x/src/91x_tim.c **** * Input2         : TIM_DMA_Souces: specifies the TIM DMA source to be selected.
+ 648:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 649:libstr91x/src/91x_tim.c **** *                       - TIM_DMA_IC1: Input Capture 1 DMA source.
+ 650:libstr91x/src/91x_tim.c **** *                       - TIM_DMA_OCA1 Output Compare 1 DMA source.
+ 651:libstr91x/src/91x_tim.c **** *                       - TIM_DMA_TO: Timer Overflow DMA source.
+ 652:libstr91x/src/91x_tim.c **** *                       - TIM_DMA_IC2: Input Capture 2 DMA source.
+ 653:libstr91x/src/91x_tim.c **** *                       - TIM_DMA_OC2: Output Compare 2 DMA source.
+ 654:libstr91x/src/91x_tim.c **** * Output         : None
+ 655:libstr91x/src/91x_tim.c **** * Return         : None
+ 656:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 657:libstr91x/src/91x_tim.c **** void TIM_DMAConfig(TIM_TypeDef *TIMx, u16 TIM_DMA_Sources)
+ 658:libstr91x/src/91x_tim.c **** {
+ 835              		.loc 1 658 0
+ 836              		.cfi_startproc
+ 837              		@ args = 0, pretend = 0, frame = 0
+ 838              		@ frame_needed = 0, uses_anonymous_args = 0
+ 839              		@ link register save eliminated.
+ 840              	.LVL38:
+ 659:libstr91x/src/91x_tim.c ****   /* Reset the DMAS[1:0] bits */
+ 660:libstr91x/src/91x_tim.c ****   TIMx->CR1 &= TIM_DMA_CLEAR_MASK;
+ 841              		.loc 1 660 0
+ 842 0544 B421D0E1 		ldrh	r2, [r0, #20]
+ 843 0548 14309FE5 		ldr	r3, .L84
+ 844 054c 03C002E0 		and	ip, r2, r3
+ 845 0550 B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 661:libstr91x/src/91x_tim.c ****   /* Set the DMAS[1:0] bits according to TIM_DMA_Sources parameter */
+ 662:libstr91x/src/91x_tim.c ****   TIMx->CR1 |= TIM_DMA_Sources; 
+ 846              		.loc 1 662 0
+ 847 0554 B421D0E1 		ldrh	r2, [r0, #20]
+ 848 0558 023081E1 		orr	r3, r1, r2
+ 849 055c B431C0E1 		strh	r3, [r0, #20]	@ movhi
+ 663:libstr91x/src/91x_tim.c **** }
+ 850              		.loc 1 663 0
+ 851 0560 1EFF2FE1 		bx	lr
+ 852              	.L85:
+ 853              		.align	2
+ 854              	.L84:
+ 855 0564 FFCF0000 		.word	53247
+ 856              		.cfi_endproc
+ 857              	.LFE15:
+ 859              		.align	2
+ 860              		.global	TIM_DMACmd
+ 862              	TIM_DMACmd:
+ 863              	.LFB16:
+ 664:libstr91x/src/91x_tim.c **** 
+ 665:libstr91x/src/91x_tim.c **** /*******************************************************************************
+ 666:libstr91x/src/91x_tim.c **** * Function Name  : TIM_DMACmd
+ 667:libstr91x/src/91x_tim.c **** * Description    : Enables or disables TIMx DMA peripheral.
+ 668:libstr91x/src/91x_tim.c **** * Input1         : TIMx: where x can be from 0 to 3 to select the TIM
+ 669:libstr91x/src/91x_tim.c **** *                  peripheral.
+ 670:libstr91x/src/91x_tim.c **** * Input2         : TIM_Newstate: new state of the  TIMx DMA peripheral 
+ 671:libstr91x/src/91x_tim.c **** *                  This parameter can be one of the following values:
+ 672:libstr91x/src/91x_tim.c **** *                       - ENABLE : Enable the TIMx DMA.
+ 673:libstr91x/src/91x_tim.c **** *                       - DISABLE: Disable the TIMx DMA.
+ 674:libstr91x/src/91x_tim.c **** * Output         : None
+ 675:libstr91x/src/91x_tim.c **** * Return         : None
+ 676:libstr91x/src/91x_tim.c **** *******************************************************************************/
+ 677:libstr91x/src/91x_tim.c **** void TIM_DMACmd(TIM_TypeDef *TIMx, FunctionalState TIM_Newstate)
+ 678:libstr91x/src/91x_tim.c **** {
+ 864              		.loc 1 678 0
+ 865              		.cfi_startproc
+ 866              		@ args = 0, pretend = 0, frame = 0
+ 867              		@ frame_needed = 0, uses_anonymous_args = 0
+ 868              		@ link register save eliminated.
+ 869              	.LVL39:
+ 679:libstr91x/src/91x_tim.c ****   if (TIM_Newstate == ENABLE)
+ 870              		.loc 1 679 0
+ 871 0568 010051E3 		cmp	r1, #1
+ 680:libstr91x/src/91x_tim.c ****   {
+ 681:libstr91x/src/91x_tim.c ****     TIMx->CR2 |= TIM_DMA_ENABLE;
+ 872              		.loc 1 681 0
+ 873 056c B831D001 		ldreqh	r3, [r0, #24]
+ 682:libstr91x/src/91x_tim.c ****   }
+ 683:libstr91x/src/91x_tim.c ****   else
+ 684:libstr91x/src/91x_tim.c ****   {
+ 685:libstr91x/src/91x_tim.c ****     TIMx->CR2 &= TIM_DMA_DISABLE;
+ 874              		.loc 1 685 0
+ 875 0570 B821D011 		ldrneh	r2, [r0, #24]
+ 876 0574 0C309F15 		ldrne	r3, .L89
+ 681:libstr91x/src/91x_tim.c ****     TIMx->CR2 |= TIM_DMA_ENABLE;
+ 877              		.loc 1 681 0
+ 878 0578 013B8303 		orreq	r3, r3, #1024
+ 879              		.loc 1 685 0
+ 880 057c 03300210 		andne	r3, r2, r3
+ 881 0580 B831C0E1 		strh	r3, [r0, #24]	@ movhi
+ 882 0584 1EFF2FE1 		bx	lr
+ 883              	.L90:
+ 884              		.align	2
+ 885              	.L89:
+ 886 0588 FFFB0000 		.word	64511
+ 887              		.cfi_endproc
+ 888              	.LFE16:
+ 890              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_tim.c
+     /tmp/ccEME0Jl.s:21     .text:00000000 $a
+     /tmp/ccEME0Jl.s:24     .text:00000000 TIM_DeInit
+     /tmp/ccEME0Jl.s:81     .text:00000060 $d
+     /tmp/ccEME0Jl.s:87     .text:0000006c $a
+     /tmp/ccEME0Jl.s:90     .text:0000006c TIM_StructInit
+     /tmp/ccEME0Jl.s:137    .text:000000b0 TIM_Init
+     /tmp/ccEME0Jl.s:541    .text:00000434 $d
+     /tmp/ccEME0Jl.s:552    .text:00000454 $a
+     /tmp/ccEME0Jl.s:555    .text:00000454 TIM_CounterCmd
+     /tmp/ccEME0Jl.s:597    .text:000004a0 $d
+     /tmp/ccEME0Jl.s:601    .text:000004a4 $a
+     /tmp/ccEME0Jl.s:604    .text:000004a4 TIM_PrescalerConfig
+     /tmp/ccEME0Jl.s:628    .text:000004c0 TIM_GetPrescalerValue
+     /tmp/ccEME0Jl.s:648    .text:000004cc TIM_GetCounterValue
+     /tmp/ccEME0Jl.s:667    .text:000004d4 TIM_GetICAP1Value
+     /tmp/ccEME0Jl.s:686    .text:000004dc TIM_GetICAP2Value
+     /tmp/ccEME0Jl.s:705    .text:000004e4 TIM_SetPulse
+     /tmp/ccEME0Jl.s:726    .text:000004f4 TIM_GetFlagStatus
+     /tmp/ccEME0Jl.s:749    .text:00000508 TIM_ClearFlag
+     /tmp/ccEME0Jl.s:769    .text:00000518 TIM_GetPWMIPulse
+     /tmp/ccEME0Jl.s:788    .text:00000520 TIM_GetPWMIPeriod
+     /tmp/ccEME0Jl.s:807    .text:00000528 TIM_ITConfig
+     /tmp/ccEME0Jl.s:833    .text:00000544 TIM_DMAConfig
+     /tmp/ccEME0Jl.s:855    .text:00000564 $d
+     /tmp/ccEME0Jl.s:859    .text:00000568 $a
+     /tmp/ccEME0Jl.s:862    .text:00000568 TIM_DMACmd
+     /tmp/ccEME0Jl.s:886    .text:00000588 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset

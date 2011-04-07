@@ -1,0 +1,479 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_wiu.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	WIU_Init
+  24              	WIU_Init:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_wiu.c"
+   1:libstr91x/src/91x_wiu.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_wiu.c **** * File Name          : 91x_wiu.c
+   3:libstr91x/src/91x_wiu.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_wiu.c **** * Version            : V2.1
+   5:libstr91x/src/91x_wiu.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_wiu.c **** * Description        : This file provides all the WIU firmware functions.
+   7:libstr91x/src/91x_wiu.c **** **********************************************************************************
+   8:libstr91x/src/91x_wiu.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_wiu.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_wiu.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_wiu.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_wiu.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_wiu.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_wiu.c **** *********************************************************************************/
+  15:libstr91x/src/91x_wiu.c **** 
+  16:libstr91x/src/91x_wiu.c **** /* Standard include ----------------------------------------------------------*/
+  17:libstr91x/src/91x_wiu.c **** #include "91x_wiu.h"
+  18:libstr91x/src/91x_wiu.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_wiu.c **** 
+  20:libstr91x/src/91x_wiu.c **** /* Include of other module interface headers ---------------------------------*/
+  21:libstr91x/src/91x_wiu.c **** /* Local includes ------------------------------------------------------------*/
+  22:libstr91x/src/91x_wiu.c **** /* Private typedef -----------------------------------------------------------*/
+  23:libstr91x/src/91x_wiu.c **** /* Private define ------------------------------------------------------------*/
+  24:libstr91x/src/91x_wiu.c **** 
+  25:libstr91x/src/91x_wiu.c **** 
+  26:libstr91x/src/91x_wiu.c **** /* WIU Masks "used" only in this module */
+  27:libstr91x/src/91x_wiu.c **** #define WIU_Enable        0x02
+  28:libstr91x/src/91x_wiu.c **** 
+  29:libstr91x/src/91x_wiu.c **** 
+  30:libstr91x/src/91x_wiu.c **** /* Private macro -------------------------------------------------------------*/
+  31:libstr91x/src/91x_wiu.c **** /* Private variables ---------------------------------------------------------*/
+  32:libstr91x/src/91x_wiu.c **** /* Private function prototypes -----------------------------------------------*/
+  33:libstr91x/src/91x_wiu.c **** /* Interface functions -------------------------------------------------------*/
+  34:libstr91x/src/91x_wiu.c **** /* Private functions ---------------------------------------------------------*/
+  35:libstr91x/src/91x_wiu.c **** /******************************************************************************
+  36:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_Init
+  37:libstr91x/src/91x_wiu.c **** * Description    : Initializes the WIU unit according to the specified parameters
+  38:libstr91x/src/91x_wiu.c **** *                  in the WIU_InitTypeDef structure.
+  39:libstr91x/src/91x_wiu.c **** * Input          : WIU_InitStruct: pointer to a WIU_InitTypeDef structure that
+  40:libstr91x/src/91x_wiu.c **** *                  contains the configuration information for the WIU peripheral.
+  41:libstr91x/src/91x_wiu.c **** * Output         : None
+  42:libstr91x/src/91x_wiu.c **** * Return         : None
+  43:libstr91x/src/91x_wiu.c **** ******************************************************************************/
+  44:libstr91x/src/91x_wiu.c **** void WIU_Init(WIU_InitTypeDef* WIU_InitStruct)
+  45:libstr91x/src/91x_wiu.c **** {
+  27              		.loc 1 45 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  46:libstr91x/src/91x_wiu.c ****   /* select the Wake-up line to be used */
+  47:libstr91x/src/91x_wiu.c ****   WIU->MR |= WIU_InitStruct->WIU_Line;
+  33              		.loc 1 47 0
+  34 0000 28309FE5 		ldr	r3, .L4
+  35 0004 042090E5 		ldr	r2, [r0, #4]
+  36 0008 041093E5 		ldr	r1, [r3, #4]
+  37 000c 01C082E1 		orr	ip, r2, r1
+  38 0010 04C083E5 		str	ip, [r3, #4]
+  48:libstr91x/src/91x_wiu.c **** 
+  49:libstr91x/src/91x_wiu.c ****   /* configure the triggering edge */
+  50:libstr91x/src/91x_wiu.c ****   if(WIU_InitStruct->WIU_TriggerEdge == WIU_RisingEdge)
+  39              		.loc 1 50 0
+  40 0014 0000D0E5 		ldrb	r0, [r0, #0]	@ zero_extendqisi2
+  41              	.LVL1:
+  51:libstr91x/src/91x_wiu.c ****   {
+  52:libstr91x/src/91x_wiu.c ****     /* trigger on rising edge */
+  53:libstr91x/src/91x_wiu.c ****     WIU->TR |= WIU_InitStruct->WIU_Line;
+  42              		.loc 1 53 0
+  43 0018 081093E5 		ldr	r1, [r3, #8]
+  50:libstr91x/src/91x_wiu.c ****   if(WIU_InitStruct->WIU_TriggerEdge == WIU_RisingEdge)
+  44              		.loc 1 50 0
+  45 001c 010050E3 		cmp	r0, #1
+  46              		.loc 1 53 0
+  47 0020 02208101 		orreq	r2, r1, r2
+  54:libstr91x/src/91x_wiu.c ****   }
+  55:libstr91x/src/91x_wiu.c ****   else
+  56:libstr91x/src/91x_wiu.c ****   {
+  57:libstr91x/src/91x_wiu.c ****     /* trigger on falling edge */
+  58:libstr91x/src/91x_wiu.c ****     WIU->TR &= ~WIU_InitStruct->WIU_Line;
+  48              		.loc 1 58 0
+  49 0024 0220C111 		bicne	r2, r1, r2
+  50 0028 082083E5 		str	r2, [r3, #8]
+  51 002c 1EFF2FE1 		bx	lr
+  52              	.L5:
+  53              		.align	2
+  54              	.L4:
+  55 0030 00100058 		.word	1476399104
+  56              		.cfi_endproc
+  57              	.LFE0:
+  59              		.align	2
+  60              		.global	WIU_DeInit
+  62              	WIU_DeInit:
+  63              	.LFB1:
+  59:libstr91x/src/91x_wiu.c ****   }
+  60:libstr91x/src/91x_wiu.c **** 
+  61:libstr91x/src/91x_wiu.c **** }
+  62:libstr91x/src/91x_wiu.c **** 
+  63:libstr91x/src/91x_wiu.c **** /******************************************************************************
+  64:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_DeInit
+  65:libstr91x/src/91x_wiu.c **** * Description    : Deinitializes the WIU registers to their default reset values.
+  66:libstr91x/src/91x_wiu.c **** * Input          : None
+  67:libstr91x/src/91x_wiu.c **** * Output         : None
+  68:libstr91x/src/91x_wiu.c **** * Return         : None
+  69:libstr91x/src/91x_wiu.c **** ******************************************************************************/
+  70:libstr91x/src/91x_wiu.c **** void WIU_DeInit(void)
+  71:libstr91x/src/91x_wiu.c **** {
+  64              		.loc 1 71 0
+  65              		.cfi_startproc
+  66              		@ args = 0, pretend = 0, frame = 0
+  67              		@ frame_needed = 0, uses_anonymous_args = 0
+  68 0034 10402DE9 		stmfd	sp!, {r4, lr}
+  69              	.LCFI0:
+  70              		.cfi_def_cfa_offset 8
+  72:libstr91x/src/91x_wiu.c ****   /* initialize the WIU registers to their reset value */
+  73:libstr91x/src/91x_wiu.c ****   SCU_APBPeriphReset(__WIU, ENABLE);
+  71              		.loc 1 73 0
+  72 0038 020AA0E3 		mov	r0, #8192
+  73 003c 0110A0E3 		mov	r1, #1
+  74              		.cfi_offset 14, -4
+  75              		.cfi_offset 4, -8
+  76 0040 FEFFFFEB 		bl	SCU_APBPeriphReset
+  74:libstr91x/src/91x_wiu.c ****   SCU_APBPeriphReset(__WIU, DISABLE);
+  77              		.loc 1 74 0
+  78 0044 020AA0E3 		mov	r0, #8192
+  79 0048 0010A0E3 		mov	r1, #0
+  75:libstr91x/src/91x_wiu.c **** }
+  80              		.loc 1 75 0
+  81 004c 1040BDE8 		ldmfd	sp!, {r4, lr}
+  74:libstr91x/src/91x_wiu.c ****   SCU_APBPeriphReset(__WIU, DISABLE);
+  82              		.loc 1 74 0
+  83 0050 FEFFFFEA 		b	SCU_APBPeriphReset
+  84              		.cfi_endproc
+  85              	.LFE1:
+  87              		.align	2
+  88              		.global	WIU_StructInit
+  90              	WIU_StructInit:
+  91              	.LFB2:
+  76:libstr91x/src/91x_wiu.c **** 
+  77:libstr91x/src/91x_wiu.c **** /******************************************************************************
+  78:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_StructInit
+  79:libstr91x/src/91x_wiu.c **** * Description    : Fills in a WIU_InitTypeDef structure with the reset value of
+  80:libstr91x/src/91x_wiu.c **** *                  each parameter.
+  81:libstr91x/src/91x_wiu.c **** * Input          : WIU_InitStruct : pointer to a WIU_InitTypeDef structure
+  82:libstr91x/src/91x_wiu.c **** *                  which will be initialized.
+  83:libstr91x/src/91x_wiu.c **** * Output         : None
+  84:libstr91x/src/91x_wiu.c **** * Return         : None
+  85:libstr91x/src/91x_wiu.c **** ******************************************************************************/
+  86:libstr91x/src/91x_wiu.c **** void WIU_StructInit(WIU_InitTypeDef* WIU_InitStruct)
+  87:libstr91x/src/91x_wiu.c **** {
+  92              		.loc 1 87 0
+  93              		.cfi_startproc
+  94              		@ args = 0, pretend = 0, frame = 0
+  95              		@ frame_needed = 0, uses_anonymous_args = 0
+  96              		@ link register save eliminated.
+  97              	.LVL2:
+  88:libstr91x/src/91x_wiu.c ****   /* initialize the WIU_InitStruct fields to their reset values */
+  89:libstr91x/src/91x_wiu.c ****   WIU_InitStruct->WIU_Line = 0x0 ;
+  98              		.loc 1 89 0
+  99 0054 0030A0E3 		mov	r3, #0
+ 100 0058 043080E5 		str	r3, [r0, #4]
+  90:libstr91x/src/91x_wiu.c ****   WIU_InitStruct->WIU_TriggerEdge = WIU_FallingEdge ;
+ 101              		.loc 1 90 0
+ 102 005c 0030C0E5 		strb	r3, [r0, #0]
+  91:libstr91x/src/91x_wiu.c **** }
+ 103              		.loc 1 91 0
+ 104 0060 1EFF2FE1 		bx	lr
+ 105              		.cfi_endproc
+ 106              	.LFE2:
+ 108              		.align	2
+ 109              		.global	WIU_Cmd
+ 111              	WIU_Cmd:
+ 112              	.LFB3:
+  92:libstr91x/src/91x_wiu.c **** 
+  93:libstr91x/src/91x_wiu.c **** /*******************************************************************************
+  94:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_Cmd
+  95:libstr91x/src/91x_wiu.c **** * Description    : Enables or disables the WIU peripheral.
+  96:libstr91x/src/91x_wiu.c **** * Input          : NewState: new state of the WIU peripheral (Newstate can be
+  97:libstr91x/src/91x_wiu.c **** *                  ENABLE or DISABLE)
+  98:libstr91x/src/91x_wiu.c **** * Output         : None
+  99:libstr91x/src/91x_wiu.c **** * Return         : None
+ 100:libstr91x/src/91x_wiu.c **** *******************************************************************************/
+ 101:libstr91x/src/91x_wiu.c **** void WIU_Cmd(FunctionalState NewState )
+ 102:libstr91x/src/91x_wiu.c **** {
+ 113              		.loc 1 102 0
+ 114              		.cfi_startproc
+ 115              		@ args = 0, pretend = 0, frame = 0
+ 116              		@ frame_needed = 0, uses_anonymous_args = 0
+ 117              		@ link register save eliminated.
+ 118              	.LVL3:
+ 103:libstr91x/src/91x_wiu.c ****      if(NewState == ENABLE)
+ 104:libstr91x/src/91x_wiu.c ****   {
+ 105:libstr91x/src/91x_wiu.c ****       /* Enable the Wake-up Unit (for interrupts and wake-up from low power modes) */
+ 106:libstr91x/src/91x_wiu.c ****       WIU->CTRL |= WIU_Enable ;
+ 119              		.loc 1 106 0
+ 120 0064 14309FE5 		ldr	r3, .L11
+ 103:libstr91x/src/91x_wiu.c ****      if(NewState == ENABLE)
+ 121              		.loc 1 103 0
+ 122 0068 010050E3 		cmp	r0, #1
+ 123              		.loc 1 106 0
+ 124 006c 002093E5 		ldr	r2, [r3, #0]
+ 125 0070 02208203 		orreq	r2, r2, #2
+ 107:libstr91x/src/91x_wiu.c ****   }
+ 108:libstr91x/src/91x_wiu.c ****     else
+ 109:libstr91x/src/91x_wiu.c ****   {
+ 110:libstr91x/src/91x_wiu.c ****         /* Disable the Wake-up Unit (for interrupts and wake-up from low power modes) */
+ 111:libstr91x/src/91x_wiu.c **** 
+ 112:libstr91x/src/91x_wiu.c ****      WIU->CTRL &= ~WIU_Enable ;
+ 126              		.loc 1 112 0
+ 127 0074 0220C213 		bicne	r2, r2, #2
+ 128 0078 002083E5 		str	r2, [r3, #0]
+ 129 007c 1EFF2FE1 		bx	lr
+ 130              	.L12:
+ 131              		.align	2
+ 132              	.L11:
+ 133 0080 00100058 		.word	1476399104
+ 134              		.cfi_endproc
+ 135              	.LFE3:
+ 137              		.align	2
+ 138              		.global	WIU_GenerateSWInterrupt
+ 140              	WIU_GenerateSWInterrupt:
+ 141              	.LFB4:
+ 113:libstr91x/src/91x_wiu.c ****   }
+ 114:libstr91x/src/91x_wiu.c **** }
+ 115:libstr91x/src/91x_wiu.c **** 
+ 116:libstr91x/src/91x_wiu.c **** /*******************************************************************************
+ 117:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_GenerateSWInterrupt
+ 118:libstr91x/src/91x_wiu.c **** * Description    : Generates a Software interrupt.
+ 119:libstr91x/src/91x_wiu.c **** * Input          : - WIU_Line: specifies the WIU lines to be enabled or
+ 120:libstr91x/src/91x_wiu.c **** *                    disabled. This parameter can be:
+ 121:libstr91x/src/91x_wiu.c **** *                     - WIU_Linex: External interrupt line x where x(0..31)
+ 122:libstr91x/src/91x_wiu.c **** * Output         : None
+ 123:libstr91x/src/91x_wiu.c **** * Return         : None
+ 124:libstr91x/src/91x_wiu.c **** *******************************************************************************/
+ 125:libstr91x/src/91x_wiu.c **** void WIU_GenerateSWInterrupt(u32 WIU_Line)
+ 126:libstr91x/src/91x_wiu.c **** {
+ 142              		.loc 1 126 0
+ 143              		.cfi_startproc
+ 144              		@ args = 0, pretend = 0, frame = 0
+ 145              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146              		@ link register save eliminated.
+ 147              	.LVL4:
+ 127:libstr91x/src/91x_wiu.c ****   WIU->INTR |= WIU_Line;
+ 148              		.loc 1 127 0
+ 149 0084 0C309FE5 		ldr	r3, .L14
+ 150 0088 101093E5 		ldr	r1, [r3, #16]
+ 151 008c 012080E1 		orr	r2, r0, r1
+ 152 0090 102083E5 		str	r2, [r3, #16]
+ 128:libstr91x/src/91x_wiu.c **** }
+ 153              		.loc 1 128 0
+ 154 0094 1EFF2FE1 		bx	lr
+ 155              	.L15:
+ 156              		.align	2
+ 157              	.L14:
+ 158 0098 00100058 		.word	1476399104
+ 159              		.cfi_endproc
+ 160              	.LFE4:
+ 162              		.align	2
+ 163              		.global	WIU_GetFlagStatus
+ 165              	WIU_GetFlagStatus:
+ 166              	.LFB5:
+ 129:libstr91x/src/91x_wiu.c **** 
+ 130:libstr91x/src/91x_wiu.c **** /*******************************************************************************
+ 131:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_GetFlagStatus
+ 132:libstr91x/src/91x_wiu.c **** * Description    : Checks whether the specified WIU line flag is set or not.
+ 133:libstr91x/src/91x_wiu.c **** * Input          : - WIU_Line: specifies the WIU lines flag to check.
+ 134:libstr91x/src/91x_wiu.c **** *                    This parameter can be:
+ 135:libstr91x/src/91x_wiu.c **** *                     - WIU_Linex: External interrupt line x where x(0..31)
+ 136:libstr91x/src/91x_wiu.c **** * Output         : None
+ 137:libstr91x/src/91x_wiu.c **** * Return         : The new state of WIU_Line (SET or RESET).
+ 138:libstr91x/src/91x_wiu.c **** *******************************************************************************/
+ 139:libstr91x/src/91x_wiu.c **** FlagStatus WIU_GetFlagStatus(u32 WIU_Line)
+ 140:libstr91x/src/91x_wiu.c **** {
+ 167              		.loc 1 140 0
+ 168              		.cfi_startproc
+ 169              		@ args = 0, pretend = 0, frame = 0
+ 170              		@ frame_needed = 0, uses_anonymous_args = 0
+ 171              		@ link register save eliminated.
+ 172              	.LVL5:
+ 141:libstr91x/src/91x_wiu.c ****   if((WIU->PR & WIU_Line) != RESET)
+ 173              		.loc 1 141 0
+ 174 009c 10109FE5 		ldr	r1, .L17
+ 175 00a0 0C3091E5 		ldr	r3, [r1, #12]
+ 142:libstr91x/src/91x_wiu.c ****   {
+ 143:libstr91x/src/91x_wiu.c ****     return SET;
+ 176              		.loc 1 143 0
+ 177 00a4 030010E1 		tst	r0, r3
+ 144:libstr91x/src/91x_wiu.c ****   }
+ 145:libstr91x/src/91x_wiu.c ****   else
+ 146:libstr91x/src/91x_wiu.c ****   {
+ 147:libstr91x/src/91x_wiu.c ****     return RESET;
+ 148:libstr91x/src/91x_wiu.c ****   }
+ 149:libstr91x/src/91x_wiu.c **** }
+ 178              		.loc 1 149 0
+ 179 00a8 0000A003 		moveq	r0, #0
+ 180 00ac 0100A013 		movne	r0, #1
+ 181              	.LVL6:
+ 182 00b0 1EFF2FE1 		bx	lr
+ 183              	.L18:
+ 184              		.align	2
+ 185              	.L17:
+ 186 00b4 00100058 		.word	1476399104
+ 187              		.cfi_endproc
+ 188              	.LFE5:
+ 190              		.align	2
+ 191              		.global	WIU_ClearFlag
+ 193              	WIU_ClearFlag:
+ 194              	.LFB6:
+ 150:libstr91x/src/91x_wiu.c **** 
+ 151:libstr91x/src/91x_wiu.c **** /*******************************************************************************
+ 152:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_ClearFlag
+ 153:libstr91x/src/91x_wiu.c **** * Description    : Clears the WIU’s line pending flags.
+ 154:libstr91x/src/91x_wiu.c **** * Input          : - WIU_Line: specifies the WIU lines flags to clear.
+ 155:libstr91x/src/91x_wiu.c **** *                    This parameter can be:
+ 156:libstr91x/src/91x_wiu.c **** *                     - WIU_Linex: External interrupt line x where x(0..31)
+ 157:libstr91x/src/91x_wiu.c **** * Output         : None
+ 158:libstr91x/src/91x_wiu.c **** * Return         : None
+ 159:libstr91x/src/91x_wiu.c **** *******************************************************************************/
+ 160:libstr91x/src/91x_wiu.c **** void WIU_ClearFlag(u32 WIU_Line)
+ 161:libstr91x/src/91x_wiu.c **** {
+ 195              		.loc 1 161 0
+ 196              		.cfi_startproc
+ 197              		@ args = 0, pretend = 0, frame = 0
+ 198              		@ frame_needed = 0, uses_anonymous_args = 0
+ 199              		@ link register save eliminated.
+ 200              	.LVL7:
+ 162:libstr91x/src/91x_wiu.c ****   WIU->PR = WIU_Line;
+ 201              		.loc 1 162 0
+ 202 00b8 04309FE5 		ldr	r3, .L20
+ 203 00bc 0C0083E5 		str	r0, [r3, #12]
+ 163:libstr91x/src/91x_wiu.c **** }
+ 204              		.loc 1 163 0
+ 205 00c0 1EFF2FE1 		bx	lr
+ 206              	.L21:
+ 207              		.align	2
+ 208              	.L20:
+ 209 00c4 00100058 		.word	1476399104
+ 210              		.cfi_endproc
+ 211              	.LFE6:
+ 213              		.align	2
+ 214              		.global	WIU_GetITStatus
+ 216              	WIU_GetITStatus:
+ 217              	.LFB7:
+ 164:libstr91x/src/91x_wiu.c **** 
+ 165:libstr91x/src/91x_wiu.c **** /*******************************************************************************
+ 166:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_GetITStatus
+ 167:libstr91x/src/91x_wiu.c **** * Description    : Checks whether the specified WIU line is asserted or not.
+ 168:libstr91x/src/91x_wiu.c **** * Input          : - WIU_Line: specifies the WIU lines to check.
+ 169:libstr91x/src/91x_wiu.c **** *                    This parameter can be:
+ 170:libstr91x/src/91x_wiu.c **** *                     - WIU_Linex: External interrupt line x where x(0..31)
+ 171:libstr91x/src/91x_wiu.c **** * Output         : None
+ 172:libstr91x/src/91x_wiu.c **** * Return         : The new state of WIU_Line (SET or RESET).
+ 173:libstr91x/src/91x_wiu.c **** *******************************************************************************/
+ 174:libstr91x/src/91x_wiu.c **** ITStatus WIU_GetITStatus(u32 WIU_Line)
+ 175:libstr91x/src/91x_wiu.c **** {
+ 218              		.loc 1 175 0
+ 219              		.cfi_startproc
+ 220              		@ args = 0, pretend = 0, frame = 0
+ 221              		@ frame_needed = 0, uses_anonymous_args = 0
+ 222              		@ link register save eliminated.
+ 223              	.LVL8:
+ 176:libstr91x/src/91x_wiu.c ****   if(((WIU->PR & WIU_Line) != RESET)&& ((WIU->MR & WIU_Line) != RESET))
+ 224              		.loc 1 176 0
+ 225 00c8 24309FE5 		ldr	r3, .L26
+ 226 00cc 0C2093E5 		ldr	r2, [r3, #12]
+ 227 00d0 022010E0 		ands	r2, r0, r2
+ 228 00d4 0400000A 		beq	.L24
+ 229              		.loc 1 176 0 is_stmt 0 discriminator 1
+ 230 00d8 043093E5 		ldr	r3, [r3, #4]
+ 177:libstr91x/src/91x_wiu.c ****   {
+ 178:libstr91x/src/91x_wiu.c ****     return SET;
+ 231              		.loc 1 178 0 is_stmt 1 discriminator 1
+ 232 00dc 030010E1 		tst	r0, r3
+ 233 00e0 0000A003 		moveq	r0, #0
+ 234 00e4 0100A013 		movne	r0, #1
+ 235              	.LVL9:
+ 236 00e8 1EFF2FE1 		bx	lr
+ 237              	.LVL10:
+ 238              	.L24:
+ 179:libstr91x/src/91x_wiu.c ****   }
+ 180:libstr91x/src/91x_wiu.c ****   else
+ 181:libstr91x/src/91x_wiu.c ****   {
+ 182:libstr91x/src/91x_wiu.c ****     return RESET;
+ 239              		.loc 1 182 0
+ 240 00ec 0200A0E1 		mov	r0, r2
+ 241              	.LVL11:
+ 183:libstr91x/src/91x_wiu.c ****   }
+ 184:libstr91x/src/91x_wiu.c **** }
+ 242              		.loc 1 184 0
+ 243 00f0 1EFF2FE1 		bx	lr
+ 244              	.L27:
+ 245              		.align	2
+ 246              	.L26:
+ 247 00f4 00100058 		.word	1476399104
+ 248              		.cfi_endproc
+ 249              	.LFE7:
+ 251              		.align	2
+ 252              		.global	WIU_ClearITPendingBit
+ 254              	WIU_ClearITPendingBit:
+ 255              	.LFB8:
+ 185:libstr91x/src/91x_wiu.c **** 
+ 186:libstr91x/src/91x_wiu.c **** /*******************************************************************************
+ 187:libstr91x/src/91x_wiu.c **** * Function Name  : WIU_ClearITPendingBit
+ 188:libstr91x/src/91x_wiu.c **** * Description    : Clears the WIU’s line pending bits.
+ 189:libstr91x/src/91x_wiu.c **** * Input          : - WIU_Line: specifies the WIU lines to clear.
+ 190:libstr91x/src/91x_wiu.c **** *                    This parameter can be:
+ 191:libstr91x/src/91x_wiu.c **** *                     - WIU_Linex: External interrupt line x where x(0..31)
+ 192:libstr91x/src/91x_wiu.c **** * Output         : None
+ 193:libstr91x/src/91x_wiu.c **** * Return         : None
+ 194:libstr91x/src/91x_wiu.c **** *******************************************************************************/
+ 195:libstr91x/src/91x_wiu.c **** void WIU_ClearITPendingBit(u32 WIU_Line)
+ 196:libstr91x/src/91x_wiu.c **** {
+ 256              		.loc 1 196 0
+ 257              		.cfi_startproc
+ 258              		@ args = 0, pretend = 0, frame = 0
+ 259              		@ frame_needed = 0, uses_anonymous_args = 0
+ 260              		@ link register save eliminated.
+ 261              	.LVL12:
+ 197:libstr91x/src/91x_wiu.c ****   WIU->PR = WIU_Line;
+ 262              		.loc 1 197 0
+ 263 00f8 04309FE5 		ldr	r3, .L29
+ 264 00fc 0C0083E5 		str	r0, [r3, #12]
+ 198:libstr91x/src/91x_wiu.c **** }
+ 265              		.loc 1 198 0
+ 266 0100 1EFF2FE1 		bx	lr
+ 267              	.L30:
+ 268              		.align	2
+ 269              	.L29:
+ 270 0104 00100058 		.word	1476399104
+ 271              		.cfi_endproc
+ 272              	.LFE8:
+ 274              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_wiu.c
+     /tmp/ccobix2W.s:21     .text:00000000 $a
+     /tmp/ccobix2W.s:24     .text:00000000 WIU_Init
+     /tmp/ccobix2W.s:55     .text:00000030 $d
+     /tmp/ccobix2W.s:59     .text:00000034 $a
+     /tmp/ccobix2W.s:62     .text:00000034 WIU_DeInit
+     /tmp/ccobix2W.s:90     .text:00000054 WIU_StructInit
+     /tmp/ccobix2W.s:111    .text:00000064 WIU_Cmd
+     /tmp/ccobix2W.s:133    .text:00000080 $d
+     /tmp/ccobix2W.s:137    .text:00000084 $a
+     /tmp/ccobix2W.s:140    .text:00000084 WIU_GenerateSWInterrupt
+     /tmp/ccobix2W.s:158    .text:00000098 $d
+     /tmp/ccobix2W.s:162    .text:0000009c $a
+     /tmp/ccobix2W.s:165    .text:0000009c WIU_GetFlagStatus
+     /tmp/ccobix2W.s:186    .text:000000b4 $d
+     /tmp/ccobix2W.s:190    .text:000000b8 $a
+     /tmp/ccobix2W.s:193    .text:000000b8 WIU_ClearFlag
+     /tmp/ccobix2W.s:209    .text:000000c4 $d
+     /tmp/ccobix2W.s:213    .text:000000c8 $a
+     /tmp/ccobix2W.s:216    .text:000000c8 WIU_GetITStatus
+     /tmp/ccobix2W.s:247    .text:000000f4 $d
+     /tmp/ccobix2W.s:251    .text:000000f8 $a
+     /tmp/ccobix2W.s:254    .text:000000f8 WIU_ClearITPendingBit
+     /tmp/ccobix2W.s:270    .text:00000104 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset

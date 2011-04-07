@@ -1,0 +1,1482 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_i2c.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	I2C_DeInit
+  24              	I2C_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_i2c.c"
+   1:libstr91x/src/91x_i2c.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_i2c.c **** * File Name          : 91x_i2c.c
+   3:libstr91x/src/91x_i2c.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_i2c.c **** * Version            : V2.1
+   5:libstr91x/src/91x_i2c.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_i2c.c **** * Description        : This file provides all the I2C firmware functions.
+   7:libstr91x/src/91x_i2c.c **** ********************************************************************************
+   8:libstr91x/src/91x_i2c.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_i2c.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_i2c.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_i2c.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_i2c.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_i2c.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+  15:libstr91x/src/91x_i2c.c **** 
+  16:libstr91x/src/91x_i2c.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_i2c.c **** #include "91x_i2c.h"
+  18:libstr91x/src/91x_i2c.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_i2c.c **** 
+  20:libstr91x/src/91x_i2c.c **** /* Private typedef -----------------------------------------------------------*/
+  21:libstr91x/src/91x_i2c.c **** /* Private define ------------------------------------------------------------*/
+  22:libstr91x/src/91x_i2c.c **** 
+  23:libstr91x/src/91x_i2c.c **** /* I2C IT enable */
+  24:libstr91x/src/91x_i2c.c **** #define  I2C_IT_Enable     0x01
+  25:libstr91x/src/91x_i2c.c **** #define  I2C_IT_Disable    0xFE
+  26:libstr91x/src/91x_i2c.c **** 
+  27:libstr91x/src/91x_i2c.c **** /* I2C Peripheral Enable/Disable */
+  28:libstr91x/src/91x_i2c.c **** #define  I2C_PE_Set        0x20
+  29:libstr91x/src/91x_i2c.c **** #define  I2C_PE_Reset      0xDF
+  30:libstr91x/src/91x_i2c.c **** 
+  31:libstr91x/src/91x_i2c.c **** /* Address direction bit */
+  32:libstr91x/src/91x_i2c.c **** #define I2C_ADD0_Set       0x01
+  33:libstr91x/src/91x_i2c.c **** #define I2C_ADD0_Reset     0xFE
+  34:libstr91x/src/91x_i2c.c **** 
+  35:libstr91x/src/91x_i2c.c **** /* I2C START Enable/Disable */
+  36:libstr91x/src/91x_i2c.c **** #define  I2C_Start_Enable       0x08
+  37:libstr91x/src/91x_i2c.c **** #define  I2C_Start_Disable      0xF7
+  38:libstr91x/src/91x_i2c.c **** 
+  39:libstr91x/src/91x_i2c.c **** /* I2C STOP Enable/Disable */
+  40:libstr91x/src/91x_i2c.c **** #define  I2C_Stop_Enable        0x02
+  41:libstr91x/src/91x_i2c.c **** #define  I2C_Stop_Disable       0xFD
+  42:libstr91x/src/91x_i2c.c **** 
+  43:libstr91x/src/91x_i2c.c **** /* I2C Masks */
+  44:libstr91x/src/91x_i2c.c **** #define  I2C_Frequency_Mask     0x1F
+  45:libstr91x/src/91x_i2c.c **** #define  I2C_AddressHigh_Mask   0xF9
+  46:libstr91x/src/91x_i2c.c **** #define  I2C_OwnAddress_Mask    0x0300
+  47:libstr91x/src/91x_i2c.c **** #define  I2C_StandardMode_Mask  0x7f
+  48:libstr91x/src/91x_i2c.c **** #define  I2C_FastMode_Mask      0x80
+  49:libstr91x/src/91x_i2c.c **** #define  I2C_Event_Mask         0x3FFF
+  50:libstr91x/src/91x_i2c.c **** #define  I2C_HeaderSet_Mask     0xF1
+  51:libstr91x/src/91x_i2c.c **** #define  I2C_HeaderReset_Mask   0xFE
+  52:libstr91x/src/91x_i2c.c **** 
+  53:libstr91x/src/91x_i2c.c **** /* Private macro -------------------------------------------------------------*/
+  54:libstr91x/src/91x_i2c.c **** /* Private variables ---------------------------------------------------------*/
+  55:libstr91x/src/91x_i2c.c **** /* Private function prototypes -----------------------------------------------*/
+  56:libstr91x/src/91x_i2c.c **** /* Private functions ---------------------------------------------------------*/
+  57:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+  58:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_DeInit
+  59:libstr91x/src/91x_i2c.c **** * Description    : Deinitializes the I2C peripheral registers to their default
+  60:libstr91x/src/91x_i2c.c **** *                  reset values.
+  61:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+  62:libstr91x/src/91x_i2c.c **** *                    - I2C0
+  63:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+  64:libstr91x/src/91x_i2c.c **** * Output         : None
+  65:libstr91x/src/91x_i2c.c **** * Return         : None
+  66:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+  67:libstr91x/src/91x_i2c.c **** void I2C_DeInit(I2C_TypeDef* I2Cx)
+  68:libstr91x/src/91x_i2c.c **** {
+  27              		.loc 1 68 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  69:libstr91x/src/91x_i2c.c ****   if (I2Cx == I2C0)
+  32              		.loc 1 69 0
+  33 0000 4C309FE5 		ldr	r3, .L6
+  68:libstr91x/src/91x_i2c.c **** {
+  34              		.loc 1 68 0
+  35 0004 10402DE9 		stmfd	sp!, {r4, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.loc 1 69 0
+  39 0008 030050E1 		cmp	r0, r3
+  40 000c 0900000A 		beq	.L5
+  41              		.cfi_offset 14, -4
+  42              		.cfi_offset 4, -8
+  70:libstr91x/src/91x_i2c.c ****   {
+  71:libstr91x/src/91x_i2c.c ****   /* Reset the I2C0 registers values */
+  72:libstr91x/src/91x_i2c.c ****    SCU_APBPeriphReset(__I2C0, ENABLE);
+  73:libstr91x/src/91x_i2c.c ****    SCU_APBPeriphReset(__I2C0, DISABLE);
+  74:libstr91x/src/91x_i2c.c ****   }
+  75:libstr91x/src/91x_i2c.c ****    if (I2Cx == I2C1)
+  43              		.loc 1 75 0
+  44 0010 40109FE5 		ldr	r1, .L6+4
+  45 0014 010050E1 		cmp	r0, r1
+  46 0018 1080BD18 		ldmnefd	sp!, {r4, pc}
+  76:libstr91x/src/91x_i2c.c ****   {
+  77:libstr91x/src/91x_i2c.c ****   /* Reset the I2C1 registers values */
+  78:libstr91x/src/91x_i2c.c ****   SCU_APBPeriphReset(__I2C1, ENABLE);
+  47              		.loc 1 78 0
+  48 001c 8000A0E3 		mov	r0, #128
+  49              	.LVL1:
+  50 0020 0110A0E3 		mov	r1, #1
+  51 0024 FEFFFFEB 		bl	SCU_APBPeriphReset
+  79:libstr91x/src/91x_i2c.c ****   SCU_APBPeriphReset(__I2C1, DISABLE);
+  52              		.loc 1 79 0
+  53 0028 8000A0E3 		mov	r0, #128
+  54 002c 0010A0E3 		mov	r1, #0
+  80:libstr91x/src/91x_i2c.c ****   }
+  81:libstr91x/src/91x_i2c.c **** }
+  55              		.loc 1 81 0
+  56 0030 1040BDE8 		ldmfd	sp!, {r4, lr}
+  79:libstr91x/src/91x_i2c.c ****   SCU_APBPeriphReset(__I2C1, DISABLE);
+  57              		.loc 1 79 0
+  58 0034 FEFFFFEA 		b	SCU_APBPeriphReset
+  59              	.LVL2:
+  60              	.L5:
+  72:libstr91x/src/91x_i2c.c ****    SCU_APBPeriphReset(__I2C0, ENABLE);
+  61              		.loc 1 72 0
+  62 0038 4000A0E3 		mov	r0, #64
+  63              	.LVL3:
+  64 003c 0110A0E3 		mov	r1, #1
+  65 0040 FEFFFFEB 		bl	SCU_APBPeriphReset
+  73:libstr91x/src/91x_i2c.c ****    SCU_APBPeriphReset(__I2C0, DISABLE);
+  66              		.loc 1 73 0
+  67 0044 4000A0E3 		mov	r0, #64
+  68 0048 0010A0E3 		mov	r1, #0
+  69              		.loc 1 81 0
+  70 004c 1040BDE8 		ldmfd	sp!, {r4, lr}
+  73:libstr91x/src/91x_i2c.c ****    SCU_APBPeriphReset(__I2C0, DISABLE);
+  71              		.loc 1 73 0
+  72 0050 FEFFFFEA 		b	SCU_APBPeriphReset
+  73              	.L7:
+  74              		.align	2
+  75              	.L6:
+  76 0054 00C0005C 		.word	1543553024
+  77 0058 00D0005C 		.word	1543557120
+  78              		.cfi_endproc
+  79              	.LFE0:
+  81              		.global	__aeabi_uidiv
+  82              		.align	2
+  83              		.global	I2C_Init
+  85              	I2C_Init:
+  86              	.LFB1:
+  82:libstr91x/src/91x_i2c.c **** 
+  83:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+  84:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_Init
+  85:libstr91x/src/91x_i2c.c **** * Description    : Initializes the I2C  peripheral according to the specified
+  86:libstr91x/src/91x_i2c.c **** *                  parameters in the I2C_InitTypeDef structure.
+  87:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+  88:libstr91x/src/91x_i2c.c **** *                    - I2C0
+  89:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+  90:libstr91x/src/91x_i2c.c **** *
+  91:libstr91x/src/91x_i2c.c **** *                  - I2C_InitStruct: pointer to an I2C_InitTypeDef structure that
+  92:libstr91x/src/91x_i2c.c **** *                  contains the configuration information for the specified I2C
+  93:libstr91x/src/91x_i2c.c **** *                  peripheral.
+  94:libstr91x/src/91x_i2c.c **** * Output         : None
+  95:libstr91x/src/91x_i2c.c **** * Return         : None
+  96:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+  97:libstr91x/src/91x_i2c.c **** void I2C_Init(I2C_TypeDef* I2Cx, I2C_InitTypeDef* I2C_InitStruct)
+  98:libstr91x/src/91x_i2c.c **** {
+  87              		.loc 1 98 0
+  88              		.cfi_startproc
+  89              		@ args = 0, pretend = 0, frame = 0
+  90              		@ frame_needed = 0, uses_anonymous_args = 0
+  91              	.LVL4:
+  92 005c 38402DE9 		stmfd	sp!, {r3, r4, r5, lr}
+  93              	.LCFI1:
+  94              		.cfi_def_cfa_offset 16
+  95              		.loc 1 98 0
+  96 0060 0040A0E1 		mov	r4, r0
+  97              		.cfi_offset 14, -4
+  98              		.cfi_offset 5, -8
+  99              		.cfi_offset 4, -12
+ 100              		.cfi_offset 3, -16
+ 101 0064 0150A0E1 		mov	r5, r1
+  99:libstr91x/src/91x_i2c.c ****   u16 wResult = 0x0F;
+ 100:libstr91x/src/91x_i2c.c ****   u32 dPCLK = 25000000;
+ 101:libstr91x/src/91x_i2c.c **** 
+ 102:libstr91x/src/91x_i2c.c ****   /* Get PCLK frequency value */
+ 103:libstr91x/src/91x_i2c.c ****  dPCLK = SCU_GetPCLKFreqValue()*1000;
+ 102              		.loc 1 103 0
+ 103 0068 FEFFFFEB 		bl	SCU_GetPCLKFreqValue
+ 104              	.LVL5:
+ 105              	.LBB12:
+ 106              	.LBB13:
+ 104:libstr91x/src/91x_i2c.c ****   /* Disable I2C peripheral to set FR[2:0] bits */
+ 105:libstr91x/src/91x_i2c.c ****   I2C_Cmd (I2Cx, DISABLE);
+ 106:libstr91x/src/91x_i2c.c ****   /* Clear frequency FR[2:0] bits */
+ 107:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 &= I2C_Frequency_Mask;
+ 108:libstr91x/src/91x_i2c.c ****   /* Set frequency bits depending on PCLK value */
+ 109:libstr91x/src/91x_i2c.c ****   if ((dPCLK <1667000) & (dPCLK > 10000000))
+ 110:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x20;
+ 111:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 26670000)
+ 112:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x40;
+ 113:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 40000000)
+ 114:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x60;
+ 115:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 53330000)
+ 116:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x80;
+ 117:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 66000000)
+ 118:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0xA0;
+ 119:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 80000000)
+ 120:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0xC0;
+ 121:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 100000000)
+ 122:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0xE0;
+ 123:libstr91x/src/91x_i2c.c ****   I2C_Cmd (I2Cx, ENABLE);
+ 124:libstr91x/src/91x_i2c.c **** 
+ 125:libstr91x/src/91x_i2c.c ****   /* Configure general call */
+ 126:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_GeneralCall == I2C_GeneralCall_Enable)
+ 127:libstr91x/src/91x_i2c.c ****   {
+ 128:libstr91x/src/91x_i2c.c ****     /* Enable general call */
+ 129:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_GeneralCall_Enable;
+ 130:libstr91x/src/91x_i2c.c ****   }
+ 131:libstr91x/src/91x_i2c.c ****   else
+ 132:libstr91x/src/91x_i2c.c ****   {
+ 133:libstr91x/src/91x_i2c.c ****     /* Disable general call */
+ 134:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_GeneralCall_Disable;
+ 135:libstr91x/src/91x_i2c.c ****   }
+ 136:libstr91x/src/91x_i2c.c ****   /* Configure acknowledgement */
+ 137:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_Ack == I2C_Ack_Enable)
+ 138:libstr91x/src/91x_i2c.c ****   {
+ 139:libstr91x/src/91x_i2c.c ****     /* Enable acknowledgement */
+ 140:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_Ack_Enable;
+ 141:libstr91x/src/91x_i2c.c ****   }
+ 142:libstr91x/src/91x_i2c.c ****   else
+ 143:libstr91x/src/91x_i2c.c ****   {
+ 144:libstr91x/src/91x_i2c.c ****     /* Disable acknowledgement */
+ 145:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_Ack_Disable;
+ 146:libstr91x/src/91x_i2c.c ****   }
+ 147:libstr91x/src/91x_i2c.c **** 
+ 148:libstr91x/src/91x_i2c.c ****   /* Configure LSB own address */
+ 149:libstr91x/src/91x_i2c.c ****   I2Cx->OAR1 = I2C_InitStruct->I2C_OwnAddress;
+ 150:libstr91x/src/91x_i2c.c ****   /* Clear MSB own address ADD[9:8] bits */
+ 151:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 &= I2C_AddressHigh_Mask;
+ 152:libstr91x/src/91x_i2c.c ****   /* Set MSB own address value */
+ 153:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 |= (I2C_InitStruct->I2C_OwnAddress & I2C_OwnAddress_Mask)>>7;
+ 154:libstr91x/src/91x_i2c.c **** 
+ 155:libstr91x/src/91x_i2c.c ****   /* Configure speed in standard mode */
+ 156:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_CLKSpeed <= 100000)
+ 157:libstr91x/src/91x_i2c.c ****   {
+ 158:libstr91x/src/91x_i2c.c ****     /* Standard mode speed calculate */
+ 159:libstr91x/src/91x_i2c.c ****     wResult = ((dPCLK/I2C_InitStruct->I2C_CLKSpeed)-7)/2;
+ 160:libstr91x/src/91x_i2c.c ****     /* Set speed value and clear FM/SM bit for standard mode in LSB clock divider */
+ 161:libstr91x/src/91x_i2c.c ****     I2Cx->CCR = wResult & I2C_StandardMode_Mask;
+ 162:libstr91x/src/91x_i2c.c ****   }
+ 163:libstr91x/src/91x_i2c.c ****   /* Configure speed in fast mode */
+ 164:libstr91x/src/91x_i2c.c ****   else if (I2C_InitStruct->I2C_CLKSpeed <= 400000)
+ 165:libstr91x/src/91x_i2c.c ****   {
+ 166:libstr91x/src/91x_i2c.c ****     /* Fast mode speed calculate */
+ 167:libstr91x/src/91x_i2c.c ****     wResult = ((dPCLK/I2C_InitStruct->I2C_CLKSpeed)-9)/3;
+ 168:libstr91x/src/91x_i2c.c ****     /* Set speed value and set FM/SM bit for fast mode in LSB clock divider */
+ 169:libstr91x/src/91x_i2c.c ****     I2Cx->CCR = wResult | I2C_FastMode_Mask;
+ 170:libstr91x/src/91x_i2c.c ****   }
+ 171:libstr91x/src/91x_i2c.c ****   /* Set speed in MSB clock divider */
+ 172:libstr91x/src/91x_i2c.c ****   I2Cx->ECCR = wResult >>7;
+ 173:libstr91x/src/91x_i2c.c **** }
+ 174:libstr91x/src/91x_i2c.c **** 
+ 175:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 176:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_StructInit		         		
+ 177:libstr91x/src/91x_i2c.c **** * Description    : Initialize the I2C Init Structure parameters
+ 178:libstr91x/src/91x_i2c.c **** * Input          : - I2C_InitStruct: pointer to an I2C_InitTypeDef structure
+ 179:libstr91x/src/91x_i2c.c ****                      which will be initialized.
+ 180:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 181:libstr91x/src/91x_i2c.c **** * Return         : None.						
+ 182:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 183:libstr91x/src/91x_i2c.c **** void I2C_StructInit(I2C_InitTypeDef* I2C_InitStruct)
+ 184:libstr91x/src/91x_i2c.c **** {
+ 185:libstr91x/src/91x_i2c.c ****   /* Initialize the I2C_CLKSpeed member */
+ 186:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_CLKSpeed = 5000;
+ 187:libstr91x/src/91x_i2c.c **** 
+ 188:libstr91x/src/91x_i2c.c ****   /* Initialize the I2C_OwnAddress member */
+ 189:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_OwnAddress = 0x0;
+ 190:libstr91x/src/91x_i2c.c **** 
+ 191:libstr91x/src/91x_i2c.c ****   /* Initialize the I2C_GeneralCall member */
+ 192:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_GeneralCall = I2C_GeneralCall_Disable;
+ 193:libstr91x/src/91x_i2c.c **** 
+ 194:libstr91x/src/91x_i2c.c ****   /* Initialize the I2C_Ack member */
+ 195:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_Ack = I2C_Ack_Disable;
+ 196:libstr91x/src/91x_i2c.c **** }
+ 197:libstr91x/src/91x_i2c.c **** 
+ 198:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 199:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_Cmd
+ 200:libstr91x/src/91x_i2c.c **** * Description    : Enables or disables the specified I2C peripheral.
+ 201:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 202:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 203:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 204:libstr91x/src/91x_i2c.c **** *                 - NewState: new state of the I2C peripheral. This parameter
+ 205:libstr91x/src/91x_i2c.c **** *                    can be: ENABLE or DISABLE.
+ 206:libstr91x/src/91x_i2c.c **** * Output         : None
+ 207:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 208:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 209:libstr91x/src/91x_i2c.c **** void I2C_Cmd(I2C_TypeDef* I2Cx, FunctionalState NewState)
+ 210:libstr91x/src/91x_i2c.c **** {
+ 211:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 212:libstr91x/src/91x_i2c.c ****   {
+ 213:libstr91x/src/91x_i2c.c ****     /* Enable the I2C peripheral by setting twice the PE bit on the CR register */
+ 214:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_PE_Set;
+ 215:libstr91x/src/91x_i2c.c **** 	  I2Cx->CR |= I2C_PE_Set;
+ 216:libstr91x/src/91x_i2c.c ****   }
+ 217:libstr91x/src/91x_i2c.c ****   else
+ 218:libstr91x/src/91x_i2c.c ****   {
+ 219:libstr91x/src/91x_i2c.c ****     /* Disable the I2C peripheral */
+ 220:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_PE_Reset;
+ 107              		.loc 1 220 0
+ 108 006c 0030D4E5 		ldrb	r3, [r4, #0]	@ zero_extendqisi2
+ 109              	.LBE13:
+ 110              	.LBE12:
+ 103:libstr91x/src/91x_i2c.c ****  dPCLK = SCU_GetPCLKFreqValue()*1000;
+ 111              		.loc 1 103 0
+ 112 0070 FA2FA0E3 		mov	r2, #1000
+ 113 0074 920000E0 		mul	r0, r2, r0
+ 114              	.LVL6:
+ 115              	.LBB15:
+ 116              	.LBB14:
+ 117              		.loc 1 220 0
+ 118 0078 DFC003E2 		and	ip, r3, #223
+ 119 007c 00C0C4E5 		strb	ip, [r4, #0]
+ 120              	.LBE14:
+ 121              	.LBE15:
+ 107:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 &= I2C_Frequency_Mask;
+ 122              		.loc 1 107 0
+ 123 0080 1410D4E5 		ldrb	r1, [r4, #20]	@ zero_extendqisi2
+ 111:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 26670000)
+ 124              		.loc 1 111 0
+ 125 0084 80219FE5 		ldr	r2, .L24
+ 107:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 &= I2C_Frequency_Mask;
+ 126              		.loc 1 107 0
+ 127 0088 1F3001E2 		and	r3, r1, #31
+ 111:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 26670000)
+ 128              		.loc 1 111 0
+ 129 008c 020050E1 		cmp	r0, r2
+ 107:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 &= I2C_Frequency_Mask;
+ 130              		.loc 1 107 0
+ 131 0090 1430C4E5 		strb	r3, [r4, #20]
+ 111:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 26670000)
+ 132              		.loc 1 111 0
+ 133 0094 3300008A 		bhi	.L9
+ 112:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x40;
+ 134              		.loc 1 112 0
+ 135 0098 1410D4E5 		ldrb	r1, [r4, #20]	@ zero_extendqisi2
+ 136 009c 40E081E3 		orr	lr, r1, #64
+ 137 00a0 14E0C4E5 		strb	lr, [r4, #20]
+ 138              	.L10:
+ 139              	.LVL7:
+ 140              	.LBB16:
+ 141              	.LBB17:
+ 214:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_PE_Set;
+ 142              		.loc 1 214 0
+ 143 00a4 00E0D4E5 		ldrb	lr, [r4, #0]	@ zero_extendqisi2
+ 144 00a8 20308EE3 		orr	r3, lr, #32
+ 145 00ac 0030C4E5 		strb	r3, [r4, #0]
+ 215:libstr91x/src/91x_i2c.c **** 	  I2Cx->CR |= I2C_PE_Set;
+ 146              		.loc 1 215 0
+ 147 00b0 0020D4E5 		ldrb	r2, [r4, #0]	@ zero_extendqisi2
+ 148 00b4 20C082E3 		orr	ip, r2, #32
+ 149 00b8 00C0C4E5 		strb	ip, [r4, #0]
+ 150              	.LBE17:
+ 151              	.LBE16:
+ 126:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_GeneralCall == I2C_GeneralCall_Enable)
+ 152              		.loc 1 126 0
+ 153 00bc 0610D5E5 		ldrb	r1, [r5, #6]	@ zero_extendqisi2
+ 129:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_GeneralCall_Enable;
+ 154              		.loc 1 129 0
+ 155 00c0 00E0D4E5 		ldrb	lr, [r4, #0]	@ zero_extendqisi2
+ 126:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_GeneralCall == I2C_GeneralCall_Enable)
+ 156              		.loc 1 126 0
+ 157 00c4 100051E3 		cmp	r1, #16
+ 129:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_GeneralCall_Enable;
+ 158              		.loc 1 129 0
+ 159 00c8 10E08E03 		orreq	lr, lr, #16
+ 134:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_GeneralCall_Disable;
+ 160              		.loc 1 134 0
+ 161 00cc EFE00E12 		andne	lr, lr, #239
+ 162 00d0 00E0C4E5 		strb	lr, [r4, #0]
+ 137:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_Ack == I2C_Ack_Enable)
+ 163              		.loc 1 137 0
+ 164 00d4 0730D5E5 		ldrb	r3, [r5, #7]	@ zero_extendqisi2
+ 140:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_Ack_Enable;
+ 165              		.loc 1 140 0
+ 166 00d8 0020D4E5 		ldrb	r2, [r4, #0]	@ zero_extendqisi2
+ 137:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_Ack == I2C_Ack_Enable)
+ 167              		.loc 1 137 0
+ 168 00dc 040053E3 		cmp	r3, #4
+ 140:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_Ack_Enable;
+ 169              		.loc 1 140 0
+ 170 00e0 04208203 		orreq	r2, r2, #4
+ 145:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_Ack_Disable;
+ 171              		.loc 1 145 0
+ 172 00e4 FB200212 		andne	r2, r2, #251
+ 173 00e8 0020C4E5 		strb	r2, [r4, #0]
+ 149:libstr91x/src/91x_i2c.c ****   I2Cx->OAR1 = I2C_InitStruct->I2C_OwnAddress;
+ 174              		.loc 1 149 0
+ 175 00ec 04C0D5E5 		ldrb	ip, [r5, #4]	@ zero_extendqisi2
+ 176 00f0 10C0C4E5 		strb	ip, [r4, #16]
+ 151:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 &= I2C_AddressHigh_Mask;
+ 177              		.loc 1 151 0
+ 178 00f4 1410D4E5 		ldrb	r1, [r4, #20]	@ zero_extendqisi2
+ 179 00f8 F9E001E2 		and	lr, r1, #249
+ 180 00fc 14E0C4E5 		strb	lr, [r4, #20]
+ 153:libstr91x/src/91x_i2c.c ****   I2Cx->OAR2 |= (I2C_InitStruct->I2C_OwnAddress & I2C_OwnAddress_Mask)>>7;
+ 181              		.loc 1 153 0
+ 182 0100 B430D5E1 		ldrh	r3, [r5, #4]
+ 183 0104 1420D4E5 		ldrb	r2, [r4, #20]	@ zero_extendqisi2
+ 184 0108 03CC03E2 		and	ip, r3, #768
+ 185 010c AC1382E1 		orr	r1, r2, ip, lsr #7
+ 186 0110 1410C4E5 		strb	r1, [r4, #20]
+ 156:libstr91x/src/91x_i2c.c ****   if (I2C_InitStruct->I2C_CLKSpeed <= 100000)
+ 187              		.loc 1 156 0
+ 188 0114 001095E5 		ldr	r1, [r5, #0]
+ 189 0118 F0E09FE5 		ldr	lr, .L24+4
+ 190 011c 0E0051E1 		cmp	r1, lr
+ 191 0120 2000009A 		bls	.L22
+ 164:libstr91x/src/91x_i2c.c ****   else if (I2C_InitStruct->I2C_CLKSpeed <= 400000)
+ 192              		.loc 1 164 0
+ 193 0124 E8309FE5 		ldr	r3, .L24+8
+ 194 0128 030051E1 		cmp	r1, r3
+ 195 012c 0030A083 		movhi	r3, #0
+ 196 0130 0A00008A 		bhi	.L20
+ 167:libstr91x/src/91x_i2c.c ****     wResult = ((dPCLK/I2C_InitStruct->I2C_CLKSpeed)-9)/3;
+ 197              		.loc 1 167 0
+ 198 0134 FEFFFFEB 		bl	__aeabi_uidiv
+ 199              	.LVL8:
+ 200 0138 D8309FE5 		ldr	r3, .L24+12
+ 201 013c 090040E2 		sub	r0, r0, #9
+ 202 0140 902383E0 		umull	r2, r3, r0, r3
+ 203 0144 A310A0E1 		mov	r1, r3, lsr #1
+ 169:libstr91x/src/91x_i2c.c ****     I2Cx->CCR = wResult | I2C_FastMode_Mask;
+ 204              		.loc 1 169 0
+ 205 0148 812CE0E1 		mvn	r2, r1, asl #25
+ 206 014c A2CCE0E1 		mvn	ip, r2, lsr #25
+ 207 0150 FF000CE2 		and	r0, ip, #255
+ 208 0154 A133A0E1 		mov	r3, r1, lsr #7
+ 209 0158 0C00C4E5 		strb	r0, [r4, #12]
+ 210 015c FF3003E2 		and	r3, r3, #255
+ 211              	.L20:
+ 172:libstr91x/src/91x_i2c.c ****   I2Cx->ECCR = wResult >>7;
+ 212              		.loc 1 172 0
+ 213 0160 1C30C4E5 		strb	r3, [r4, #28]
+ 173:libstr91x/src/91x_i2c.c **** }
+ 214              		.loc 1 173 0
+ 215 0164 3880BDE8 		ldmfd	sp!, {r3, r4, r5, pc}
+ 216              	.LVL9:
+ 217              	.L9:
+ 113:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 40000000)
+ 218              		.loc 1 113 0
+ 219 0168 ACC09FE5 		ldr	ip, .L24+16
+ 220 016c 0C0050E1 		cmp	r0, ip
+ 114:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x60;
+ 221              		.loc 1 114 0
+ 222 0170 1420D495 		ldrlsb	r2, [r4, #20]	@ zero_extendqisi2
+ 223 0174 60308293 		orrls	r3, r2, #96
+ 224 0178 1430C495 		strlsb	r3, [r4, #20]
+ 225 017c C8FFFF9A 		bls	.L10
+ 226              	.L11:
+ 115:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 53330000)
+ 227              		.loc 1 115 0
+ 228 0180 98E09FE5 		ldr	lr, .L24+20
+ 229 0184 0E0050E1 		cmp	r0, lr
+ 230 0188 0F00009A 		bls	.L23
+ 117:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 66000000)
+ 231              		.loc 1 117 0
+ 232 018c 90309FE5 		ldr	r3, .L24+24
+ 233 0190 030050E1 		cmp	r0, r3
+ 234 0194 1000008A 		bhi	.L13
+ 118:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0xA0;
+ 235              		.loc 1 118 0
+ 236 0198 14E0D4E5 		ldrb	lr, [r4, #20]	@ zero_extendqisi2
+ 237 019c A0208EE3 		orr	r2, lr, #160
+ 238 01a0 1420C4E5 		strb	r2, [r4, #20]
+ 239 01a4 BEFFFFEA 		b	.L10
+ 240              	.LVL10:
+ 241              	.L22:
+ 159:libstr91x/src/91x_i2c.c ****     wResult = ((dPCLK/I2C_InitStruct->I2C_CLKSpeed)-7)/2;
+ 242              		.loc 1 159 0
+ 243 01a8 FEFFFFEB 		bl	__aeabi_uidiv
+ 244              	.LVL11:
+ 245 01ac 072040E2 		sub	r2, r0, #7
+ 246 01b0 A2C0A0E1 		mov	ip, r2, lsr #1
+ 161:libstr91x/src/91x_i2c.c ****     I2Cx->CCR = wResult & I2C_StandardMode_Mask;
+ 247              		.loc 1 161 0
+ 248 01b4 AC03A0E1 		mov	r0, ip, lsr #7
+ 249 01b8 7F100CE2 		and	r1, ip, #127
+ 250 01bc FF3000E2 		and	r3, r0, #255
+ 251 01c0 0C10C4E5 		strb	r1, [r4, #12]
+ 172:libstr91x/src/91x_i2c.c ****   I2Cx->ECCR = wResult >>7;
+ 252              		.loc 1 172 0
+ 253 01c4 1C30C4E5 		strb	r3, [r4, #28]
+ 173:libstr91x/src/91x_i2c.c **** }
+ 254              		.loc 1 173 0
+ 255 01c8 3880BDE8 		ldmfd	sp!, {r3, r4, r5, pc}
+ 256              	.LVL12:
+ 257              	.L23:
+ 116:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0x80;
+ 258              		.loc 1 116 0
+ 259 01cc 14C0D4E5 		ldrb	ip, [r4, #20]	@ zero_extendqisi2
+ 260 01d0 80108CE3 		orr	r1, ip, #128
+ 261 01d4 1410C4E5 		strb	r1, [r4, #20]
+ 262 01d8 B1FFFFEA 		b	.L10
+ 263              	.L13:
+ 119:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 80000000)
+ 264              		.loc 1 119 0
+ 265 01dc 44109FE5 		ldr	r1, .L24+28
+ 266 01e0 010050E1 		cmp	r0, r1
+ 120:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0xC0;
+ 267              		.loc 1 120 0
+ 268 01e4 1430D495 		ldrlsb	r3, [r4, #20]	@ zero_extendqisi2
+ 269 01e8 C0C08393 		orrls	ip, r3, #192
+ 270 01ec 14C0C495 		strlsb	ip, [r4, #20]
+ 271 01f0 ABFFFF9A 		bls	.L10
+ 272              	.L14:
+ 121:libstr91x/src/91x_i2c.c ****   else if (dPCLK < 100000000)
+ 273              		.loc 1 121 0
+ 274 01f4 30209FE5 		ldr	r2, .L24+32
+ 275 01f8 020050E1 		cmp	r0, r2
+ 122:libstr91x/src/91x_i2c.c ****     I2Cx->OAR2 |= 0xE0;
+ 276              		.loc 1 122 0
+ 277 01fc 1420D495 		ldrlsb	r2, [r4, #20]	@ zero_extendqisi2
+ 278 0200 E0208293 		orrls	r2, r2, #224
+ 279 0204 1420C495 		strlsb	r2, [r4, #20]
+ 280 0208 A5FFFFEA 		b	.L10
+ 281              	.L25:
+ 282              		.align	2
+ 283              	.L24:
+ 284 020c AFF39601 		.word	26669999
+ 285 0210 A0860100 		.word	100000
+ 286 0214 801A0600 		.word	400000
+ 287 0218 ABAAAAAA 		.word	-1431655765
+ 288 021c FF596202 		.word	39999999
+ 289 0220 4FC02D03 		.word	53329999
+ 290 0224 7F14EF03 		.word	65999999
+ 291 0228 FFB3C404 		.word	79999999
+ 292 022c FFE0F505 		.word	99999999
+ 293              		.cfi_endproc
+ 294              	.LFE1:
+ 296              		.align	2
+ 297              		.global	I2C_StructInit
+ 299              	I2C_StructInit:
+ 300              	.LFB2:
+ 184:libstr91x/src/91x_i2c.c **** {
+ 301              		.loc 1 184 0
+ 302              		.cfi_startproc
+ 303              		@ args = 0, pretend = 0, frame = 0
+ 304              		@ frame_needed = 0, uses_anonymous_args = 0
+ 305              		@ link register save eliminated.
+ 306              	.LVL13:
+ 186:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_CLKSpeed = 5000;
+ 307              		.loc 1 186 0
+ 308 0230 1CC09FE5 		ldr	ip, .L27
+ 189:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_OwnAddress = 0x0;
+ 309              		.loc 1 189 0
+ 310 0234 0020A0E3 		mov	r2, #0	@ movhi
+ 192:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_GeneralCall = I2C_GeneralCall_Disable;
+ 311              		.loc 1 192 0
+ 312 0238 1010E0E3 		mvn	r1, #16
+ 195:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_Ack = I2C_Ack_Disable;
+ 313              		.loc 1 195 0
+ 314 023c 0430E0E3 		mvn	r3, #4
+ 186:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_CLKSpeed = 5000;
+ 315              		.loc 1 186 0
+ 316 0240 00C080E5 		str	ip, [r0, #0]
+ 189:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_OwnAddress = 0x0;
+ 317              		.loc 1 189 0
+ 318 0244 B420C0E1 		strh	r2, [r0, #4]	@ movhi
+ 192:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_GeneralCall = I2C_GeneralCall_Disable;
+ 319              		.loc 1 192 0
+ 320 0248 0610C0E5 		strb	r1, [r0, #6]
+ 195:libstr91x/src/91x_i2c.c ****   I2C_InitStruct->I2C_Ack = I2C_Ack_Disable;
+ 321              		.loc 1 195 0
+ 322 024c 0730C0E5 		strb	r3, [r0, #7]
+ 196:libstr91x/src/91x_i2c.c **** }
+ 323              		.loc 1 196 0
+ 324 0250 1EFF2FE1 		bx	lr
+ 325              	.L28:
+ 326              		.align	2
+ 327              	.L27:
+ 328 0254 88130000 		.word	5000
+ 329              		.cfi_endproc
+ 330              	.LFE2:
+ 332              		.align	2
+ 333              		.global	I2C_Cmd
+ 335              	I2C_Cmd:
+ 336              	.LFB3:
+ 210:libstr91x/src/91x_i2c.c **** {
+ 337              		.loc 1 210 0
+ 338              		.cfi_startproc
+ 339              		@ args = 0, pretend = 0, frame = 0
+ 340              		@ frame_needed = 0, uses_anonymous_args = 0
+ 341              		@ link register save eliminated.
+ 342              	.LVL14:
+ 214:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_PE_Set;
+ 343              		.loc 1 214 0
+ 344 0258 0030D0E5 		ldrb	r3, [r0, #0]	@ zero_extendqisi2
+ 211:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 345              		.loc 1 211 0
+ 346 025c 010051E3 		cmp	r1, #1
+ 214:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_PE_Set;
+ 347              		.loc 1 214 0
+ 348 0260 20308303 		orreq	r3, r3, #32
+ 349 0264 0030C005 		streqb	r3, [r0, #0]
+ 215:libstr91x/src/91x_i2c.c **** 	  I2Cx->CR |= I2C_PE_Set;
+ 350              		.loc 1 215 0
+ 351 0268 0030D005 		ldreqb	r3, [r0, #0]	@ zero_extendqisi2
+ 352              		.loc 1 220 0
+ 353 026c DF300312 		andne	r3, r3, #223
+ 215:libstr91x/src/91x_i2c.c **** 	  I2Cx->CR |= I2C_PE_Set;
+ 354              		.loc 1 215 0
+ 355 0270 20308303 		orreq	r3, r3, #32
+ 356              		.loc 1 220 0
+ 357 0274 0030C0E5 		strb	r3, [r0, #0]
+ 358 0278 1EFF2FE1 		bx	lr
+ 359              		.cfi_endproc
+ 360              	.LFE3:
+ 362              		.align	2
+ 363              		.global	I2C_GenerateStart
+ 365              	I2C_GenerateStart:
+ 366              	.LFB4:
+ 221:libstr91x/src/91x_i2c.c ****   }
+ 222:libstr91x/src/91x_i2c.c **** }
+ 223:libstr91x/src/91x_i2c.c **** 
+ 224:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 225:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_GenerateSTART
+ 226:libstr91x/src/91x_i2c.c **** * Description    : Generates I2C communication START condition.
+ 227:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 228:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 229:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 230:libstr91x/src/91x_i2c.c **** *
+ 231:libstr91x/src/91x_i2c.c **** *                 - NewState: new state of the Start condition. This parameter
+ 232:libstr91x/src/91x_i2c.c **** *                    can be: ENABLE or DISABLE.
+ 233:libstr91x/src/91x_i2c.c **** * Output         : None
+ 234:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 235:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 236:libstr91x/src/91x_i2c.c **** void I2C_GenerateStart(I2C_TypeDef* I2Cx, FunctionalState NewState)
+ 237:libstr91x/src/91x_i2c.c **** {
+ 367              		.loc 1 237 0
+ 368              		.cfi_startproc
+ 369              		@ args = 0, pretend = 0, frame = 0
+ 370              		@ frame_needed = 0, uses_anonymous_args = 0
+ 371              		@ link register save eliminated.
+ 372              	.LVL15:
+ 238:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 239:libstr91x/src/91x_i2c.c ****   {
+ 240:libstr91x/src/91x_i2c.c ****     /* Generate a START condition */
+ 241:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_Start_Enable;
+ 373              		.loc 1 241 0
+ 374 027c 0030D0E5 		ldrb	r3, [r0, #0]	@ zero_extendqisi2
+ 238:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 375              		.loc 1 238 0
+ 376 0280 010051E3 		cmp	r1, #1
+ 377              		.loc 1 241 0
+ 378 0284 08308303 		orreq	r3, r3, #8
+ 242:libstr91x/src/91x_i2c.c ****   }
+ 243:libstr91x/src/91x_i2c.c ****   else
+ 244:libstr91x/src/91x_i2c.c ****   {
+ 245:libstr91x/src/91x_i2c.c ****     /* Disable the START condition generation */
+ 246:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_Start_Disable;
+ 379              		.loc 1 246 0
+ 380 0288 F7300312 		andne	r3, r3, #247
+ 381 028c 0030C0E5 		strb	r3, [r0, #0]
+ 382 0290 1EFF2FE1 		bx	lr
+ 383              		.cfi_endproc
+ 384              	.LFE4:
+ 386              		.align	2
+ 387              		.global	I2C_GenerateSTOP
+ 389              	I2C_GenerateSTOP:
+ 390              	.LFB5:
+ 247:libstr91x/src/91x_i2c.c ****   }
+ 248:libstr91x/src/91x_i2c.c **** }
+ 249:libstr91x/src/91x_i2c.c **** 
+ 250:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 251:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_GenerateSTOP
+ 252:libstr91x/src/91x_i2c.c **** * Description    : Generates I2C communication STOP condition.
+ 253:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 254:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 255:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 256:libstr91x/src/91x_i2c.c **** *
+ 257:libstr91x/src/91x_i2c.c **** *                  - NewState: new state of the Stop condition. This parameter
+ 258:libstr91x/src/91x_i2c.c **** *                    can be: ENABLE or DISABLE.
+ 259:libstr91x/src/91x_i2c.c **** * Output         : None
+ 260:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 261:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 262:libstr91x/src/91x_i2c.c **** void I2C_GenerateSTOP(I2C_TypeDef* I2Cx, FunctionalState NewState)
+ 263:libstr91x/src/91x_i2c.c **** {
+ 391              		.loc 1 263 0
+ 392              		.cfi_startproc
+ 393              		@ args = 0, pretend = 0, frame = 0
+ 394              		@ frame_needed = 0, uses_anonymous_args = 0
+ 395              		@ link register save eliminated.
+ 396              	.LVL16:
+ 264:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 265:libstr91x/src/91x_i2c.c ****   {
+ 266:libstr91x/src/91x_i2c.c ****     /* Generate a SIOP condition */
+ 267:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_Stop_Enable;
+ 397              		.loc 1 267 0
+ 398 0294 0030D0E5 		ldrb	r3, [r0, #0]	@ zero_extendqisi2
+ 264:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 399              		.loc 1 264 0
+ 400 0298 010051E3 		cmp	r1, #1
+ 401              		.loc 1 267 0
+ 402 029c 02308303 		orreq	r3, r3, #2
+ 268:libstr91x/src/91x_i2c.c ****   }
+ 269:libstr91x/src/91x_i2c.c ****   else
+ 270:libstr91x/src/91x_i2c.c ****   {
+ 271:libstr91x/src/91x_i2c.c ****     /* Disable the STOP condition generation */
+ 272:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_Stop_Disable;
+ 403              		.loc 1 272 0
+ 404 02a0 FD300312 		andne	r3, r3, #253
+ 405 02a4 0030C0E5 		strb	r3, [r0, #0]
+ 406 02a8 1EFF2FE1 		bx	lr
+ 407              		.cfi_endproc
+ 408              	.LFE5:
+ 410              		.align	2
+ 411              		.global	I2C_AcknowledgeConfig
+ 413              	I2C_AcknowledgeConfig:
+ 414              	.LFB6:
+ 273:libstr91x/src/91x_i2c.c ****   }
+ 274:libstr91x/src/91x_i2c.c **** }
+ 275:libstr91x/src/91x_i2c.c **** 
+ 276:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 277:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_AcknowledgeConfig
+ 278:libstr91x/src/91x_i2c.c **** * Description    : Enables or disables I2C acknowledge feature.
+ 279:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 280:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 281:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 282:libstr91x/src/91x_i2c.c **** *                 - NewState: new state of the Acknowledgement. This parameter
+ 283:libstr91x/src/91x_i2c.c **** *                    can be: ENABLE or DISABLE.
+ 284:libstr91x/src/91x_i2c.c **** * Output         : None
+ 285:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 286:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 287:libstr91x/src/91x_i2c.c **** void I2C_AcknowledgeConfig(I2C_TypeDef *I2Cx, FunctionalState NewState)
+ 288:libstr91x/src/91x_i2c.c **** {
+ 415              		.loc 1 288 0
+ 416              		.cfi_startproc
+ 417              		@ args = 0, pretend = 0, frame = 0
+ 418              		@ frame_needed = 0, uses_anonymous_args = 0
+ 419              		@ link register save eliminated.
+ 420              	.LVL17:
+ 289:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 290:libstr91x/src/91x_i2c.c ****   {
+ 291:libstr91x/src/91x_i2c.c ****     /* Enable the acknowledgement */
+ 292:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_Ack_Enable;
+ 421              		.loc 1 292 0
+ 422 02ac 0030D0E5 		ldrb	r3, [r0, #0]	@ zero_extendqisi2
+ 289:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 423              		.loc 1 289 0
+ 424 02b0 010051E3 		cmp	r1, #1
+ 425              		.loc 1 292 0
+ 426 02b4 04308303 		orreq	r3, r3, #4
+ 293:libstr91x/src/91x_i2c.c ****   }
+ 294:libstr91x/src/91x_i2c.c ****   else
+ 295:libstr91x/src/91x_i2c.c ****   {
+ 296:libstr91x/src/91x_i2c.c ****     /* Disable the acknowledgement */
+ 297:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_Ack_Disable;
+ 427              		.loc 1 297 0
+ 428 02b8 FB300312 		andne	r3, r3, #251
+ 429 02bc 0030C0E5 		strb	r3, [r0, #0]
+ 430 02c0 1EFF2FE1 		bx	lr
+ 431              		.cfi_endproc
+ 432              	.LFE6:
+ 434              		.align	2
+ 435              		.global	I2C_ITConfig
+ 437              	I2C_ITConfig:
+ 438              	.LFB7:
+ 298:libstr91x/src/91x_i2c.c ****   }
+ 299:libstr91x/src/91x_i2c.c **** }
+ 300:libstr91x/src/91x_i2c.c **** 
+ 301:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 302:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_ITConfig
+ 303:libstr91x/src/91x_i2c.c **** * Description    : Enables or disables I2C interrupt feature.
+ 304:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 305:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 306:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 307:libstr91x/src/91x_i2c.c **** *                  - NewState: new state of the specified I2C interrupt.
+ 308:libstr91x/src/91x_i2c.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 309:libstr91x/src/91x_i2c.c **** * Output         : None
+ 310:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 311:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 312:libstr91x/src/91x_i2c.c **** void I2C_ITConfig(I2C_TypeDef *I2Cx, FunctionalState NewState)
+ 313:libstr91x/src/91x_i2c.c **** {
+ 439              		.loc 1 313 0
+ 440              		.cfi_startproc
+ 441              		@ args = 0, pretend = 0, frame = 0
+ 442              		@ frame_needed = 0, uses_anonymous_args = 0
+ 443              		@ link register save eliminated.
+ 444              	.LVL18:
+ 314:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 315:libstr91x/src/91x_i2c.c ****   {
+ 316:libstr91x/src/91x_i2c.c ****     /* Enable the I2C interrupt */
+ 317:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_IT_Enable;
+ 445              		.loc 1 317 0
+ 446 02c4 0030D0E5 		ldrb	r3, [r0, #0]	@ zero_extendqisi2
+ 314:libstr91x/src/91x_i2c.c ****   if (NewState == ENABLE)
+ 447              		.loc 1 314 0
+ 448 02c8 010051E3 		cmp	r1, #1
+ 449              		.loc 1 317 0
+ 450 02cc 01308303 		orreq	r3, r3, #1
+ 318:libstr91x/src/91x_i2c.c ****   }
+ 319:libstr91x/src/91x_i2c.c ****   else
+ 320:libstr91x/src/91x_i2c.c ****   {
+ 321:libstr91x/src/91x_i2c.c ****     /* Disable the I2C interrupt */
+ 322:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_IT_Disable;
+ 451              		.loc 1 322 0
+ 452 02d0 FE300312 		andne	r3, r3, #254
+ 453 02d4 0030C0E5 		strb	r3, [r0, #0]
+ 454 02d8 1EFF2FE1 		bx	lr
+ 455              		.cfi_endproc
+ 456              	.LFE7:
+ 458              		.align	2
+ 459              		.global	I2C_ReadRegister
+ 461              	I2C_ReadRegister:
+ 462              	.LFB8:
+ 323:libstr91x/src/91x_i2c.c ****   }
+ 324:libstr91x/src/91x_i2c.c **** }
+ 325:libstr91x/src/91x_i2c.c **** 
+ 326:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 327:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_ReadRegister
+ 328:libstr91x/src/91x_i2c.c **** * Description    : Reads any I2C register and returns its value.
+ 329:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 330:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 331:libstr91x/src/91x_i2c.c **** *					 - I2C1     
+ 332:libstr91x/src/91x_i2c.c **** *                 - I2C_Register: the I2C register to be read. This parameter
+ 333:libstr91x/src/91x_i2c.c **** *                    can be one of the following values:
+ 334:libstr91x/src/91x_i2c.c **** *                         - I2C_CR:   CR register.
+ 335:libstr91x/src/91x_i2c.c **** *                         - I2C_SR1:  SR1 register.
+ 336:libstr91x/src/91x_i2c.c **** *                         - I2C_SR2:  SR2 register.
+ 337:libstr91x/src/91x_i2c.c **** *                         - I2C_CCR:  CCR register.
+ 338:libstr91x/src/91x_i2c.c **** *                         - I2C_OAR1: OAR1 register.
+ 339:libstr91x/src/91x_i2c.c **** *                         - I2C_OAR2: OAR2 register.
+ 340:libstr91x/src/91x_i2c.c **** *                         - I2C_DR:   DR register.
+ 341:libstr91x/src/91x_i2c.c **** *                         - I2C_ECCR: ECCR register.
+ 342:libstr91x/src/91x_i2c.c **** * Output         : None
+ 343:libstr91x/src/91x_i2c.c **** * Return         : The value of the register passed as parameter
+ 344:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 345:libstr91x/src/91x_i2c.c **** u8 I2C_ReadRegister(I2C_TypeDef* I2Cx, u8 I2C_Register)
+ 346:libstr91x/src/91x_i2c.c **** {
+ 463              		.loc 1 346 0
+ 464              		.cfi_startproc
+ 465              		@ args = 0, pretend = 0, frame = 0
+ 466              		@ frame_needed = 0, uses_anonymous_args = 0
+ 467              		@ link register save eliminated.
+ 468              	.LVL19:
+ 347:libstr91x/src/91x_i2c.c ****   /* Return the selected register value */
+ 348:libstr91x/src/91x_i2c.c ****   if (I2Cx == I2C0)
+ 469              		.loc 1 348 0
+ 470 02dc 20309FE5 		ldr	r3, .L49
+ 471 02e0 030050E1 		cmp	r0, r3
+ 472 02e4 0400000A 		beq	.L48
+ 349:libstr91x/src/91x_i2c.c ****   {
+ 350:libstr91x/src/91x_i2c.c ****   return (*(u8 *)(I2C0_BASE + I2C_Register));
+ 351:libstr91x/src/91x_i2c.c ****   }
+ 352:libstr91x/src/91x_i2c.c ****   if (I2Cx == I2C1)
+ 473              		.loc 1 352 0
+ 474 02e8 18209FE5 		ldr	r2, .L49+4
+ 475 02ec 020050E1 		cmp	r0, r2
+ 476 02f0 0100000A 		beq	.L48
+ 353:libstr91x/src/91x_i2c.c ****   {
+ 354:libstr91x/src/91x_i2c.c ****   return (*(u8 *)(I2C1_BASE + I2C_Register));
+ 355:libstr91x/src/91x_i2c.c ****   }
+ 356:libstr91x/src/91x_i2c.c ****  return 0;
+ 477              		.loc 1 356 0
+ 478 02f4 0000A0E3 		mov	r0, #0
+ 479              	.LVL20:
+ 357:libstr91x/src/91x_i2c.c **** }
+ 480              		.loc 1 357 0
+ 481 02f8 1EFF2FE1 		bx	lr
+ 482              	.LVL21:
+ 483              	.L48:
+ 354:libstr91x/src/91x_i2c.c ****   return (*(u8 *)(I2C1_BASE + I2C_Register));
+ 484              		.loc 1 354 0
+ 485 02fc 0000D1E7 		ldrb	r0, [r1, r0]	@ zero_extendqisi2
+ 486              	.LVL22:
+ 487 0300 1EFF2FE1 		bx	lr
+ 488              	.L50:
+ 489              		.align	2
+ 490              	.L49:
+ 491 0304 00C0005C 		.word	1543553024
+ 492 0308 00D0005C 		.word	1543557120
+ 493              		.cfi_endproc
+ 494              	.LFE8:
+ 496              		.align	2
+ 497              		.global	I2C_GetFlagStatus
+ 499              	I2C_GetFlagStatus:
+ 500              	.LFB9:
+ 358:libstr91x/src/91x_i2c.c **** 
+ 359:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 360:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_GetFlagStatus
+ 361:libstr91x/src/91x_i2c.c **** * Description    : Checks whether the specified I2C flag is set or not.
+ 362:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 363:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 364:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 365:libstr91x/src/91x_i2c.c **** *                 - I2C_FLAG: flag to check. This parameter can be one of the
+ 366:libstr91x/src/91x_i2c.c **** *                    following values:
+ 367:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_SB: Start bit flag
+ 368:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_M_SL: Master/Slave flag
+ 369:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ADSL: Adress matched flag
+ 370:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_BTF: Byte transfer finished flag
+ 371:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_BUSY: Bus busy flag
+ 372:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_TRA: Transmitter/Receiver flag
+ 373:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ADD10: 10-bit addressing in Master mode flag
+ 374:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_EVF: Event flag
+ 375:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_GCAL: General call flag
+ 376:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_BERR: Bus error flag
+ 377:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ARLO: Arbitration lost flag
+ 378:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_STOPF: Stop detection flag
+ 379:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_AF: Acknowledge failure flag
+ 380:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ENDAD: End of address transmission flag
+ 381:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ACK: Acknowledge enable flag
+ 382:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 383:libstr91x/src/91x_i2c.c **** * Return         : The NewState of the I2C_Flag (SET or RESET).
+ 384:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 385:libstr91x/src/91x_i2c.c **** FlagStatus I2C_GetFlagStatus(I2C_TypeDef* I2Cx, u16 I2C_FLAG)
+ 386:libstr91x/src/91x_i2c.c **** {
+ 501              		.loc 1 386 0
+ 502              		.cfi_startproc
+ 503              		@ args = 0, pretend = 0, frame = 0
+ 504              		@ frame_needed = 0, uses_anonymous_args = 0
+ 505              		@ link register save eliminated.
+ 506              	.LVL23:
+ 387:libstr91x/src/91x_i2c.c ****   u16 wFlag1=0, wFlag2=0, wTmp=0;
+ 388:libstr91x/src/91x_i2c.c **** 
+ 389:libstr91x/src/91x_i2c.c ****   wFlag1 = I2Cx->SR2;
+ 507              		.loc 1 389 0
+ 508 030c 08C0D0E5 		ldrb	ip, [r0, #8]	@ zero_extendqisi2
+ 509              	.LVL24:
+ 390:libstr91x/src/91x_i2c.c ****   wFlag1 = wFlag1<<8;
+ 391:libstr91x/src/91x_i2c.c ****   wFlag2 = I2Cx->CR & 0x04;
+ 510              		.loc 1 391 0
+ 511 0310 0020D0E5 		ldrb	r2, [r0, #0]	@ zero_extendqisi2
+ 512              	.LVL25:
+ 392:libstr91x/src/91x_i2c.c **** 
+ 393:libstr91x/src/91x_i2c.c ****   /* Get all the I2C flags in a unique register*/
+ 394:libstr91x/src/91x_i2c.c ****   wTmp = (((I2Cx->SR1 | (wFlag1)) & I2C_Event_Mask) | (wFlag2<<12));
+ 513              		.loc 1 394 0
+ 514 0314 0400D0E5 		ldrb	r0, [r0, #4]	@ zero_extendqisi2
+ 515              	.LVL26:
+ 516 0318 042002E2 		and	r2, r2, #4
+ 517 031c 0C3480E1 		orr	r3, r0, ip, asl #8
+ 518 0320 03C9A0E1 		mov	ip, r3, asl #18
+ 519              	.LVL27:
+ 520 0324 2C09A0E1 		mov	r0, ip, lsr #18
+ 521 0328 023680E1 		orr	r3, r0, r2, asl #12
+ 395:libstr91x/src/91x_i2c.c **** 
+ 396:libstr91x/src/91x_i2c.c ****   /* Check the status of the specified I2C flag */
+ 397:libstr91x/src/91x_i2c.c ****   if((wTmp & I2C_FLAG) != RESET)
+ 398:libstr91x/src/91x_i2c.c ****   {
+ 399:libstr91x/src/91x_i2c.c ****     /* Return SET if I2C_FLAG is set */
+ 400:libstr91x/src/91x_i2c.c ****     return SET;
+ 522              		.loc 1 400 0
+ 523 032c 030011E1 		tst	r1, r3
+ 401:libstr91x/src/91x_i2c.c ****   }
+ 402:libstr91x/src/91x_i2c.c ****   else
+ 403:libstr91x/src/91x_i2c.c ****   {
+ 404:libstr91x/src/91x_i2c.c ****     /* Return RESET if I2C_FLAG is reset */
+ 405:libstr91x/src/91x_i2c.c ****     return RESET;
+ 406:libstr91x/src/91x_i2c.c ****   }
+ 407:libstr91x/src/91x_i2c.c **** }
+ 524              		.loc 1 407 0
+ 525 0330 0000A003 		moveq	r0, #0
+ 526 0334 0100A013 		movne	r0, #1
+ 527 0338 1EFF2FE1 		bx	lr
+ 528              		.cfi_endproc
+ 529              	.LFE9:
+ 531              		.align	2
+ 532              		.global	I2C_ClearFlag
+ 534              	I2C_ClearFlag:
+ 535              	.LFB10:
+ 408:libstr91x/src/91x_i2c.c **** 
+ 409:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 410:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_ClearFlag
+ 411:libstr91x/src/91x_i2c.c **** * Description    : Clears the I2C Flag passed as a parameter 
+ 412:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 413:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 414:libstr91x/src/91x_i2c.c **** *					 - I2C1
+ 415:libstr91x/src/91x_i2c.c **** *                 - I2C_FLAG: flag to check. This parameter can be one of the
+ 416:libstr91x/src/91x_i2c.c **** *                    following values:
+ 417:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_SB: Start bit flag
+ 418:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_M_SL: Master/Slave flag
+ 419:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ADSL: Adress matched flag
+ 420:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_BTF: Byte transfer finished flag
+ 421:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_BUSY: Bus busy flag
+ 422:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_TRA: Transmitter/Receiver flag
+ 423:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ADD10: 10-bit addressing in Master mode flag
+ 424:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_EVF: Event flag
+ 425:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_GCAL: General call flag
+ 426:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_BERR: Bus error flag
+ 427:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ARLO: Arbitration lost flag
+ 428:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_STOPF: Stop detection flag
+ 429:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_AF: Acknowledge failure flag
+ 430:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ENDAD: End of address transmission flag
+ 431:libstr91x/src/91x_i2c.c **** *                         - I2C_FLAG_ACK: Acknowledge enable flag
+ 432:libstr91x/src/91x_i2c.c **** *                  - parameter needed in the case that the flag to be cleared
+ 433:libstr91x/src/91x_i2c.c **** *                    need a write in one register
+ 434:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 435:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 436:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 437:libstr91x/src/91x_i2c.c **** void I2C_ClearFlag(I2C_TypeDef* I2Cx, u16 I2C_FLAG, ...)
+ 438:libstr91x/src/91x_i2c.c **** {
+ 536              		.loc 1 438 0
+ 537              		.cfi_startproc
+ 538              		@ args = 4, pretend = 12, frame = 0
+ 539              		@ frame_needed = 0, uses_anonymous_args = 1
+ 540              		@ link register save eliminated.
+ 541              	.LVL28:
+ 542 033c 0E002DE9 		stmfd	sp!, {r1, r2, r3}
+ 543              	.LCFI2:
+ 544              		.cfi_def_cfa_offset 12
+ 439:libstr91x/src/91x_i2c.c ****   u8 bTmp = (u8)*((u32 *) & I2C_FLAG + sizeof(I2C_FLAG));
+ 440:libstr91x/src/91x_i2c.c **** 
+ 441:libstr91x/src/91x_i2c.c ****   /* flags that need a read of the SR2 register to be cleared */
+ 442:libstr91x/src/91x_i2c.c ****   if ((I2C_FLAG==I2C_FLAG_ADD10) || (I2C_FLAG==I2C_FLAG_EVF) || (I2C_FLAG==I2C_FLAG_BERR) || (I2C_F
+ 545              		.loc 1 442 0
+ 546 0340 B030DDE1 		ldrh	r3, [sp, #0]
+ 547              		.cfi_offset 3, -4
+ 548              		.cfi_offset 2, -8
+ 549              		.cfi_offset 1, -12
+ 439:libstr91x/src/91x_i2c.c ****   u8 bTmp = (u8)*((u32 *) & I2C_FLAG + sizeof(I2C_FLAG));
+ 550              		.loc 1 439 0
+ 551 0344 0820DDE5 		ldrb	r2, [sp, #8]	@ zero_extendqisi2
+ 552              	.LVL29:
+ 553              		.loc 1 442 0
+ 554 0348 400053E3 		cmp	r3, #64
+ 555 034c 80005313 		cmpne	r3, #128
+ 556 0350 1F00000A 		beq	.L53
+ 557              		.loc 1 442 0 is_stmt 0 discriminator 1
+ 558 0354 020C53E3 		cmp	r3, #512
+ 559 0358 2600000A 		beq	.L54
+ 560 035c 010B53E3 		cmp	r3, #1024
+ 561 0360 020B5313 		cmpne	r3, #2048
+ 562 0364 1A00000A 		beq	.L53
+ 443:libstr91x/src/91x_i2c.c ****       (I2C_FLAG==I2C_FLAG_STOPF) ||(I2C_FLAG==I2C_FLAG_AF)  || (I2C_FLAG==I2C_FLAG_ENDAD))
+ 563              		.loc 1 443 0 is_stmt 1
+ 564 0368 010A53E3 		cmp	r3, #4096
+ 565 036c 2100000A 		beq	.L54
+ 566              		.loc 1 443 0 is_stmt 0 discriminator 1
+ 567 0370 020A53E3 		cmp	r3, #8192
+ 568 0374 2800000A 		beq	.L68
+ 444:libstr91x/src/91x_i2c.c ****   {
+ 445:libstr91x/src/91x_i2c.c ****     /* Read the SR2 register */
+ 446:libstr91x/src/91x_i2c.c ****     I2Cx->SR2;
+ 447:libstr91x/src/91x_i2c.c **** 
+ 448:libstr91x/src/91x_i2c.c ****     /* Two flags need a second step to be cleared */
+ 449:libstr91x/src/91x_i2c.c ****     switch (I2C_FLAG)
+ 450:libstr91x/src/91x_i2c.c ****     {
+ 451:libstr91x/src/91x_i2c.c ****        case  I2C_FLAG_ADD10:
+ 452:libstr91x/src/91x_i2c.c ****          /* Send the MSB 10bit address passed as second parameter */
+ 453:libstr91x/src/91x_i2c.c ****          I2Cx->DR = bTmp;
+ 454:libstr91x/src/91x_i2c.c ****          break;
+ 455:libstr91x/src/91x_i2c.c ****        case  I2C_FLAG_ENDAD:
+ 456:libstr91x/src/91x_i2c.c ****          /* Write to the I2C_CR register by setting PE bit */
+ 457:libstr91x/src/91x_i2c.c ****          I2Cx->CR |= I2C_PE_Set;
+ 458:libstr91x/src/91x_i2c.c ****          break;
+ 459:libstr91x/src/91x_i2c.c ****     }
+ 460:libstr91x/src/91x_i2c.c ****   }
+ 461:libstr91x/src/91x_i2c.c **** 
+ 462:libstr91x/src/91x_i2c.c ****   /* flags that need a read of the SR1 register to be cleared */
+ 463:libstr91x/src/91x_i2c.c ****   else if (I2C_FLAG==I2C_FLAG_SB || I2C_FLAG==I2C_FLAG_ADSL || I2C_FLAG==I2C_FLAG_BTF || I2C_FLAG==
+ 569              		.loc 1 463 0 is_stmt 1
+ 570 0378 01C043E2 		sub	ip, r3, #1
+ 571 037c 00107CE2 		rsbs	r1, ip, #0
+ 572 0380 0C10A1E0 		adc	r1, r1, ip
+ 573 0384 010053E3 		cmp	r3, #1
+ 574 0388 04005313 		cmpne	r3, #4
+ 575 038c 1B00000A 		beq	.L60
+ 576              		.loc 1 463 0 is_stmt 0 discriminator 1
+ 577 0390 080053E3 		cmp	r3, #8
+ 578 0394 2200000A 		beq	.L61
+ 579 0398 200053E3 		cmp	r3, #32
+ 580 039c 2000000A 		beq	.L61
+ 464:libstr91x/src/91x_i2c.c ****   {
+ 465:libstr91x/src/91x_i2c.c ****     /* Read the SR1 register */
+ 466:libstr91x/src/91x_i2c.c ****     (void)I2Cx->SR1;
+ 467:libstr91x/src/91x_i2c.c **** 
+ 468:libstr91x/src/91x_i2c.c ****     /* three flags need a second step to be cleared */
+ 469:libstr91x/src/91x_i2c.c ****     if (I2C_FLAG == I2C_FLAG_SB)
+ 470:libstr91x/src/91x_i2c.c ****     {
+ 471:libstr91x/src/91x_i2c.c ****       /* Send the address byte passed as second parameter */
+ 472:libstr91x/src/91x_i2c.c ****       I2Cx->DR = bTmp;
+ 473:libstr91x/src/91x_i2c.c ****     }
+ 474:libstr91x/src/91x_i2c.c ****     else if (I2C_FLAG==I2C_FLAG_BTF || I2C_FLAG==I2C_FLAG_TRA)
+ 475:libstr91x/src/91x_i2c.c ****     {
+ 476:libstr91x/src/91x_i2c.c ****       /* return the received byte in the variable passed as second parameter  */
+ 477:libstr91x/src/91x_i2c.c ****       bTmp=I2Cx->DR;
+ 478:libstr91x/src/91x_i2c.c ****     }
+ 479:libstr91x/src/91x_i2c.c ****   }
+ 480:libstr91x/src/91x_i2c.c **** 
+ 481:libstr91x/src/91x_i2c.c ****   /* flags that need to disable the I2C interface */
+ 482:libstr91x/src/91x_i2c.c ****   else if ( I2C_FLAG==I2C_FLAG_M_SL || I2C_FLAG==I2C_FLAG_GCAL)
+ 581              		.loc 1 482 0 is_stmt 1
+ 582 03a0 020053E3 		cmp	r3, #2
+ 583 03a4 010C5313 		cmpne	r3, #256
+ 584 03a8 0E00001A 		bne	.L52
+ 585              	.LVL30:
+ 586              	.LBB18:
+ 587              	.LBB19:
+ 220:libstr91x/src/91x_i2c.c ****     I2Cx->CR &= I2C_PE_Reset;
+ 588              		.loc 1 220 0
+ 589 03ac 00C0D0E5 		ldrb	ip, [r0, #0]	@ zero_extendqisi2
+ 590 03b0 DF100CE2 		and	r1, ip, #223
+ 591 03b4 0010C0E5 		strb	r1, [r0, #0]
+ 592              	.LVL31:
+ 593              	.LBE19:
+ 594              	.LBE18:
+ 595              	.LBB20:
+ 596              	.LBB21:
+ 214:libstr91x/src/91x_i2c.c ****     I2Cx->CR |= I2C_PE_Set;
+ 597              		.loc 1 214 0
+ 598 03b8 0020D0E5 		ldrb	r2, [r0, #0]	@ zero_extendqisi2
+ 599              	.LVL32:
+ 600 03bc 203082E3 		orr	r3, r2, #32
+ 601 03c0 0030C0E5 		strb	r3, [r0, #0]
+ 602              	.LVL33:
+ 603              	.L67:
+ 215:libstr91x/src/91x_i2c.c **** 	  I2Cx->CR |= I2C_PE_Set;
+ 604              		.loc 1 215 0
+ 605 03c4 0020D0E5 		ldrb	r2, [r0, #0]	@ zero_extendqisi2
+ 606 03c8 203082E3 		orr	r3, r2, #32
+ 607 03cc 0030C0E5 		strb	r3, [r0, #0]
+ 608 03d0 040000EA 		b	.L52
+ 609              	.LVL34:
+ 610              	.L53:
+ 611              	.LBE21:
+ 612              	.LBE20:
+ 449:libstr91x/src/91x_i2c.c ****     switch (I2C_FLAG)
+ 613              		.loc 1 449 0
+ 614 03d4 400053E3 		cmp	r3, #64
+ 446:libstr91x/src/91x_i2c.c ****     I2Cx->SR2;
+ 615              		.loc 1 446 0
+ 616 03d8 0810D0E5 		ldrb	r1, [r0, #8]	@ zero_extendqisi2
+ 449:libstr91x/src/91x_i2c.c ****     switch (I2C_FLAG)
+ 617              		.loc 1 449 0
+ 618 03dc 0300000A 		beq	.L66
+ 619 03e0 020A53E3 		cmp	r3, #8192
+ 620 03e4 F6FFFF0A 		beq	.L67
+ 621              	.LVL35:
+ 622              	.L52:
+ 483:libstr91x/src/91x_i2c.c ****   {
+ 484:libstr91x/src/91x_i2c.c ****     I2C_Cmd(I2Cx, DISABLE);
+ 485:libstr91x/src/91x_i2c.c ****     I2C_Cmd(I2Cx, ENABLE);
+ 486:libstr91x/src/91x_i2c.c ****   }
+ 487:libstr91x/src/91x_i2c.c **** }
+ 623              		.loc 1 487 0
+ 624 03e8 0CD08DE2 		add	sp, sp, #12
+ 625 03ec 1EFF2FE1 		bx	lr
+ 626              	.LVL36:
+ 627              	.L66:
+ 472:libstr91x/src/91x_i2c.c ****       I2Cx->DR = bTmp;
+ 628              		.loc 1 472 0
+ 629 03f0 1820C0E5 		strb	r2, [r0, #24]
+ 630 03f4 FBFFFFEA 		b	.L52
+ 631              	.L54:
+ 446:libstr91x/src/91x_i2c.c ****     I2Cx->SR2;
+ 632              		.loc 1 446 0
+ 633 03f8 0830D0E5 		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 634 03fc F9FFFFEA 		b	.L52
+ 635              	.L60:
+ 469:libstr91x/src/91x_i2c.c ****     if (I2C_FLAG == I2C_FLAG_SB)
+ 636              		.loc 1 469 0
+ 637 0400 000051E3 		cmp	r1, #0
+ 466:libstr91x/src/91x_i2c.c ****     (void)I2Cx->SR1;
+ 638              		.loc 1 466 0
+ 639 0404 0410D0E5 		ldrb	r1, [r0, #4]	@ zero_extendqisi2
+ 469:libstr91x/src/91x_i2c.c ****     if (I2C_FLAG == I2C_FLAG_SB)
+ 640              		.loc 1 469 0
+ 641 0408 F8FFFF1A 		bne	.L66
+ 642              	.LVL37:
+ 643              	.L63:
+ 474:libstr91x/src/91x_i2c.c ****     else if (I2C_FLAG==I2C_FLAG_BTF || I2C_FLAG==I2C_FLAG_TRA)
+ 644              		.loc 1 474 0
+ 645 040c 080053E3 		cmp	r3, #8
+ 646 0410 20005313 		cmpne	r3, #32
+ 477:libstr91x/src/91x_i2c.c ****       bTmp=I2Cx->DR;
+ 647              		.loc 1 477 0
+ 648 0414 1830D005 		ldreqb	r3, [r0, #24]	@ zero_extendqisi2
+ 649 0418 F2FFFFEA 		b	.L52
+ 650              	.LVL38:
+ 651              	.L68:
+ 446:libstr91x/src/91x_i2c.c ****     I2Cx->SR2;
+ 652              		.loc 1 446 0
+ 653 041c 0830D0E5 		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 654 0420 E7FFFFEA 		b	.L67
+ 655              	.L61:
+ 466:libstr91x/src/91x_i2c.c ****     (void)I2Cx->SR1;
+ 656              		.loc 1 466 0
+ 657 0424 0420D0E5 		ldrb	r2, [r0, #4]	@ zero_extendqisi2
+ 658              	.LVL39:
+ 659 0428 F7FFFFEA 		b	.L63
+ 660              		.cfi_endproc
+ 661              	.LFE10:
+ 663              		.align	2
+ 664              		.global	I2C_Send7bitAddress
+ 666              	I2C_Send7bitAddress:
+ 667              	.LFB11:
+ 488:libstr91x/src/91x_i2c.c **** 
+ 489:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 490:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_Send7bitAddress                                             
+ 491:libstr91x/src/91x_i2c.c **** * Description    : Transmits the address byte to select the slave device.      
+ 492:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 493:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 494:libstr91x/src/91x_i2c.c **** *					 - I2C1
+ 495:libstr91x/src/91x_i2c.c **** *                 - Address: specifies the slave address which will be transmitted    
+ 496:libstr91x/src/91x_i2c.c **** *                 - Direction: specifies whether the I2C device will be a 
+ 497:libstr91x/src/91x_i2c.c **** *                    Transmitter or a Receiver. This parameter can be one of the 
+ 498:libstr91x/src/91x_i2c.c **** *                    following values
+ 499:libstr91x/src/91x_i2c.c **** *                         - I2C_MODE_TRANSMITTER: Transmitter mode
+ 500:libstr91x/src/91x_i2c.c **** *                         - I2C_MODE_RECEIVER: Receiver mode  
+ 501:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 502:libstr91x/src/91x_i2c.c **** * Return         : None.                                                       
+ 503:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 504:libstr91x/src/91x_i2c.c **** void I2C_Send7bitAddress(I2C_TypeDef* I2Cx, u8 Address, u8 Direction)
+ 505:libstr91x/src/91x_i2c.c **** {
+ 668              		.loc 1 505 0
+ 669              		.cfi_startproc
+ 670              		@ args = 0, pretend = 0, frame = 0
+ 671              		@ frame_needed = 0, uses_anonymous_args = 0
+ 672              		@ link register save eliminated.
+ 673              	.LVL40:
+ 506:libstr91x/src/91x_i2c.c ****   /* Test on the direction to define the read/write bit */
+ 507:libstr91x/src/91x_i2c.c ****   if (Direction == I2C_MODE_RECEIVER)
+ 674              		.loc 1 507 0
+ 675 042c 010052E3 		cmp	r2, #1
+ 508:libstr91x/src/91x_i2c.c ****   {
+ 509:libstr91x/src/91x_i2c.c ****     /* Set the address bit0 for read */
+ 510:libstr91x/src/91x_i2c.c ****     Address |= I2C_ADD0_Set;
+ 676              		.loc 1 510 0
+ 677 0430 01108103 		orreq	r1, r1, #1
+ 678              	.LVL41:
+ 511:libstr91x/src/91x_i2c.c ****   }
+ 512:libstr91x/src/91x_i2c.c ****   else
+ 513:libstr91x/src/91x_i2c.c ****   {
+ 514:libstr91x/src/91x_i2c.c ****     /* Reset the address bit0 for write */
+ 515:libstr91x/src/91x_i2c.c ****     Address &= I2C_ADD0_Reset;
+ 679              		.loc 1 515 0
+ 680 0434 FE100112 		andne	r1, r1, #254
+ 681              	.LVL42:
+ 516:libstr91x/src/91x_i2c.c ****   }
+ 517:libstr91x/src/91x_i2c.c ****   /* Send the address */
+ 518:libstr91x/src/91x_i2c.c ****   I2Cx->DR = Address;
+ 682              		.loc 1 518 0
+ 683 0438 1810C0E5 		strb	r1, [r0, #24]
+ 519:libstr91x/src/91x_i2c.c **** }
+ 684              		.loc 1 519 0
+ 685 043c 1EFF2FE1 		bx	lr
+ 686              		.cfi_endproc
+ 687              	.LFE11:
+ 689              		.align	2
+ 690              		.global	I2C_SendData
+ 692              	I2C_SendData:
+ 693              	.LFB12:
+ 520:libstr91x/src/91x_i2c.c **** 
+ 521:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 522:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_SendData
+ 523:libstr91x/src/91x_i2c.c **** * Description    : Send a data byte.
+ 524:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 525:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 526:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 527:libstr91x/src/91x_i2c.c **** *                   - bData : the byte to be sent
+ 528:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 529:libstr91x/src/91x_i2c.c **** * Return         : None.
+ 530:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 531:libstr91x/src/91x_i2c.c **** void I2C_SendData(I2C_TypeDef* I2Cx, u8 bData)
+ 532:libstr91x/src/91x_i2c.c **** {
+ 694              		.loc 1 532 0
+ 695              		.cfi_startproc
+ 696              		@ args = 0, pretend = 0, frame = 0
+ 697              		@ frame_needed = 0, uses_anonymous_args = 0
+ 698              		@ link register save eliminated.
+ 699              	.LVL43:
+ 533:libstr91x/src/91x_i2c.c ****   /* Write in the DR register the byte to be sent */
+ 534:libstr91x/src/91x_i2c.c ****   I2Cx->DR = bData;
+ 700              		.loc 1 534 0
+ 701 0440 1810C0E5 		strb	r1, [r0, #24]
+ 535:libstr91x/src/91x_i2c.c **** }
+ 702              		.loc 1 535 0
+ 703 0444 1EFF2FE1 		bx	lr
+ 704              		.cfi_endproc
+ 705              	.LFE12:
+ 707              		.align	2
+ 708              		.global	I2C_ReceiveData
+ 710              	I2C_ReceiveData:
+ 711              	.LFB13:
+ 536:libstr91x/src/91x_i2c.c **** 
+ 537:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 538:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_ReceiveData
+ 539:libstr91x/src/91x_i2c.c **** * Description    : Read the received byte.
+ 540:libstr91x/src/91x_i2c.c **** * Input          : - I2Cx: I2C peripheral can be:
+ 541:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 542:libstr91x/src/91x_i2c.c **** *					 - I2C1
+ 543:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 544:libstr91x/src/91x_i2c.c **** * Return         : The received byte
+ 545:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 546:libstr91x/src/91x_i2c.c **** u8 I2C_ReceiveData(I2C_TypeDef* I2Cx)
+ 547:libstr91x/src/91x_i2c.c **** {
+ 712              		.loc 1 547 0
+ 713              		.cfi_startproc
+ 714              		@ args = 0, pretend = 0, frame = 0
+ 715              		@ frame_needed = 0, uses_anonymous_args = 0
+ 716              		@ link register save eliminated.
+ 717              	.LVL44:
+ 548:libstr91x/src/91x_i2c.c ****   /* Return from the DR register the received byte */
+ 549:libstr91x/src/91x_i2c.c ****   return I2Cx->DR;
+ 718              		.loc 1 549 0
+ 719 0448 1800D0E5 		ldrb	r0, [r0, #24]	@ zero_extendqisi2
+ 720              	.LVL45:
+ 550:libstr91x/src/91x_i2c.c **** }
+ 721              		.loc 1 550 0
+ 722 044c 1EFF2FE1 		bx	lr
+ 723              		.cfi_endproc
+ 724              	.LFE13:
+ 726              		.align	2
+ 727              		.global	I2C_GetLastEvent
+ 729              	I2C_GetLastEvent:
+ 730              	.LFB14:
+ 551:libstr91x/src/91x_i2c.c **** 
+ 552:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 553:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_GetLastEvent
+ 554:libstr91x/src/91x_i2c.c **** * Description    : Get the Last happened I2C Event.
+ 555:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 556:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 557:libstr91x/src/91x_i2c.c **** *					 - I2C1  
+ 558:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 559:libstr91x/src/91x_i2c.c **** * Return         : The Last happened Event.
+ 560:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 561:libstr91x/src/91x_i2c.c **** u16 I2C_GetLastEvent(I2C_TypeDef* I2Cx)
+ 562:libstr91x/src/91x_i2c.c **** {
+ 731              		.loc 1 562 0
+ 732              		.cfi_startproc
+ 733              		@ args = 0, pretend = 0, frame = 0
+ 734              		@ frame_needed = 0, uses_anonymous_args = 0
+ 735              		@ link register save eliminated.
+ 736              	.LVL46:
+ 563:libstr91x/src/91x_i2c.c ****   u16 wFlag1=0, wFlag2 =0, wLastEvent=0;
+ 564:libstr91x/src/91x_i2c.c ****   wFlag2 = I2Cx->SR1;
+ 737              		.loc 1 564 0
+ 738 0450 0430D0E5 		ldrb	r3, [r0, #4]	@ zero_extendqisi2
+ 739              	.LVL47:
+ 565:libstr91x/src/91x_i2c.c ****   wFlag1 = I2Cx->SR2;
+ 740              		.loc 1 565 0
+ 741 0454 0820D0E5 		ldrb	r2, [r0, #8]	@ zero_extendqisi2
+ 742              	.LVL48:
+ 566:libstr91x/src/91x_i2c.c ****   wFlag1 = wFlag1<<8;
+ 567:libstr91x/src/91x_i2c.c ****   /* Get the last event value from I2C status register */
+ 568:libstr91x/src/91x_i2c.c ****   wLastEvent = ((( wFlag2 | (wFlag1)) & I2C_Event_Mask));
+ 743              		.loc 1 568 0
+ 744 0458 021483E1 		orr	r1, r3, r2, asl #8
+ 745 045c 0109A0E1 		mov	r0, r1, asl #18
+ 746              	.LVL49:
+ 569:libstr91x/src/91x_i2c.c ****   /* Return the last event */
+ 570:libstr91x/src/91x_i2c.c ****   return wLastEvent;
+ 571:libstr91x/src/91x_i2c.c **** }
+ 747              		.loc 1 571 0
+ 748 0460 2009A0E1 		mov	r0, r0, lsr #18
+ 749 0464 1EFF2FE1 		bx	lr
+ 750              		.cfi_endproc
+ 751              	.LFE14:
+ 753              		.align	2
+ 754              		.global	I2C_CheckEvent
+ 756              	I2C_CheckEvent:
+ 757              	.LFB15:
+ 572:libstr91x/src/91x_i2c.c **** 
+ 573:libstr91x/src/91x_i2c.c **** /*******************************************************************************
+ 574:libstr91x/src/91x_i2c.c **** * Function Name  : I2C_CheckEvent
+ 575:libstr91x/src/91x_i2c.c **** * Description    : Checks whether the Last I2C Event is equal to the one passed
+ 576:libstr91x/src/91x_i2c.c **** *                  as parameter.
+ 577:libstr91x/src/91x_i2c.c **** * Input          :- I2Cx: I2C peripheral can be:
+ 578:libstr91x/src/91x_i2c.c **** *                    - I2C0
+ 579:libstr91x/src/91x_i2c.c **** *					 - I2C1   
+ 580:libstr91x/src/91x_i2c.c **** *                  - I2C_EVENT: the event to check. This parameter can be one of
+ 581:libstr91x/src/91x_i2c.c **** *                    the following values:
+ 582:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_SLAVE_ADDRESS_MATCHED
+ 583:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_SLAVE_BYTE_RECEIVED
+ 584:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_SLAVE_BYTE_TRANSMITTED
+ 585:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_MASTER_MODE_SELECT
+ 586:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_MASTER_MODE_SELECTED
+ 587:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_MASTER_BYTE_RECEIVED
+ 588:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_MASTER_BYTE_TRANSMITTED
+ 589:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_MASTER_MODE_ADDRESS10
+ 590:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_SLAVE_STOP_DETECTED
+ 591:libstr91x/src/91x_i2c.c **** *                         - I2C_EVENT_SLAVE_ACK_FAILURE
+ 592:libstr91x/src/91x_i2c.c ****                           - I2C_EV31 
+ 593:libstr91x/src/91x_i2c.c **** * Output         : None	
+ 594:libstr91x/src/91x_i2c.c **** * Return         : An ErrorStatus enumuration value:
+ 595:libstr91x/src/91x_i2c.c **** *                         - SUCCESS: Last event is equal to the I2C_Event
+ 596:libstr91x/src/91x_i2c.c **** *                         - ERROR: Last event is different from the I2C_Event
+ 597:libstr91x/src/91x_i2c.c **** *******************************************************************************/
+ 598:libstr91x/src/91x_i2c.c **** ErrorStatus I2C_CheckEvent(I2C_TypeDef* I2Cx,u16 I2C_EVENT)
+ 599:libstr91x/src/91x_i2c.c **** {
+ 758              		.loc 1 599 0
+ 759              		.cfi_startproc
+ 760              		@ args = 0, pretend = 0, frame = 0
+ 761              		@ frame_needed = 0, uses_anonymous_args = 0
+ 762              		@ link register save eliminated.
+ 763              	.LVL50:
+ 764              	.LBB22:
+ 765              	.LBB23:
+ 564:libstr91x/src/91x_i2c.c ****   wFlag2 = I2Cx->SR1;
+ 766              		.loc 1 564 0
+ 767 0468 04C0D0E5 		ldrb	ip, [r0, #4]	@ zero_extendqisi2
+ 768              	.LVL51:
+ 565:libstr91x/src/91x_i2c.c ****   wFlag1 = I2Cx->SR2;
+ 769              		.loc 1 565 0
+ 770 046c 0820D0E5 		ldrb	r2, [r0, #8]	@ zero_extendqisi2
+ 771              	.LVL52:
+ 568:libstr91x/src/91x_i2c.c ****   wLastEvent = ((( wFlag2 | (wFlag1)) & I2C_Event_Mask));
+ 772              		.loc 1 568 0
+ 773 0470 02048CE1 		orr	r0, ip, r2, asl #8
+ 774              	.LVL53:
+ 775 0474 0039A0E1 		mov	r3, r0, asl #18
+ 600:libstr91x/src/91x_i2c.c ****   u16  wLastEvent = I2C_GetLastEvent(I2Cx);
+ 601:libstr91x/src/91x_i2c.c **** 
+ 602:libstr91x/src/91x_i2c.c ****   /* Check whther the last event is equal to I2C_EVENT */
+ 603:libstr91x/src/91x_i2c.c ****   if (wLastEvent == I2C_EVENT)
+ 604:libstr91x/src/91x_i2c.c ****   {
+ 605:libstr91x/src/91x_i2c.c ****     /* Return SUCCESS when last event is equal to I2C_EVENT */
+ 606:libstr91x/src/91x_i2c.c ****     return SUCCESS;
+ 776              		.loc 1 606 0
+ 777 0478 230951E1 		cmp	r1, r3, lsr #18
+ 778              	.LBE23:
+ 779              	.LBE22:
+ 607:libstr91x/src/91x_i2c.c ****   }
+ 608:libstr91x/src/91x_i2c.c ****   else
+ 609:libstr91x/src/91x_i2c.c ****   {
+ 610:libstr91x/src/91x_i2c.c ****     /* Return ERROR when last event is different from I2C_EVENT */
+ 611:libstr91x/src/91x_i2c.c ****     return ERROR;
+ 612:libstr91x/src/91x_i2c.c ****   }
+ 613:libstr91x/src/91x_i2c.c **** }
+ 780              		.loc 1 613 0
+ 781 047c 0000A013 		movne	r0, #0
+ 782 0480 0100A003 		moveq	r0, #1
+ 783 0484 1EFF2FE1 		bx	lr
+ 784              		.cfi_endproc
+ 785              	.LFE15:
+ 787              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_i2c.c
+     /tmp/ccChRMhp.s:21     .text:00000000 $a
+     /tmp/ccChRMhp.s:24     .text:00000000 I2C_DeInit
+     /tmp/ccChRMhp.s:76     .text:00000054 $d
+     /tmp/ccChRMhp.s:82     .text:0000005c $a
+     /tmp/ccChRMhp.s:85     .text:0000005c I2C_Init
+     /tmp/ccChRMhp.s:284    .text:0000020c $d
+     /tmp/ccChRMhp.s:296    .text:00000230 $a
+     /tmp/ccChRMhp.s:299    .text:00000230 I2C_StructInit
+     /tmp/ccChRMhp.s:328    .text:00000254 $d
+     /tmp/ccChRMhp.s:332    .text:00000258 $a
+     /tmp/ccChRMhp.s:335    .text:00000258 I2C_Cmd
+     /tmp/ccChRMhp.s:365    .text:0000027c I2C_GenerateStart
+     /tmp/ccChRMhp.s:389    .text:00000294 I2C_GenerateSTOP
+     /tmp/ccChRMhp.s:413    .text:000002ac I2C_AcknowledgeConfig
+     /tmp/ccChRMhp.s:437    .text:000002c4 I2C_ITConfig
+     /tmp/ccChRMhp.s:461    .text:000002dc I2C_ReadRegister
+     /tmp/ccChRMhp.s:491    .text:00000304 $d
+     /tmp/ccChRMhp.s:496    .text:0000030c $a
+     /tmp/ccChRMhp.s:499    .text:0000030c I2C_GetFlagStatus
+     /tmp/ccChRMhp.s:534    .text:0000033c I2C_ClearFlag
+     /tmp/ccChRMhp.s:666    .text:0000042c I2C_Send7bitAddress
+     /tmp/ccChRMhp.s:692    .text:00000440 I2C_SendData
+     /tmp/ccChRMhp.s:710    .text:00000448 I2C_ReceiveData
+     /tmp/ccChRMhp.s:729    .text:00000450 I2C_GetLastEvent
+     /tmp/ccChRMhp.s:756    .text:00000468 I2C_CheckEvent
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset
+__aeabi_uidiv
+SCU_GetPCLKFreqValue

@@ -1,0 +1,3342 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_can.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	CAN_DeInit
+  24              	CAN_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_can.c"
+   1:libstr91x/src/91x_can.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_can.c **** * File Name          : 91x_can.c
+   3:libstr91x/src/91x_can.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_can.c **** * Version            : V2.1
+   5:libstr91x/src/91x_can.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_can.c **** * Description        : This file provides all the CAN firmware functions.
+   7:libstr91x/src/91x_can.c **** ********************************************************************************
+   8:libstr91x/src/91x_can.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_can.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_can.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_can.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_can.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_can.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_can.c **** *******************************************************************************/
+  15:libstr91x/src/91x_can.c **** 
+  16:libstr91x/src/91x_can.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_can.c **** #include "91x_can.h"
+  18:libstr91x/src/91x_can.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_can.c **** 
+  20:libstr91x/src/91x_can.c **** /* Private typedef -----------------------------------------------------------*/
+  21:libstr91x/src/91x_can.c **** /* Private define ------------------------------------------------------------*/
+  22:libstr91x/src/91x_can.c **** /* Private macro -------------------------------------------------------------*/
+  23:libstr91x/src/91x_can.c **** /*----------------------------------------------------------------------------*/
+  24:libstr91x/src/91x_can.c **** /* Macro Name     : xxx_ID_MSK, xxx_ID_ARB                                    */
+  25:libstr91x/src/91x_can.c **** /* Description    : Form the Mask and Arbitration registers value to filter   */
+  26:libstr91x/src/91x_can.c **** /*                  a range of identifiers or a fixed identifier, for standard*/
+  27:libstr91x/src/91x_can.c **** /*                  and extended IDs                                          */
+  28:libstr91x/src/91x_can.c **** /*----------------------------------------------------------------------------*/
+  29:libstr91x/src/91x_can.c **** #define RANGE_ID_MSK(range_start, range_end)	(~((range_end) - (range_start)))
+  30:libstr91x/src/91x_can.c **** #define RANGE_ID_ARB(range_start, range_end)	((range_start) & (range_end))
+  31:libstr91x/src/91x_can.c **** 
+  32:libstr91x/src/91x_can.c **** #define FIXED_ID_MSK(id)	RANGE_ID_MSK((id), (id))
+  33:libstr91x/src/91x_can.c **** #define FIXED_ID_ARB(id)	RANGE_ID_ARB((id), (id))
+  34:libstr91x/src/91x_can.c **** 
+  35:libstr91x/src/91x_can.c **** #define STD_RANGE_ID_MSK(range_start, range_end)	((u16)((RANGE_ID_MSK((range_start), (range_end)) &
+  36:libstr91x/src/91x_can.c **** #define STD_RANGE_ID_ARB(range_start, range_end)	((u16)(RANGE_ID_ARB((range_start), (range_end)) <<
+  37:libstr91x/src/91x_can.c **** 
+  38:libstr91x/src/91x_can.c **** #define STD_FIXED_ID_MSK(id)	((u16)((FIXED_ID_MSK(id) & 0x7FF) << 2))
+  39:libstr91x/src/91x_can.c **** #define STD_FIXED_ID_ARB(id)	((u16)(FIXED_ID_ARB(id) << 2))
+  40:libstr91x/src/91x_can.c **** 
+  41:libstr91x/src/91x_can.c **** #define EXT_RANGE_ID_MSK_L(range_start, range_end)     \
+  42:libstr91x/src/91x_can.c ****   ((u16)(RANGE_ID_MSK((range_start), (range_end))))
+  43:libstr91x/src/91x_can.c **** 
+  44:libstr91x/src/91x_can.c **** #define EXT_RANGE_ID_MSK_H(range_start, range_end)	\
+  45:libstr91x/src/91x_can.c ****   ((u16)(RANGE_ID_MSK((range_start), (range_end)) >> 16) & 0x1FFF) 
+  46:libstr91x/src/91x_can.c **** 
+  47:libstr91x/src/91x_can.c **** #define EXT_RANGE_ID_ARB_L(range_start, range_end)	\
+  48:libstr91x/src/91x_can.c ****   ((u16)(RANGE_ID_ARB((range_start), (range_end))))
+  49:libstr91x/src/91x_can.c **** 
+  50:libstr91x/src/91x_can.c **** #define EXT_RANGE_ID_ARB_H(range_start, range_end)       \
+  51:libstr91x/src/91x_can.c ****   ((u16)(RANGE_ID_ARB((range_start), (range_end)) >> 16) & 0x1FFF)
+  52:libstr91x/src/91x_can.c **** 
+  53:libstr91x/src/91x_can.c **** #define EXT_FIXED_ID_MSK_L(id)	((u16)(FIXED_ID_MSK(id)))
+  54:libstr91x/src/91x_can.c **** 
+  55:libstr91x/src/91x_can.c **** #define EXT_FIXED_ID_MSK_H(id)	((u16)(FIXED_ID_MSK(id) >> 16 ) & 0x1FFF)
+  56:libstr91x/src/91x_can.c **** 
+  57:libstr91x/src/91x_can.c **** #define EXT_FIXED_ID_ARB_L(id)	((u16)(FIXED_ID_ARB(id)))
+  58:libstr91x/src/91x_can.c **** 
+  59:libstr91x/src/91x_can.c **** #define EXT_FIXED_ID_ARB_H(id)	((u16)(FIXED_ID_ARB(id) >> 16) & 0x1FFF)
+  60:libstr91x/src/91x_can.c **** 
+  61:libstr91x/src/91x_can.c **** /* macro to format the timing register value from the timing parameters*/
+  62:libstr91x/src/91x_can.c **** #define CAN_TIMING(tseg1, tseg2, sjw, brp)	((((tseg2-1) & 0x07) << 12) | (((tseg1-1) & 0x0F) << 8) 
+  63:libstr91x/src/91x_can.c **** 
+  64:libstr91x/src/91x_can.c **** /* Private variables ---------------------------------------------------------*/
+  65:libstr91x/src/91x_can.c **** /* array of pre-defined timing parameters for standard bitrates*/
+  66:libstr91x/src/91x_can.c **** u16 CanTimings[] = {       /* value   bitrate     NTQ  TSEG1  TSEG2  SJW  BRP */
+  67:libstr91x/src/91x_can.c ****   CAN_TIMING(11, 4, 4, 5), /* 0x3AC4  100 kbit/s  16   11     4      4    5   */
+  68:libstr91x/src/91x_can.c ****   CAN_TIMING(11, 4, 4, 4), /* 0x3AC3  125 kbit/s  16   11     4      4    4   */
+  69:libstr91x/src/91x_can.c ****   CAN_TIMING( 4, 3, 3, 4), /* 0x2383  250 kbit/s   8    4     3      3    4   */
+  70:libstr91x/src/91x_can.c ****   CAN_TIMING(13, 2, 1, 1), /* 0x1C00  500 kbit/s  16   13     2      1    1   */
+  71:libstr91x/src/91x_can.c ****   CAN_TIMING( 4, 3, 1, 1), /* 0x2300  1 Mbit/s     8    4     3      1    1   */
+  72:libstr91x/src/91x_can.c **** };
+  73:libstr91x/src/91x_can.c **** 
+  74:libstr91x/src/91x_can.c **** /* Private function prototypes -----------------------------------------------*/
+  75:libstr91x/src/91x_can.c **** static u32 GetFreeIF(void);
+  76:libstr91x/src/91x_can.c **** /* Private functions ---------------------------------------------------------*/
+  77:libstr91x/src/91x_can.c **** 
+  78:libstr91x/src/91x_can.c **** /*******************************************************************************
+  79:libstr91x/src/91x_can.c **** * Function Name  : CAN_DeInit                                                
+  80:libstr91x/src/91x_can.c **** * Description    : Deinitializes the CAN peripheral registers to their default     
+  81:libstr91x/src/91x_can.c **** *                  reset values.                                     
+  82:libstr91x/src/91x_can.c **** * Input          : None                                                      
+  83:libstr91x/src/91x_can.c **** * Output         : None                                                      
+  84:libstr91x/src/91x_can.c **** * Return         : None                                                      
+  85:libstr91x/src/91x_can.c **** *******************************************************************************/
+  86:libstr91x/src/91x_can.c **** void CAN_DeInit (void)
+  87:libstr91x/src/91x_can.c **** {
+  27              		.loc 1 87 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 10402DE9 		stmfd	sp!, {r4, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  88:libstr91x/src/91x_can.c ****   /* Reset the CAN registers values*/
+  89:libstr91x/src/91x_can.c ****  
+  90:libstr91x/src/91x_can.c ****   SCU_APBPeriphReset(__CAN,ENABLE);         /*CAN peripheral is under Reset */
+  34              		.loc 1 90 0
+  35 0004 010BA0E3 		mov	r0, #1024
+  36 0008 0110A0E3 		mov	r1, #1
+  37              		.cfi_offset 14, -4
+  38              		.cfi_offset 4, -8
+  39 000c FEFFFFEB 		bl	SCU_APBPeriphReset
+  91:libstr91x/src/91x_can.c ****   SCU_APBPeriphReset(__CAN,DISABLE);        /*CAN peripheral Reset off*/
+  40              		.loc 1 91 0
+  41 0010 010BA0E3 		mov	r0, #1024
+  42 0014 0010A0E3 		mov	r1, #0
+  92:libstr91x/src/91x_can.c ****    
+  93:libstr91x/src/91x_can.c **** }
+  43              		.loc 1 93 0
+  44 0018 1040BDE8 		ldmfd	sp!, {r4, lr}
+  91:libstr91x/src/91x_can.c ****   SCU_APBPeriphReset(__CAN,DISABLE);        /*CAN peripheral Reset off*/
+  45              		.loc 1 91 0
+  46 001c FEFFFFEA 		b	SCU_APBPeriphReset
+  47              		.cfi_endproc
+  48              	.LFE0:
+  50              		.align	2
+  51              		.global	CAN_Init
+  53              	CAN_Init:
+  54              	.LFB1:
+  94:libstr91x/src/91x_can.c **** 
+  95:libstr91x/src/91x_can.c **** /*******************************************************************************
+  96:libstr91x/src/91x_can.c **** * Function Name  : CAN_Init                                                  
+  97:libstr91x/src/91x_can.c **** * Description    : Initializes the CAN peripheral according to the specified 
+  98:libstr91x/src/91x_can.c **** *                  parameters in the CAN_InitStruct.                                            
+  99:libstr91x/src/91x_can.c **** * Input          : CAN_InitStruct: pointer to a CAN_InitTypeDef structure that
+ 100:libstr91x/src/91x_can.c **** *                  contains the configuration information for the CAN peripheral. 
+ 101:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 102:libstr91x/src/91x_can.c **** * Return         : None                                                      
+ 103:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 104:libstr91x/src/91x_can.c **** void CAN_Init(CAN_InitTypeDef* CAN_InitStruct)
+ 105:libstr91x/src/91x_can.c **** {
+  55              		.loc 1 105 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              	.LVL0:
+  61              	.LBB24:
+  62              	.LBB26:
+ 106:libstr91x/src/91x_can.c ****   CAN_EnterInitMode(CAN_CR_CCE | CAN_InitStruct->CAN_ConfigParameters);
+ 107:libstr91x/src/91x_can.c ****   CAN_SetBitrate(CAN_InitStruct->CAN_Bitrate);
+ 108:libstr91x/src/91x_can.c ****   CAN_LeaveInitMode();
+ 109:libstr91x/src/91x_can.c ****   CAN_LeaveTestMode();
+ 110:libstr91x/src/91x_can.c **** }
+ 111:libstr91x/src/91x_can.c **** 
+ 112:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 113:libstr91x/src/91x_can.c **** * Function Name  : CAN_StructInit		                        
+ 114:libstr91x/src/91x_can.c **** * Description    : Fills each CAN_InitStruct member with its reset value.	      
+ 115:libstr91x/src/91x_can.c **** * Input          : CAN_InitStruct : pointer to a CAN_InitTypeDef structure which       
+ 116:libstr91x/src/91x_can.c **** *                  will be initialized. 
+ 117:libstr91x/src/91x_can.c **** * Output         : None                  
+ 118:libstr91x/src/91x_can.c **** * Return         : None.						      
+ 119:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 120:libstr91x/src/91x_can.c **** void CAN_StructInit(CAN_InitTypeDef* CAN_InitStruct)
+ 121:libstr91x/src/91x_can.c **** {
+ 122:libstr91x/src/91x_can.c **** /* Reset CAN init structure parameters values */
+ 123:libstr91x/src/91x_can.c ****   CAN_InitStruct->CAN_ConfigParameters = 0x0;
+ 124:libstr91x/src/91x_can.c ****   CAN_InitStruct->CAN_Bitrate = 0x2301;
+ 125:libstr91x/src/91x_can.c **** }
+ 126:libstr91x/src/91x_can.c **** 
+ 127:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 128:libstr91x/src/91x_can.c **** * Function Name  : CAN_SetBitrate                                            
+ 129:libstr91x/src/91x_can.c **** * Description    : Setups a standard CAN bitrate.                              
+ 130:libstr91x/src/91x_can.c **** * Input          : bitrate: specifies the bit rate.                       
+ 131:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 132:libstr91x/src/91x_can.c **** * Return         : None                                                                         
+ 133:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 134:libstr91x/src/91x_can.c **** void CAN_SetBitrate(u32 bitrate)
+ 135:libstr91x/src/91x_can.c **** {
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+ 137:libstr91x/src/91x_can.c ****   CAN->BRPR = 0; 		     /* clear the Extended Baud Rate Prescaler */
+ 138:libstr91x/src/91x_can.c **** }
+ 139:libstr91x/src/91x_can.c **** 
+ 140:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 141:libstr91x/src/91x_can.c **** * Function Name  : CAN_SetTiming                                             
+ 142:libstr91x/src/91x_can.c **** * Description    : Setups the CAN timing with specific parameters             
+ 143:libstr91x/src/91x_can.c **** * Input          : - tseg1: specifies Time Segment before the sample point.
+ 144:libstr91x/src/91x_can.c **** *                    This parameter must be a number between 1 and 16.       
+ 145:libstr91x/src/91x_can.c **** *                  - tseg2: Time Segment after the sample point. This parameter 
+ 146:libstr91x/src/91x_can.c **** *                    must be a number between 1 and 8.        
+ 147:libstr91x/src/91x_can.c **** *                  - sjw: Synchronisation Jump Width. This parameter must be                 
+ 148:libstr91x/src/91x_can.c **** *                     a number between 1 and 4.
+ 149:libstr91x/src/91x_can.c **** *                  - brp: Baud Rate Prescaler. This parameter must be a number
+ 150:libstr91x/src/91x_can.c **** *                    between 1 and 1024.                                         
+ 151:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 152:libstr91x/src/91x_can.c **** * Return         : None                                                                       
+ 153:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 154:libstr91x/src/91x_can.c **** void CAN_SetTiming(u32 tseg1, u32 tseg2, u32 sjw, u32 brp)
+ 155:libstr91x/src/91x_can.c **** {
+ 156:libstr91x/src/91x_can.c ****   CAN->BTR = CAN_TIMING(tseg1, tseg2, sjw, brp);
+ 157:libstr91x/src/91x_can.c ****   CAN->BRPR = ((brp-1) >> 6) & 0x0F;
+ 158:libstr91x/src/91x_can.c **** }
+ 159:libstr91x/src/91x_can.c **** 
+ 160:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 161:libstr91x/src/91x_can.c **** * Function Name  : GetFreeIF                                             
+ 162:libstr91x/src/91x_can.c **** * Description    : Searchs the first free message interface, starting from 0.  
+ 163:libstr91x/src/91x_can.c **** * Input          : None                                                      
+ 164:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 165:libstr91x/src/91x_can.c **** * Return         : A free message interface number (0 or 1) if found, else 2 
+ 166:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 167:libstr91x/src/91x_can.c **** static u32 GetFreeIF(void)
+ 168:libstr91x/src/91x_can.c **** {
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 170:libstr91x/src/91x_can.c ****     return 0;
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 172:libstr91x/src/91x_can.c ****     return 1;
+ 173:libstr91x/src/91x_can.c ****   else
+ 174:libstr91x/src/91x_can.c ****    return 2;
+ 175:libstr91x/src/91x_can.c **** }
+ 176:libstr91x/src/91x_can.c **** 
+ 177:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 178:libstr91x/src/91x_can.c **** * Function Name  : CAN_SetUnusedMsgObj                                       
+ 179:libstr91x/src/91x_can.c **** * Description    : Configures the message object as unused                   
+ 180:libstr91x/src/91x_can.c **** * Input          : msgobj: specifies the Message object number, from 0 to 31.                      
+ 181:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 182:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 183:libstr91x/src/91x_can.c **** *                         - SUCCESS: Interface to treat the message
+ 184:libstr91x/src/91x_can.c **** *                         - ERROR: No interface to treat the message
+ 185:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 186:libstr91x/src/91x_can.c **** ErrorStatus CAN_SetUnusedMsgObj(u32 msgobj)
+ 187:libstr91x/src/91x_can.c **** {
+ 188:libstr91x/src/91x_can.c ****   u32 msg_if=0;
+ 189:libstr91x/src/91x_can.c **** 
+ 190:libstr91x/src/91x_can.c ****   if ((msg_if = GetFreeIF()) == 2)
+ 191:libstr91x/src/91x_can.c ****   {
+ 192:libstr91x/src/91x_can.c ****     return ERROR;
+ 193:libstr91x/src/91x_can.c ****   }
+ 194:libstr91x/src/91x_can.c **** 
+ 195:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 196:libstr91x/src/91x_can.c ****                            | CAN_CMR_MASK
+ 197:libstr91x/src/91x_can.c ****                            | CAN_CMR_ARB
+ 198:libstr91x/src/91x_can.c ****                            | CAN_CMR_CONTROL
+ 199:libstr91x/src/91x_can.c ****                            | CAN_CMR_DATAA
+ 200:libstr91x/src/91x_can.c ****                            | CAN_CMR_DATAB;
+ 201:libstr91x/src/91x_can.c **** 
+ 202:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0;
+ 203:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M2R = 0;
+ 204:libstr91x/src/91x_can.c **** 
+ 205:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A1R = 0;
+ 206:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A2R = 0;
+ 207:libstr91x/src/91x_can.c **** 
+ 208:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = 0;
+ 209:libstr91x/src/91x_can.c **** 
+ 210:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 211:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA2R = 0;
+ 212:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB1R = 0;
+ 213:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB2R = 0;
+ 214:libstr91x/src/91x_can.c **** 
+ 215:libstr91x/src/91x_can.c ****  CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 216:libstr91x/src/91x_can.c ****  
+ 217:libstr91x/src/91x_can.c ****  return SUCCESS;
+ 218:libstr91x/src/91x_can.c **** }
+ 219:libstr91x/src/91x_can.c **** 
+ 220:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 221:libstr91x/src/91x_can.c **** * Function Name  : CAN_SetTxMsgObj                                           
+ 222:libstr91x/src/91x_can.c **** * Description    : Configures the message object as TX.                        
+ 223:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 224:libstr91x/src/91x_can.c **** *                  - idType: specifies the identifier type of the frames that
+ 225:libstr91x/src/91x_can.c **** *                    will be transmitted using this message object.
+ 226:libstr91x/src/91x_can.c **** *                    This parameter can be one of the following values:
+ 227:libstr91x/src/91x_can.c **** *                          - CAN_STD_ID (standard ID, 11-bit)
+ 228:libstr91x/src/91x_can.c **** *                          - CAN_EXT_ID (extended ID, 29-bit) 
+ 229:libstr91x/src/91x_can.c **** *                  - RemoteEN : specifies if the CAN message will answer remote
+ 230:libstr91x/src/91x_can.c **** *                   frames with exactly matching ID; It can be 
+ 231:libstr91x/src/91x_can.c **** *                          - ENABLE : remote frame with matching ID is answered
+ 232:libstr91x/src/91x_can.c **** *                          - DISABLE : remote frames with matching ID is not 
+ 233:libstr91x/src/91x_can.c **** *                            answered
+ 234:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 235:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 236:libstr91x/src/91x_can.c **** *                         - SUCCESS: Interface to treat the message
+ 237:libstr91x/src/91x_can.c **** *                         - ERROR: No interface to treat the message
+ 238:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 239:libstr91x/src/91x_can.c **** ErrorStatus CAN_SetTxMsgObj(u32 msgobj, u32 idType, FunctionalState RemoteEN)
+ 240:libstr91x/src/91x_can.c **** {
+ 241:libstr91x/src/91x_can.c ****   u32 msg_if=0;
+ 242:libstr91x/src/91x_can.c **** 
+ 243:libstr91x/src/91x_can.c ****   if ((msg_if = GetFreeIF()) == 2)
+ 244:libstr91x/src/91x_can.c ****   {
+ 245:libstr91x/src/91x_can.c ****     return ERROR;
+ 246:libstr91x/src/91x_can.c ****   }
+ 247:libstr91x/src/91x_can.c ****   
+ 248:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 249:libstr91x/src/91x_can.c ****                            | CAN_CMR_MASK
+ 250:libstr91x/src/91x_can.c ****                            | CAN_CMR_ARB
+ 251:libstr91x/src/91x_can.c ****                            | CAN_CMR_CONTROL
+ 252:libstr91x/src/91x_can.c ****                            | CAN_CMR_DATAA
+ 253:libstr91x/src/91x_can.c ****                            | CAN_CMR_DATAB;
+ 254:libstr91x/src/91x_can.c **** 
+ 255:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0xFFFF;
+ 256:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A1R = 0;
+ 257:libstr91x/src/91x_can.c **** 
+ 258:libstr91x/src/91x_can.c ****   if (idType == CAN_STD_ID)
+ 259:libstr91x/src/91x_can.c ****   {
+ 260:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MDIR | 0x1FFF;
+ 261:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_DIR;
+ 262:libstr91x/src/91x_can.c ****   }
+ 263:libstr91x/src/91x_can.c ****   else
+ 264:libstr91x/src/91x_can.c ****   {
+ 265:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MDIR | CAN_M2R_MXTD | 0x1FFF;
+ 266:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_DIR | CAN_A2R_XTD;
+ 267:libstr91x/src/91x_can.c ****   }
+ 268:libstr91x/src/91x_can.c **** 
+ 269:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_TXIE | CAN_MCR_EOB | ( RemoteEN ? CAN_MCR_RMTEN : 0)
+ 270:libstr91x/src/91x_can.c ****                             | ( RemoteEN ? CAN_MCR_UMASK : 0);
+ 271:libstr91x/src/91x_can.c **** 
+ 272:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 273:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA2R = 0;
+ 274:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB1R = 0;
+ 275:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB2R = 0;
+ 276:libstr91x/src/91x_can.c **** 
+ 277:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 278:libstr91x/src/91x_can.c ****   
+ 279:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 280:libstr91x/src/91x_can.c **** }
+ 281:libstr91x/src/91x_can.c **** 
+ 282:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 283:libstr91x/src/91x_can.c **** * Function Name  : CAN_SetRxMsgObj                                           
+ 284:libstr91x/src/91x_can.c **** * Description    : Configures the message object as RX.                        
+ 285:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 286:libstr91x/src/91x_can.c **** *                  - idType: specifies the identifier type of the frames that
+ 287:libstr91x/src/91x_can.c **** *                    will be transmitted using this message object.
+ 288:libstr91x/src/91x_can.c **** *                    This parameter can be one of the following values:
+ 289:libstr91x/src/91x_can.c **** *                          - CAN_STD_ID (standard ID, 11-bit)
+ 290:libstr91x/src/91x_can.c **** *                          - CAN_EXT_ID (extended ID, 29-bit)                               
+ 291:libstr91x/src/91x_can.c **** *                  - idLow: specifies the low part of the identifier range used      
+ 292:libstr91x/src/91x_can.c **** *                    for acceptance filtering.
+ 293:libstr91x/src/91x_can.c **** *                  - idHigh: specifies the high part of the identifier range    
+ 294:libstr91x/src/91x_can.c **** *                    used for acceptance filtering.
+ 295:libstr91x/src/91x_can.c **** *                  - singleOrFifoLast: specifies the end-of-buffer indicator.
+ 296:libstr91x/src/91x_can.c **** *                    This parameter can be one of the following values:
+ 297:libstr91x/src/91x_can.c **** *                          - TRUE: for a single receive object or a FIFO receive
+ 298:libstr91x/src/91x_can.c **** *                            object that is the last one of the FIFO. 
+ 299:libstr91x/src/91x_can.c **** *                          - FALSE: for a FIFO receive object that is not the 
+ 300:libstr91x/src/91x_can.c **** *                            last one. 
+ 301:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 302:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 303:libstr91x/src/91x_can.c **** *                         - SUCCESS: Interface to treat the message
+ 304:libstr91x/src/91x_can.c **** *                         - ERROR: No interface to treat the message
+ 305:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 306:libstr91x/src/91x_can.c **** ErrorStatus CAN_SetRxMsgObj(u32 msgobj, u32 idType, u32 idLow, u32 idHigh, bool singleOrFifoLast)
+ 307:libstr91x/src/91x_can.c **** {
+ 308:libstr91x/src/91x_can.c ****   u32 msg_if=0;
+ 309:libstr91x/src/91x_can.c **** 
+ 310:libstr91x/src/91x_can.c ****   if ((msg_if = GetFreeIF()) == 2)
+ 311:libstr91x/src/91x_can.c ****   {
+ 312:libstr91x/src/91x_can.c ****     return ERROR;
+ 313:libstr91x/src/91x_can.c ****   }
+ 314:libstr91x/src/91x_can.c ****   
+ 315:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 316:libstr91x/src/91x_can.c ****                            | CAN_CMR_MASK
+ 317:libstr91x/src/91x_can.c ****                            | CAN_CMR_ARB
+ 318:libstr91x/src/91x_can.c ****                            | CAN_CMR_CONTROL
+ 319:libstr91x/src/91x_can.c ****                            | CAN_CMR_DATAA
+ 320:libstr91x/src/91x_can.c ****                            | CAN_CMR_DATAB;
+ 321:libstr91x/src/91x_can.c **** 
+ 322:libstr91x/src/91x_can.c ****   if (idType == CAN_STD_ID)
+ 323:libstr91x/src/91x_can.c ****   {
+ 324:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = 0xFFFF;
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 326:libstr91x/src/91x_can.c **** 
+ 327:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A1R = 0;
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 329:libstr91x/src/91x_can.c ****   }
+ 330:libstr91x/src/91x_can.c ****   else
+ 331:libstr91x/src/91x_can.c ****   {
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 334:libstr91x/src/91x_can.c **** 
+ 335:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A1R = EXT_RANGE_ID_ARB_L(idLow, idHigh);
+ 336:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_XTD | EXT_RANGE_ID_ARB_H(idLow, idHigh);
+ 337:libstr91x/src/91x_can.c ****   }
+ 338:libstr91x/src/91x_can.c **** 
+ 339:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_RXIE | CAN_MCR_UMASK | (singleOrFifoLast ? CAN_MCR_EOB : 0);
+ 340:libstr91x/src/91x_can.c **** 
+ 341:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 342:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA2R = 0;
+ 343:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB1R = 0;
+ 344:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB2R = 0;
+ 345:libstr91x/src/91x_can.c **** 
+ 346:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 347:libstr91x/src/91x_can.c ****   
+ 348:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 349:libstr91x/src/91x_can.c **** }
+ 350:libstr91x/src/91x_can.c **** 
+ 351:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 352:libstr91x/src/91x_can.c **** * Function Name  : CAN_SetUnusedAllMsgObj				      
+ 353:libstr91x/src/91x_can.c **** * Description    : Configures all the message objects as unused.               
+ 354:libstr91x/src/91x_can.c **** * Input          : None                                                      
+ 355:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 356:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 357:libstr91x/src/91x_can.c **** *                         - SUCCESS: Interface to treat the message
+ 358:libstr91x/src/91x_can.c **** *                         - ERROR: No interface to treat the messageNone                           
+ 359:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 360:libstr91x/src/91x_can.c **** ErrorStatus CAN_SetUnusedAllMsgObj(void)
+ 361:libstr91x/src/91x_can.c **** {
+ 362:libstr91x/src/91x_can.c ****   u32 i=0;
+ 363:libstr91x/src/91x_can.c ****   for (i = 0; i < 32; i++)
+ 364:libstr91x/src/91x_can.c ****   {
+ 365:libstr91x/src/91x_can.c ****     if ( CAN_SetUnusedMsgObj(i) == ERROR)
+ 366:libstr91x/src/91x_can.c ****       return ERROR;
+ 367:libstr91x/src/91x_can.c ****   }
+ 368:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 369:libstr91x/src/91x_can.c **** }
+ 370:libstr91x/src/91x_can.c **** 
+ 371:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 372:libstr91x/src/91x_can.c **** * Function Name  : CAN_ReleaseMessage					      
+ 373:libstr91x/src/91x_can.c **** * Description    : Releases the message object                                
+ 374:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 375:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 376:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 377:libstr91x/src/91x_can.c **** *                         - SUCCESS: Interface to treat the message
+ 378:libstr91x/src/91x_can.c **** *                         - ERROR: No interface to treat the message
+ 379:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 380:libstr91x/src/91x_can.c **** ErrorStatus CAN_ReleaseMessage(u32 msgobj)
+ 381:libstr91x/src/91x_can.c **** {
+ 382:libstr91x/src/91x_can.c ****   u32 msg_if=0;
+ 383:libstr91x/src/91x_can.c **** 
+ 384:libstr91x/src/91x_can.c ****   if ((msg_if = GetFreeIF()) == 2)
+ 385:libstr91x/src/91x_can.c ****   {
+ 386:libstr91x/src/91x_can.c ****     return ERROR;
+ 387:libstr91x/src/91x_can.c ****   }
+ 388:libstr91x/src/91x_can.c **** 
+ 389:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 390:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 391:libstr91x/src/91x_can.c ****   
+ 392:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 393:libstr91x/src/91x_can.c **** }
+ 394:libstr91x/src/91x_can.c **** 
+ 395:libstr91x/src/91x_can.c **** 
+ 396:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 397:libstr91x/src/91x_can.c **** * Function Name  : CAN_UpdateMsgObj
+ 398:libstr91x/src/91x_can.c **** * Description    : Updates the CAN message object with the pCanMsg fields, it 
+ 399:libstr91x/src/91x_can.c **** *                  does not start the transmission of the CAN message object
+ 400:libstr91x/src/91x_can.c **** * Input 1        : message object number, from 0 to 31
+ 401:libstr91x/src/91x_can.c **** * Input 2        : pointer to the message structure containing data to transmit
+ 402:libstr91x/src/91x_can.c **** * Output         : None
+ 403:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 404:libstr91x/src/91x_can.c **** *                         - SUCCESS: Interface to treat the message
+ 405:libstr91x/src/91x_can.c **** *                         - ERROR: No interface to treat the message
+ 406:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 407:libstr91x/src/91x_can.c **** ErrorStatus CAN_UpdateMsgObj(u32 msgobj, canmsg* pCanMsg)
+ 408:libstr91x/src/91x_can.c **** {
+ 409:libstr91x/src/91x_can.c ****  if (CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 410:libstr91x/src/91x_can.c ****   return ERROR;
+ 411:libstr91x/src/91x_can.c **** 
+ 412:libstr91x/src/91x_can.c ****   /* read the Arbitration and Message Control */
+ 413:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_ARB | CAN_CMR_CONTROL;
+ 414:libstr91x/src/91x_can.c **** 
+ 415:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = 1 + msgobj;
+ 416:libstr91x/src/91x_can.c **** 
+ 417:libstr91x/src/91x_can.c ****   while (CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 418:libstr91x/src/91x_can.c ****   {
+ 419:libstr91x/src/91x_can.c ****     /*Wait*/
+ 420:libstr91x/src/91x_can.c ****   }
+ 421:libstr91x/src/91x_can.c **** 
+ 422:libstr91x/src/91x_can.c ****   /* update the contents needed for transmission */
+ 423:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR =   CAN_CMR_WRRD
+ 424:libstr91x/src/91x_can.c ****                           | CAN_CMR_ARB
+ 425:libstr91x/src/91x_can.c ****                           | CAN_CMR_CONTROL
+ 426:libstr91x/src/91x_can.c ****                           | CAN_CMR_DATAA
+ 427:libstr91x/src/91x_can.c ****                           | CAN_CMR_DATAB;
+ 428:libstr91x/src/91x_can.c **** 
+ 429:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].A2R & CAN_A2R_XTD) == 0)
+ 430:libstr91x/src/91x_can.c ****   {
+ 431:libstr91x/src/91x_can.c ****     /* standard ID */
+ 432:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = 0;
+ 433:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000)
+ 434:libstr91x/src/91x_can.c ****                           | STD_FIXED_ID_ARB(pCanMsg->Id);
+ 435:libstr91x/src/91x_can.c ****   }
+ 436:libstr91x/src/91x_can.c ****   else
+ 437:libstr91x/src/91x_can.c ****   {
+ 438:libstr91x/src/91x_can.c ****     /* extended ID*/
+ 439:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = EXT_FIXED_ID_ARB_L(pCanMsg->Id);
+ 440:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000)
+ 441:libstr91x/src/91x_can.c ****                           | EXT_FIXED_ID_ARB_H(pCanMsg->Id);
+ 442:libstr91x/src/91x_can.c ****   }
+ 443:libstr91x/src/91x_can.c **** 
+ 444:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].MCR = (CAN->sMsgObj[0].MCR & 0xFEF0) | CAN_MCR_NEWDAT
+ 445:libstr91x/src/91x_can.c ****                          | pCanMsg->Dlc;
+ 446:libstr91x/src/91x_can.c **** 
+ 447:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA1R = ((u16)pCanMsg->Data[1] << 8) | pCanMsg->Data[0];
+ 448:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA2R = ((u16)pCanMsg->Data[3] << 8) | pCanMsg->Data[2];
+ 449:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB1R = ((u16)pCanMsg->Data[5] << 8) | pCanMsg->Data[4];
+ 450:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB2R = ((u16)pCanMsg->Data[7] << 8) | pCanMsg->Data[6];
+ 451:libstr91x/src/91x_can.c **** 
+ 452:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = 1 + msgobj;
+ 453:libstr91x/src/91x_can.c ****   
+ 454:libstr91x/src/91x_can.c ****   while ( CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 455:libstr91x/src/91x_can.c ****   {
+ 456:libstr91x/src/91x_can.c ****      /* wait */
+ 457:libstr91x/src/91x_can.c ****   } 
+ 458:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 459:libstr91x/src/91x_can.c **** }
+ 460:libstr91x/src/91x_can.c **** 
+ 461:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 462:libstr91x/src/91x_can.c **** * Function Name  : CAN_SendMessage                                           
+ 463:libstr91x/src/91x_can.c **** * Description    : Start transmission of a message                           
+ 464:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 465:libstr91x/src/91x_can.c **** *                : - pCanMsg: pointer to the message structure containing data     
+ 466:libstr91x/src/91x_can.c **** *                    to transmit.
+ 467:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 468:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 469:libstr91x/src/91x_can.c **** *                         - SUCCESS: Transmission OK
+ 470:libstr91x/src/91x_can.c **** *                         - ERROR: No transmission
+ 471:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 472:libstr91x/src/91x_can.c **** ErrorStatus CAN_SendMessage(u32 msgobj, canmsg* pCanMsg)
+ 473:libstr91x/src/91x_can.c **** {
+ 474:libstr91x/src/91x_can.c ****    
+ 475:libstr91x/src/91x_can.c ****   if (CAN_UpdateMsgObj(msgobj, pCanMsg) == ERROR)
+ 476:libstr91x/src/91x_can.c ****   return ERROR;
+ 477:libstr91x/src/91x_can.c **** 
+ 478:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 479:libstr91x/src/91x_can.c **** 
+ 480:libstr91x/src/91x_can.c ****   return ( CAN_TransmitRequest( msgobj));
+ 481:libstr91x/src/91x_can.c **** }
+ 482:libstr91x/src/91x_can.c **** 
+ 483:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 484:libstr91x/src/91x_can.c **** * Function Name  : CAN_TransmitRequest                                            
+ 485:libstr91x/src/91x_can.c **** * Description    : This function requests the transmission of a message object 			                
+ 486:libstr91x/src/91x_can.c **** * Input          : msgobj: number of the message object that should be 
+ 487:libstr91x/src/91x_can.c **** *                  transmitted  
+ 488:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 489:libstr91x/src/91x_can.c **** * Return         :  An ErrorStatus enumuration value:
+ 490:libstr91x/src/91x_can.c **** *                         - SUCCESS: Transmission OK
+ 491:libstr91x/src/91x_can.c **** *                         - ERROR: No transmission started
+ 492:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 493:libstr91x/src/91x_can.c **** ErrorStatus CAN_TransmitRequest( u32 msgobj )
+ 494:libstr91x/src/91x_can.c **** {
+ 495:libstr91x/src/91x_can.c ****     u16 msg_if;
+ 496:libstr91x/src/91x_can.c ****    
+ 497:libstr91x/src/91x_can.c ****     if ((msg_if = GetFreeIF()) == 2) 
+ 498:libstr91x/src/91x_can.c ****     return ERROR;
+ 499:libstr91x/src/91x_can.c **** 
+ 500:libstr91x/src/91x_can.c ****      /* Set the transmit request in the command mask register */ 
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 502:libstr91x/src/91x_can.c **** 
+ 503:libstr91x/src/91x_can.c ****     /* Write the message object number in the command request register */
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 505:libstr91x/src/91x_can.c **** 
+ 506:libstr91x/src/91x_can.c ****     return SUCCESS;
+ 507:libstr91x/src/91x_can.c **** }
+ 508:libstr91x/src/91x_can.c **** 
+ 509:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 510:libstr91x/src/91x_can.c **** * Function Name  : CAN_ReceiveMessage                                        
+ 511:libstr91x/src/91x_can.c **** * Description    : Gets the message, if received.
+ 512:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 513:libstr91x/src/91x_can.c **** *                  - release: specifies the message release indicator.
+ 514:libstr91x/src/91x_can.c **** *                    This parameter can be one of the following values:
+ 515:libstr91x/src/91x_can.c **** *                          - TRUE: the message object is released when getting  
+ 516:libstr91x/src/91x_can.c **** *                            the data.
+ 517:libstr91x/src/91x_can.c **** *                          - FALSE: the message object is not released.
+ 518:libstr91x/src/91x_can.c **** *                  - pCanMsg: pointer to the message structure where received   
+ 519:libstr91x/src/91x_can.c **** *                    data is copied.
+ 520:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 521:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 522:libstr91x/src/91x_can.c **** *                         - SUCCESS: Reception OK
+ 523:libstr91x/src/91x_can.c **** *                         - ERROR: No message pending
+ 524:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 525:libstr91x/src/91x_can.c **** ErrorStatus CAN_ReceiveMessage(u32 msgobj, bool release, canmsg* pCanMsg)
+ 526:libstr91x/src/91x_can.c **** { 
+ 527:libstr91x/src/91x_can.c ****   u32 tempId;
+ 528:libstr91x/src/91x_can.c ****   
+ 529:libstr91x/src/91x_can.c ****   if (!CAN_GetMsgReceiveStatus(msgobj))
+ 530:libstr91x/src/91x_can.c ****   {
+ 531:libstr91x/src/91x_can.c ****     return ERROR;
+ 532:libstr91x/src/91x_can.c ****   }
+ 533:libstr91x/src/91x_can.c **** 
+ 534:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 535:libstr91x/src/91x_can.c **** 
+ 536:libstr91x/src/91x_can.c ****   /* read the message contents*/
+ 537:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_MASK
+ 538:libstr91x/src/91x_can.c ****                       | CAN_CMR_ARB
+ 539:libstr91x/src/91x_can.c ****                       | CAN_CMR_CONTROL
+ 540:libstr91x/src/91x_can.c ****                       | CAN_CMR_CLRINTPND
+ 541:libstr91x/src/91x_can.c ****                       | (release ? CAN_CMR_TXRQSTNEWDAT : 0)
+ 542:libstr91x/src/91x_can.c ****                       | CAN_CMR_DATAA
+ 543:libstr91x/src/91x_can.c ****                       | CAN_CMR_DATAB;
+ 544:libstr91x/src/91x_can.c **** 
+ 545:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CRR = 1 + msgobj;
+ 546:libstr91x/src/91x_can.c **** 
+ 547:libstr91x/src/91x_can.c ****   if (CAN->sMsgObj[1].CRR & CAN_CRR_BUSY)
+ 548:libstr91x/src/91x_can.c ****   {
+ 549:libstr91x/src/91x_can.c ****     return ERROR;                    
+ 550:libstr91x/src/91x_can.c ****   }
+ 551:libstr91x/src/91x_can.c ****   
+ 552:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].A2R & CAN_A2R_XTD) == 0)
+ 553:libstr91x/src/91x_can.c ****   {
+ 554:libstr91x/src/91x_can.c ****     /* standard ID*/
+ 555:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_STD_ID;
+ 556:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 557:libstr91x/src/91x_can.c ****   }
+ 558:libstr91x/src/91x_can.c ****   else
+ 559:libstr91x/src/91x_can.c ****   {
+ 560:libstr91x/src/91x_can.c ****     /* extended ID*/
+ 561:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_EXT_ID;
+ 562:libstr91x/src/91x_can.c ****     tempId = ((u32)(CAN->sMsgObj[1].A2R & 0x1FFF) << 16);
+ 563:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tempId;
+ 564:libstr91x/src/91x_can.c ****   }
+ 565:libstr91x/src/91x_can.c **** 
+ 566:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 567:libstr91x/src/91x_can.c **** 
+ 568:libstr91x/src/91x_can.c ****   pCanMsg->Data[0] = (u8) CAN->sMsgObj[1].DA1R;
+ 569:libstr91x/src/91x_can.c ****   pCanMsg->Data[1] = (u8)(CAN->sMsgObj[1].DA1R >> 8);
+ 570:libstr91x/src/91x_can.c ****   pCanMsg->Data[2] = (u8) CAN->sMsgObj[1].DA2R;
+ 571:libstr91x/src/91x_can.c ****   pCanMsg->Data[3] = (u8)(CAN->sMsgObj[1].DA2R >> 8);
+ 572:libstr91x/src/91x_can.c ****   pCanMsg->Data[4] = (u8) CAN->sMsgObj[1].DB1R;
+ 573:libstr91x/src/91x_can.c ****   pCanMsg->Data[5] = (u8)(CAN->sMsgObj[1].DB1R >> 8);
+ 574:libstr91x/src/91x_can.c ****   pCanMsg->Data[6] = (u8) CAN->sMsgObj[1].DB2R;
+ 575:libstr91x/src/91x_can.c ****   pCanMsg->Data[7] = (u8)(CAN->sMsgObj[1].DB2R >> 8);
+ 576:libstr91x/src/91x_can.c **** 
+ 577:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 578:libstr91x/src/91x_can.c **** }
+ 579:libstr91x/src/91x_can.c **** 
+ 580:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 581:libstr91x/src/91x_can.c **** * Function Name  : CAN_WaitEndOfTx                                           
+ 582:libstr91x/src/91x_can.c **** * Description    : Waits until current transmission is finished.               
+ 583:libstr91x/src/91x_can.c **** * Input          : None                                                      
+ 584:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 585:libstr91x/src/91x_can.c **** * Return         : None
+ 586:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 587:libstr91x/src/91x_can.c **** void CAN_WaitEndOfTx(void)
+ 588:libstr91x/src/91x_can.c **** {
+ 589:libstr91x/src/91x_can.c ****   while ((CAN->SR & CAN_SR_TXOK) == 0)
+ 590:libstr91x/src/91x_can.c ****   {
+ 591:libstr91x/src/91x_can.c ****     /*Wait*/
+ 592:libstr91x/src/91x_can.c ****   }
+ 593:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 594:libstr91x/src/91x_can.c **** }
+ 595:libstr91x/src/91x_can.c **** 
+ 596:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 597:libstr91x/src/91x_can.c **** * Function Name  : CAN_BasicSendMessage                                      
+ 598:libstr91x/src/91x_can.c **** * Description    : Starts transmission of a message in BASIC mode. This mode 
+ 599:libstr91x/src/91x_can.c **** *                  does not use the message RAM.             
+ 600:libstr91x/src/91x_can.c **** * Input          : pCanMsg: Pointer to the message structure containing data to       
+ 601:libstr91x/src/91x_can.c **** *                  transmit.                                                  
+ 602:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 603:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 604:libstr91x/src/91x_can.c **** *                         - SUCCESS: Transmission OK
+ 605:libstr91x/src/91x_can.c **** *                         - ERROR: No transmission
+ 606:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 607:libstr91x/src/91x_can.c **** ErrorStatus CAN_BasicSendMessage(canmsg* pCanMsg)
+ 608:libstr91x/src/91x_can.c **** {
+ 609:libstr91x/src/91x_can.c ****   /* clear NewDat bit in IF2 to detect next reception*/
+ 610:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].MCR &= ~CAN_MCR_NEWDAT;
+ 611:libstr91x/src/91x_can.c **** 
+ 612:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 613:libstr91x/src/91x_can.c ****   
+ 614:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_WRRD
+ 615:libstr91x/src/91x_can.c ****                       | CAN_CMR_ARB
+ 616:libstr91x/src/91x_can.c ****                       | CAN_CMR_CONTROL
+ 617:libstr91x/src/91x_can.c ****                       | CAN_CMR_DATAA
+ 618:libstr91x/src/91x_can.c ****                       | CAN_CMR_DATAB;
+ 619:libstr91x/src/91x_can.c **** 
+ 620:libstr91x/src/91x_can.c ****   if (pCanMsg->IdType == CAN_STD_ID)
+ 621:libstr91x/src/91x_can.c ****   {
+ 622:libstr91x/src/91x_can.c ****     /* standard ID*/
+ 623:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = 0;
+ 624:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000) | STD_FIXED_ID_ARB(pCanMsg->Id);
+ 625:libstr91x/src/91x_can.c ****   }
+ 626:libstr91x/src/91x_can.c ****   else
+ 627:libstr91x/src/91x_can.c ****   {
+ 628:libstr91x/src/91x_can.c ****     /* extended ID */
+ 629:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = EXT_FIXED_ID_ARB_L(pCanMsg->Id);
+ 630:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000) | CAN_A2R_XTD | EXT_FIXED_ID_ARB_H(pCanMsg
+ 631:libstr91x/src/91x_can.c ****   }
+ 632:libstr91x/src/91x_can.c **** 
+ 633:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].MCR = (CAN->sMsgObj[0].MCR & 0xFCF0) | pCanMsg->Dlc;
+ 634:libstr91x/src/91x_can.c **** 
+ 635:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA1R = ((u16)pCanMsg->Data[1]<<8) | pCanMsg->Data[0];
+ 636:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA2R = ((u16)pCanMsg->Data[3]<<8) | pCanMsg->Data[2];
+ 637:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB1R = ((u16)pCanMsg->Data[5]<<8) | pCanMsg->Data[4];
+ 638:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB2R = ((u16)pCanMsg->Data[7]<<8) | pCanMsg->Data[6];
+ 639:libstr91x/src/91x_can.c **** 
+ 640:libstr91x/src/91x_can.c ****   /* request the transmission*/
+ 641:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = CAN_CRR_BUSY;
+ 642:libstr91x/src/91x_can.c ****   
+ 643:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 644:libstr91x/src/91x_can.c **** }
+ 645:libstr91x/src/91x_can.c **** 
+ 646:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 647:libstr91x/src/91x_can.c **** * Function Name  : CAN_BasicReceiveMessage                                   
+ 648:libstr91x/src/91x_can.c **** * Description    : Gets the message in BASIC mode, if received. This mode does
+ 649:libstr91x/src/91x_can.c **** *                  not use the message RAM.                
+ 650:libstr91x/src/91x_can.c **** * Input          : pCanMsg: pointer to the message structure where message is copied.    
+ 651:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 652:libstr91x/src/91x_can.c **** * Return         : An ErrorStatus enumuration value:
+ 653:libstr91x/src/91x_can.c **** *                         - SUCCESS: Reception OK
+ 654:libstr91x/src/91x_can.c **** *                         - ERROR: No message pending
+ 655:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 656:libstr91x/src/91x_can.c **** ErrorStatus CAN_BasicReceiveMessage(canmsg* pCanMsg)
+ 657:libstr91x/src/91x_can.c **** {
+ 658:libstr91x/src/91x_can.c ****   u32 tmpId;
+ 659:libstr91x/src/91x_can.c ****   
+ 660:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].MCR & CAN_MCR_NEWDAT) == 0)
+ 661:libstr91x/src/91x_can.c ****   {
+ 662:libstr91x/src/91x_can.c ****     return ERROR;
+ 663:libstr91x/src/91x_can.c ****   }
+ 664:libstr91x/src/91x_can.c **** 
+ 665:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 666:libstr91x/src/91x_can.c **** 
+ 667:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_ARB
+ 668:libstr91x/src/91x_can.c ****                       | CAN_CMR_CONTROL
+ 669:libstr91x/src/91x_can.c ****                       | CAN_CMR_DATAA
+ 670:libstr91x/src/91x_can.c ****                       | CAN_CMR_DATAB;
+ 671:libstr91x/src/91x_can.c **** 
+ 672:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].A2R & CAN_A2R_XTD) == 0)
+ 673:libstr91x/src/91x_can.c ****   {
+ 674:libstr91x/src/91x_can.c ****     /* standard ID*/
+ 675:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_STD_ID;
+ 676:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 677:libstr91x/src/91x_can.c ****   }
+ 678:libstr91x/src/91x_can.c ****   else
+ 679:libstr91x/src/91x_can.c ****   {
+ 680:libstr91x/src/91x_can.c ****     /* extended ID*/
+ 681:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_EXT_ID;
+ 682:libstr91x/src/91x_can.c ****     tmpId = ((u32)(CAN->sMsgObj[1].A2R & 0x1FFF) << 16);
+ 683:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tmpId;
+ 684:libstr91x/src/91x_can.c ****   }
+ 685:libstr91x/src/91x_can.c **** 
+ 686:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 687:libstr91x/src/91x_can.c **** 
+ 688:libstr91x/src/91x_can.c ****   pCanMsg->Data[0] = (u8) CAN->sMsgObj[1].DA1R;
+ 689:libstr91x/src/91x_can.c ****   pCanMsg->Data[1] = (u8)(CAN->sMsgObj[1].DA1R >> 8);
+ 690:libstr91x/src/91x_can.c ****   pCanMsg->Data[2] = (u8) CAN->sMsgObj[1].DA2R;
+ 691:libstr91x/src/91x_can.c ****   pCanMsg->Data[3] = (u8)(CAN->sMsgObj[1].DA2R >> 8);
+ 692:libstr91x/src/91x_can.c ****   pCanMsg->Data[4] = (u8) CAN->sMsgObj[1].DB1R;
+ 693:libstr91x/src/91x_can.c ****   pCanMsg->Data[5] = (u8)(CAN->sMsgObj[1].DB1R >> 8);
+ 694:libstr91x/src/91x_can.c ****   pCanMsg->Data[6] = (u8) CAN->sMsgObj[1].DB2R;
+ 695:libstr91x/src/91x_can.c ****   pCanMsg->Data[7] = (u8)(CAN->sMsgObj[1].DB2R >> 8);
+ 696:libstr91x/src/91x_can.c **** 
+ 697:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 698:libstr91x/src/91x_can.c **** }
+ 699:libstr91x/src/91x_can.c **** 
+ 700:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 701:libstr91x/src/91x_can.c **** * Function Name  : CAN_EnterInitMode                                         
+ 702:libstr91x/src/91x_can.c **** * Description    : Switchs the CAN into initialization mode. This function must
+ 703:libstr91x/src/91x_can.c **** *                  be used in conjunction with CAN_LeaveInitMode().                 
+ 704:libstr91x/src/91x_can.c **** * Input          : InitMask: specifies the CAN configuration in normal mode.      
+ 705:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 706:libstr91x/src/91x_can.c **** * Return         : None                                                          
+ 707:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 708:libstr91x/src/91x_can.c **** void CAN_EnterInitMode(u8 InitMask)
+ 709:libstr91x/src/91x_can.c **** {
+ 710:libstr91x/src/91x_can.c ****   CAN->CR = InitMask | CAN_CR_INIT;
+  63              		.loc 1 710 0
+  64 0020 00C0D0E5 		ldrb	ip, [r0, #0]	@ zero_extendqisi2
+  65 0024 64309FE5 		ldr	r3, .L3
+  66              	.LBE26:
+  67              	.LBE24:
+  68              	.LBB29:
+  69              	.LBB32:
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+  70              		.loc 1 136 0
+  71 0028 042090E5 		ldr	r2, [r0, #4]
+  72              	.LBE32:
+  73              	.LBE29:
+  74              	.LBB35:
+  75              	.LBB27:
+ 711:libstr91x/src/91x_can.c ****   CAN->SR = 0;					/* reset the status*/
+  76              		.loc 1 711 0
+  77 002c 0010A0E3 		mov	r1, #0
+ 710:libstr91x/src/91x_can.c ****   CAN->CR = InitMask | CAN_CR_INIT;
+  78              		.loc 1 710 0
+  79 0030 41C08CE3 		orr	ip, ip, #65
+  80              	.LBE27:
+  81              	.LBE35:
+  82              	.LBB36:
+  83              	.LBB31:
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+  84              		.loc 1 136 0
+  85 0034 58009FE5 		ldr	r0, .L3+4
+  86              	.LVL1:
+  87              	.LBE31:
+  88              	.LBE36:
+  89              	.LBB37:
+  90              	.LBB25:
+ 710:libstr91x/src/91x_can.c ****   CAN->CR = InitMask | CAN_CR_INIT;
+  91              		.loc 1 710 0
+  92 0038 B0C0C3E1 		strh	ip, [r3, #0]	@ movhi
+  93              	.LBE25:
+  94              	.LBE37:
+  95              	.LBB38:
+  96              	.LBB33:
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+  97              		.loc 1 136 0
+  98 003c 8220A0E1 		mov	r2, r2, asl #1
+  99              	.LBE33:
+ 100              	.LBE38:
+ 101              	.LBB39:
+ 102              	.LBB28:
+ 103              		.loc 1 711 0
+ 104 0040 B410C3E1 		strh	r1, [r3, #4]	@ movhi
+ 105              	.LBE28:
+ 106              	.LBE39:
+ 107              	.LBB40:
+ 108              	.LBB30:
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+ 109              		.loc 1 136 0
+ 110 0044 B2C090E1 		ldrh	ip, [r0, r2]
+ 111              	.LBE30:
+ 112              	.LBE40:
+ 113              	.LBB41:
+ 114              	.LBB43:
+ 712:libstr91x/src/91x_can.c **** }
+ 713:libstr91x/src/91x_can.c **** 
+ 714:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 715:libstr91x/src/91x_can.c **** * Function Name  : CAN_LeaveInitMode                                         
+ 716:libstr91x/src/91x_can.c **** * Description    : Leaves the initialization mode (switch into normal mode).
+ 717:libstr91x/src/91x_can.c **** *                  This function must be used in conjunction with CAN_EnterInitMode().  
+ 718:libstr91x/src/91x_can.c **** * Input          : None                                                      
+ 719:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 720:libstr91x/src/91x_can.c **** * Return         : None                                                      
+ 721:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 722:libstr91x/src/91x_can.c **** void CAN_LeaveInitMode(void)
+ 723:libstr91x/src/91x_can.c **** {
+ 724:libstr91x/src/91x_can.c ****   CAN->CR &= ~(CAN_CR_INIT | CAN_CR_CCE);
+ 115              		.loc 1 724 0
+ 116 0048 48209FE5 		ldr	r2, .L3+8
+ 117              	.LBE43:
+ 118              	.LBE41:
+ 119              	.LBB45:
+ 120              	.LBB34:
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+ 121              		.loc 1 136 0
+ 122 004c BCC0C3E1 		strh	ip, [r3, #12]	@ movhi
+ 137:libstr91x/src/91x_can.c ****   CAN->BRPR = 0; 		     /* clear the Extended Baud Rate Prescaler */
+ 123              		.loc 1 137 0
+ 124 0050 B811C3E1 		strh	r1, [r3, #24]	@ movhi
+ 125              	.LBE34:
+ 126              	.LBE45:
+ 127              	.LBB46:
+ 128              	.LBB42:
+ 129              		.loc 1 724 0
+ 130 0054 B000D3E1 		ldrh	r0, [r3, #0]
+ 131              	.LBE42:
+ 132              	.LBE46:
+ 133              	.LBB47:
+ 134              	.LBB48:
+ 725:libstr91x/src/91x_can.c **** }
+ 726:libstr91x/src/91x_can.c **** 
+ 727:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 728:libstr91x/src/91x_can.c **** * Function Name  : CAN_EnterTestMode                                         
+ 729:libstr91x/src/91x_can.c **** * Description    : Switchs the CAN into test mode. This function must be used in
+ 730:libstr91x/src/91x_can.c **** *                  conjunction with CAN_LeaveTestMode().                            
+ 731:libstr91x/src/91x_can.c **** * Input          : TestMask: specifies the configuration in test modes.     
+ 732:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 733:libstr91x/src/91x_can.c **** * Return         : None                                                            
+ 734:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 735:libstr91x/src/91x_can.c **** void CAN_EnterTestMode(u8 TestMask)
+ 736:libstr91x/src/91x_can.c **** {
+ 737:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 738:libstr91x/src/91x_can.c ****   CAN->TESTR |= TestMask;
+ 739:libstr91x/src/91x_can.c **** }
+ 740:libstr91x/src/91x_can.c **** 
+ 741:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 742:libstr91x/src/91x_can.c **** * Function Name  : CAN_LeaveTestMode                                         
+ 743:libstr91x/src/91x_can.c **** * Description    : Leaves the current test mode (switch into normal mode).
+ 744:libstr91x/src/91x_can.c **** *                  This function must be used in conjunction with CAN_EnterTestMode().    
+ 745:libstr91x/src/91x_can.c **** * Input          : None                                                      
+ 746:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 747:libstr91x/src/91x_can.c **** * Return         : None                                                      
+ 748:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 749:libstr91x/src/91x_can.c **** void CAN_LeaveTestMode(void)
+ 750:libstr91x/src/91x_can.c **** {
+ 751:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 752:libstr91x/src/91x_can.c ****   CAN->TESTR &= ~(CAN_TESTR_LBACK | CAN_TESTR_SILENT | CAN_TESTR_BASIC);
+ 135              		.loc 1 752 0
+ 136 0058 3C109FE5 		ldr	r1, .L3+12
+ 137              	.LBE48:
+ 138              	.LBE47:
+ 139              	.LBB50:
+ 140              	.LBB44:
+ 724:libstr91x/src/91x_can.c ****   CAN->CR &= ~(CAN_CR_INIT | CAN_CR_CCE);
+ 141              		.loc 1 724 0
+ 142 005c 02C000E0 		and	ip, r0, r2
+ 143 0060 B0C0C3E1 		strh	ip, [r3, #0]	@ movhi
+ 144              	.LBE44:
+ 145              	.LBE50:
+ 146              	.LBB51:
+ 147              	.LBB49:
+ 751:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 148              		.loc 1 751 0
+ 149 0064 B020D3E1 		ldrh	r2, [r3, #0]
+ 753:libstr91x/src/91x_can.c ****   CAN->CR &= ~CAN_CR_TEST;
+ 150              		.loc 1 753 0
+ 151 0068 30C09FE5 		ldr	ip, .L3+16
+ 751:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 152              		.loc 1 751 0
+ 153 006c 800082E3 		orr	r0, r2, #128
+ 154 0070 B000C3E1 		strh	r0, [r3, #0]	@ movhi
+ 752:libstr91x/src/91x_can.c ****   CAN->TESTR &= ~(CAN_TESTR_LBACK | CAN_TESTR_SILENT | CAN_TESTR_BASIC);
+ 155              		.loc 1 752 0
+ 156 0074 B421D3E1 		ldrh	r2, [r3, #20]
+ 157 0078 010002E0 		and	r0, r2, r1
+ 158 007c B401C3E1 		strh	r0, [r3, #20]	@ movhi
+ 159              		.loc 1 753 0
+ 160 0080 B010D3E1 		ldrh	r1, [r3, #0]
+ 161 0084 0C2001E0 		and	r2, r1, ip
+ 162 0088 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 163              	.LBE49:
+ 164              	.LBE51:
+ 110:libstr91x/src/91x_can.c **** }
+ 165              		.loc 1 110 0
+ 166 008c 1EFF2FE1 		bx	lr
+ 167              	.L4:
+ 168              		.align	2
+ 169              	.L3:
+ 170 0090 0090005C 		.word	1543540736
+ 171 0094 00000000 		.word	.LANCHOR0
+ 172 0098 BEFF0000 		.word	65470
+ 173 009c E3FF0000 		.word	65507
+ 174 00a0 7FFF0000 		.word	65407
+ 175              		.cfi_endproc
+ 176              	.LFE1:
+ 178              		.align	2
+ 179              		.global	CAN_StructInit
+ 181              	CAN_StructInit:
+ 182              	.LFB2:
+ 121:libstr91x/src/91x_can.c **** {
+ 183              		.loc 1 121 0
+ 184              		.cfi_startproc
+ 185              		@ args = 0, pretend = 0, frame = 0
+ 186              		@ frame_needed = 0, uses_anonymous_args = 0
+ 187              		@ link register save eliminated.
+ 188              	.LVL2:
+ 124:libstr91x/src/91x_can.c ****   CAN_InitStruct->CAN_Bitrate = 0x2301;
+ 189              		.loc 1 124 0
+ 190 00a4 0C309FE5 		ldr	r3, .L6
+ 123:libstr91x/src/91x_can.c ****   CAN_InitStruct->CAN_ConfigParameters = 0x0;
+ 191              		.loc 1 123 0
+ 192 00a8 0010A0E3 		mov	r1, #0
+ 193 00ac 0010C0E5 		strb	r1, [r0, #0]
+ 124:libstr91x/src/91x_can.c ****   CAN_InitStruct->CAN_Bitrate = 0x2301;
+ 194              		.loc 1 124 0
+ 195 00b0 043080E5 		str	r3, [r0, #4]
+ 125:libstr91x/src/91x_can.c **** }
+ 196              		.loc 1 125 0
+ 197 00b4 1EFF2FE1 		bx	lr
+ 198              	.L7:
+ 199              		.align	2
+ 200              	.L6:
+ 201 00b8 01230000 		.word	8961
+ 202              		.cfi_endproc
+ 203              	.LFE2:
+ 205              		.align	2
+ 206              		.global	CAN_SetBitrate
+ 208              	CAN_SetBitrate:
+ 209              	.LFB3:
+ 135:libstr91x/src/91x_can.c **** {
+ 210              		.loc 1 135 0
+ 211              		.cfi_startproc
+ 212              		@ args = 0, pretend = 0, frame = 0
+ 213              		@ frame_needed = 0, uses_anonymous_args = 0
+ 214              		@ link register save eliminated.
+ 215              	.LVL3:
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+ 216              		.loc 1 136 0
+ 217 00bc 18C09FE5 		ldr	ip, .L9
+ 218 00c0 8010A0E1 		mov	r1, r0, asl #1
+ 219 00c4 B1009CE1 		ldrh	r0, [ip, r1]
+ 220              	.LVL4:
+ 221 00c8 10309FE5 		ldr	r3, .L9+4
+ 137:libstr91x/src/91x_can.c ****   CAN->BRPR = 0; 		     /* clear the Extended Baud Rate Prescaler */
+ 222              		.loc 1 137 0
+ 223 00cc 0020A0E3 		mov	r2, #0	@ movhi
+ 136:libstr91x/src/91x_can.c ****   CAN->BTR = CanTimings[bitrate];  /* write the predefined timing value */
+ 224              		.loc 1 136 0
+ 225 00d0 BC00C3E1 		strh	r0, [r3, #12]	@ movhi
+ 137:libstr91x/src/91x_can.c ****   CAN->BRPR = 0; 		     /* clear the Extended Baud Rate Prescaler */
+ 226              		.loc 1 137 0
+ 227 00d4 B821C3E1 		strh	r2, [r3, #24]	@ movhi
+ 138:libstr91x/src/91x_can.c **** }
+ 228              		.loc 1 138 0
+ 229 00d8 1EFF2FE1 		bx	lr
+ 230              	.L10:
+ 231              		.align	2
+ 232              	.L9:
+ 233 00dc 00000000 		.word	.LANCHOR0
+ 234 00e0 0090005C 		.word	1543540736
+ 235              		.cfi_endproc
+ 236              	.LFE3:
+ 238              		.align	2
+ 239              		.global	CAN_SetTiming
+ 241              	CAN_SetTiming:
+ 242              	.LFB4:
+ 155:libstr91x/src/91x_can.c **** {
+ 243              		.loc 1 155 0
+ 244              		.cfi_startproc
+ 245              		@ args = 0, pretend = 0, frame = 0
+ 246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 247              		@ link register save eliminated.
+ 248              	.LVL5:
+ 249 00e4 04402DE5 		str	r4, [sp, #-4]!
+ 250              	.LCFI1:
+ 251              		.cfi_def_cfa_offset 4
+ 156:libstr91x/src/91x_can.c ****   CAN->BTR = CAN_TIMING(tseg1, tseg2, sjw, brp);
+ 252              		.loc 1 156 0
+ 253 00e8 014040E2 		sub	r4, r0, #1
+ 254              		.cfi_offset 4, -4
+ 255 00ec 0FC004E2 		and	ip, r4, #15
+ 256 00f0 011041E2 		sub	r1, r1, #1
+ 257              	.LVL6:
+ 258 00f4 012042E2 		sub	r2, r2, #1
+ 259              	.LVL7:
+ 260 00f8 0C04A0E1 		mov	r0, ip, asl #8
+ 261              	.LVL8:
+ 262 00fc 074001E2 		and	r4, r1, #7
+ 263              	.LVL9:
+ 264 0100 02C3A0E1 		mov	ip, r2, asl #6
+ 265 0104 013043E2 		sub	r3, r3, #1
+ 266              	.LVL10:
+ 267 0108 044680E1 		orr	r4, r0, r4, asl #12
+ 268 010c FF100CE2 		and	r1, ip, #255
+ 269              	.LVL11:
+ 270 0110 012084E1 		orr	r2, r4, r1
+ 271              	.LVL12:
+ 272 0114 1CC09FE5 		ldr	ip, .L12
+ 273 0118 3F4003E2 		and	r4, r3, #63
+ 157:libstr91x/src/91x_can.c ****   CAN->BRPR = ((brp-1) >> 6) & 0x0F;
+ 274              		.loc 1 157 0
+ 275 011c 2303A0E1 		mov	r0, r3, lsr #6
+ 156:libstr91x/src/91x_can.c ****   CAN->BTR = CAN_TIMING(tseg1, tseg2, sjw, brp);
+ 276              		.loc 1 156 0
+ 277 0120 041082E1 		orr	r1, r2, r4
+ 157:libstr91x/src/91x_can.c ****   CAN->BRPR = ((brp-1) >> 6) & 0x0F;
+ 278              		.loc 1 157 0
+ 279 0124 0F3000E2 		and	r3, r0, #15
+ 280              	.LVL13:
+ 156:libstr91x/src/91x_can.c ****   CAN->BTR = CAN_TIMING(tseg1, tseg2, sjw, brp);
+ 281              		.loc 1 156 0
+ 282 0128 BC10CCE1 		strh	r1, [ip, #12]	@ movhi
+ 157:libstr91x/src/91x_can.c ****   CAN->BRPR = ((brp-1) >> 6) & 0x0F;
+ 283              		.loc 1 157 0
+ 284 012c B831CCE1 		strh	r3, [ip, #24]	@ movhi
+ 158:libstr91x/src/91x_can.c **** }
+ 285              		.loc 1 158 0
+ 286 0130 04409DE4 		ldmfd	sp!, {r4}
+ 287 0134 1EFF2FE1 		bx	lr
+ 288              	.L13:
+ 289              		.align	2
+ 290              	.L12:
+ 291 0138 0090005C 		.word	1543540736
+ 292              		.cfi_endproc
+ 293              	.LFE4:
+ 295              		.align	2
+ 296              		.global	CAN_SetUnusedMsgObj
+ 298              	CAN_SetUnusedMsgObj:
+ 299              	.LFB6:
+ 187:libstr91x/src/91x_can.c **** {
+ 300              		.loc 1 187 0
+ 301              		.cfi_startproc
+ 302              		@ args = 0, pretend = 0, frame = 0
+ 303              		@ frame_needed = 0, uses_anonymous_args = 0
+ 304              		@ link register save eliminated.
+ 305              	.LVL14:
+ 306 013c 70002DE9 		stmfd	sp!, {r4, r5, r6}
+ 307              	.LCFI2:
+ 308              		.cfi_def_cfa_offset 12
+ 309              	.LBB52:
+ 310              	.LBB53:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 311              		.loc 1 169 0
+ 312 0140 8C309FE5 		ldr	r3, .L21
+ 313 0144 B022D3E1 		ldrh	r2, [r3, #32]
+ 314 0148 020912E3 		tst	r2, #32768
+ 170:libstr91x/src/91x_can.c ****     return 0;
+ 315              		.loc 1 170 0
+ 316 014c 0030A003 		moveq	r3, #0
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 317              		.loc 1 169 0
+ 318 0150 1900001A 		bne	.L20
+ 319              		.cfi_offset 6, -4
+ 320              		.cfi_offset 5, -8
+ 321              		.cfi_offset 4, -12
+ 322              	.L15:
+ 323              	.LVL15:
+ 324              	.LBE53:
+ 325              	.LBE52:
+ 195:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 326              		.loc 1 195 0
+ 327 0154 8310A0E1 		mov	r1, r3, asl #1
+ 328 0158 03C081E0 		add	ip, r1, r3
+ 215:libstr91x/src/91x_can.c ****  CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 329              		.loc 1 215 0
+ 330 015c 014080E2 		add	r4, r0, #1
+ 195:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 331              		.loc 1 195 0
+ 332 0160 8C62A0E1 		mov	r6, ip, asl #5
+ 333 0164 175386E2 		add	r5, r6, #1543503872
+ 215:libstr91x/src/91x_can.c ****  CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 334              		.loc 1 215 0
+ 335 0168 0428A0E1 		mov	r2, r4, asl #16
+ 195:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 336              		.loc 1 195 0
+ 337 016c 093A85E2 		add	r3, r5, #36864
+ 202:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0;
+ 338              		.loc 1 202 0
+ 339 0170 0060A0E3 		mov	r6, #0	@ movhi
+ 195:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 340              		.loc 1 195 0
+ 341 0174 F300A0E3 		mov	r0, #243	@ movhi
+ 342              	.LVL16:
+ 215:libstr91x/src/91x_can.c ****  CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 343              		.loc 1 215 0
+ 344 0178 2218A0E1 		mov	r1, r2, lsr #16
+ 195:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 345              		.loc 1 195 0
+ 346 017c B402C3E1 		strh	r0, [r3, #36]	@ movhi
+ 202:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0;
+ 347              		.loc 1 202 0
+ 348 0180 285083E2 		add	r5, r3, #40
+ 349 0184 B862C3E1 		strh	r6, [r3, #40]	@ movhi
+ 205:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A1R = 0;
+ 350              		.loc 1 205 0
+ 351 0188 304083E2 		add	r4, r3, #48
+ 352              	.LVL17:
+ 203:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M2R = 0;
+ 353              		.loc 1 203 0
+ 354 018c BC62C3E1 		strh	r6, [r3, #44]	@ movhi
+ 217:libstr91x/src/91x_can.c ****  return SUCCESS;
+ 355              		.loc 1 217 0
+ 356 0190 0100A0E3 		mov	r0, #1
+ 205:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A1R = 0;
+ 357              		.loc 1 205 0
+ 358 0194 B063C3E1 		strh	r6, [r3, #48]	@ movhi
+ 206:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A2R = 0;
+ 359              		.loc 1 206 0
+ 360 0198 B463C3E1 		strh	r6, [r3, #52]	@ movhi
+ 208:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = 0;
+ 361              		.loc 1 208 0
+ 362 019c B863C3E1 		strh	r6, [r3, #56]	@ movhi
+ 210:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 363              		.loc 1 210 0
+ 364 01a0 BC63C3E1 		strh	r6, [r3, #60]	@ movhi
+ 211:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA2R = 0;
+ 365              		.loc 1 211 0
+ 366 01a4 B064C3E1 		strh	r6, [r3, #64]	@ movhi
+ 212:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB1R = 0;
+ 367              		.loc 1 212 0
+ 368 01a8 B464C3E1 		strh	r6, [r3, #68]	@ movhi
+ 213:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB2R = 0;
+ 369              		.loc 1 213 0
+ 370 01ac B864C3E1 		strh	r6, [r3, #72]	@ movhi
+ 215:libstr91x/src/91x_can.c ****  CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 371              		.loc 1 215 0
+ 372 01b0 B012C3E1 		strh	r1, [r3, #32]	@ movhi
+ 373              	.L16:
+ 218:libstr91x/src/91x_can.c **** }
+ 374              		.loc 1 218 0
+ 375 01b4 7000BDE8 		ldmfd	sp!, {r4, r5, r6}
+ 376 01b8 1EFF2FE1 		bx	lr
+ 377              	.LVL18:
+ 378              	.L20:
+ 379              	.LBB55:
+ 380              	.LBB54:
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 381              		.loc 1 171 0
+ 382 01bc B038D3E1 		ldrh	r3, [r3, #128]
+ 383 01c0 020913E3 		tst	r3, #32768
+ 172:libstr91x/src/91x_can.c ****     return 1;
+ 384              		.loc 1 172 0
+ 385 01c4 0130A003 		moveq	r3, #1
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 386              		.loc 1 171 0
+ 387 01c8 E1FFFF0A 		beq	.L15
+ 192:libstr91x/src/91x_can.c ****     return ERROR;
+ 388              		.loc 1 192 0
+ 389 01cc 0000A0E3 		mov	r0, #0
+ 390              	.LVL19:
+ 391 01d0 F7FFFFEA 		b	.L16
+ 392              	.L22:
+ 393              		.align	2
+ 394              	.L21:
+ 395 01d4 0090005C 		.word	1543540736
+ 396              	.LBE54:
+ 397              	.LBE55:
+ 398              		.cfi_endproc
+ 399              	.LFE6:
+ 401              		.align	2
+ 402              		.global	CAN_SetTxMsgObj
+ 404              	CAN_SetTxMsgObj:
+ 405              	.LFB7:
+ 240:libstr91x/src/91x_can.c **** {
+ 406              		.loc 1 240 0
+ 407              		.cfi_startproc
+ 408              		@ args = 0, pretend = 0, frame = 0
+ 409              		@ frame_needed = 0, uses_anonymous_args = 0
+ 410              		@ link register save eliminated.
+ 411              	.LVL20:
+ 412 01d8 70002DE9 		stmfd	sp!, {r4, r5, r6}
+ 413              	.LCFI3:
+ 414              		.cfi_def_cfa_offset 12
+ 415              	.LBB56:
+ 416              	.LBB57:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 417              		.loc 1 169 0
+ 418 01dc CC309FE5 		ldr	r3, .L33
+ 419 01e0 B0C2D3E1 		ldrh	ip, [r3, #32]
+ 420 01e4 02091CE3 		tst	ip, #32768
+ 170:libstr91x/src/91x_can.c ****     return 0;
+ 421              		.loc 1 170 0
+ 422 01e8 0030A003 		moveq	r3, #0
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 423              		.loc 1 169 0
+ 424 01ec 2900001A 		bne	.L32
+ 425              		.cfi_offset 6, -4
+ 426              		.cfi_offset 5, -8
+ 427              		.cfi_offset 4, -12
+ 428              	.L24:
+ 429              	.LVL21:
+ 430              	.LBE57:
+ 431              	.LBE56:
+ 248:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 432              		.loc 1 248 0
+ 433 01f0 8340A0E1 		mov	r4, r3, asl #1
+ 434 01f4 035084E0 		add	r5, r4, r3
+ 435 01f8 8562A0E1 		mov	r6, r5, asl #5
+ 436 01fc 17C386E2 		add	ip, r6, #1543503872
+ 437 0200 09CA8CE2 		add	ip, ip, #36864
+ 438 0204 F350A0E3 		mov	r5, #243	@ movhi
+ 255:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0xFFFF;
+ 439              		.loc 1 255 0
+ 440 0208 0060E0E3 		mvn	r6, #0	@ movhi
+ 248:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 441              		.loc 1 248 0
+ 442 020c B452CCE1 		strh	r5, [ip, #36]	@ movhi
+ 258:libstr91x/src/91x_can.c ****   if (idType == CAN_STD_ID)
+ 443              		.loc 1 258 0
+ 444 0210 000051E3 		cmp	r1, #0
+ 255:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0xFFFF;
+ 445              		.loc 1 255 0
+ 446 0214 B862CCE1 		strh	r6, [ip, #40]	@ movhi
+ 256:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A1R = 0;
+ 447              		.loc 1 256 0
+ 448 0218 0060A0E3 		mov	r6, #0	@ movhi
+ 449 021c B063CCE1 		strh	r6, [ip, #48]	@ movhi
+ 255:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].M1R = 0xFFFF;
+ 450              		.loc 1 255 0
+ 451 0220 28508CE2 		add	r5, ip, #40
+ 256:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].A1R = 0;
+ 452              		.loc 1 256 0
+ 453 0224 30108CE2 		add	r1, ip, #48
+ 454              	.LVL22:
+ 260:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MDIR | 0x1FFF;
+ 455              		.loc 1 260 0
+ 456 0228 0ACAE003 		mvneq	ip, #40960
+ 265:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MDIR | CAN_M2R_MXTD | 0x1FFF;
+ 457              		.loc 1 265 0
+ 458 022c 02CAE013 		mvnne	ip, #8192	@ movhi
+ 260:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MDIR | 0x1FFF;
+ 459              		.loc 1 260 0
+ 460 0230 B4C0C501 		streqh	ip, [r5, #4]	@ movhi
+ 265:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MDIR | CAN_M2R_MXTD | 0x1FFF;
+ 461              		.loc 1 265 0
+ 462 0234 B4C0C511 		strneh	ip, [r5, #4]	@ movhi
+ 261:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_DIR;
+ 463              		.loc 1 261 0
+ 464 0238 0ACAA003 		moveq	ip, #40960
+ 266:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_DIR | CAN_A2R_XTD;
+ 465              		.loc 1 266 0
+ 466 023c 0ECAA013 		movne	ip, #57344
+ 269:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_TXIE | CAN_MCR_EOB | ( RemoteEN ? CAN_MCR_RMTEN : 0)
+ 467              		.loc 1 269 0
+ 468 0240 033084E0 		add	r3, r4, r3
+ 266:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_DIR | CAN_A2R_XTD;
+ 469              		.loc 1 266 0
+ 470 0244 B4C0C1E1 		strh	ip, [r1, #4]	@ movhi
+ 269:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_TXIE | CAN_MCR_EOB | ( RemoteEN ? CAN_MCR_RMTEN : 0)
+ 471              		.loc 1 269 0
+ 472 0248 8312A0E1 		mov	r1, r3, asl #5
+ 473 024c 000052E3 		cmp	r2, #0
+ 474 0250 17C381E2 		add	ip, r1, #1543503872
+ 277:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 475              		.loc 1 277 0
+ 476 0254 014080E2 		add	r4, r0, #1
+ 269:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_TXIE | CAN_MCR_EOB | ( RemoteEN ? CAN_MCR_RMTEN : 0)
+ 477              		.loc 1 269 0
+ 478 0258 093A8CE2 		add	r3, ip, #36864
+ 277:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 479              		.loc 1 277 0
+ 480 025c 0408A0E1 		mov	r0, r4, asl #16
+ 481              	.LVL23:
+ 269:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_TXIE | CAN_MCR_EOB | ( RemoteEN ? CAN_MCR_RMTEN : 0)
+ 482              		.loc 1 269 0
+ 483 0260 222DA003 		moveq	r2, #2176
+ 484              	.LVL24:
+ 485 0264 6A2DA013 		movne	r2, #6784
+ 486 0268 B823C3E1 		strh	r2, [r3, #56]	@ movhi
+ 277:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 487              		.loc 1 277 0
+ 488 026c 2018A0E1 		mov	r1, r0, lsr #16
+ 272:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 489              		.loc 1 272 0
+ 490 0270 0020A0E3 		mov	r2, #0	@ movhi
+ 491 0274 BC23C3E1 		strh	r2, [r3, #60]	@ movhi
+ 269:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_TXIE | CAN_MCR_EOB | ( RemoteEN ? CAN_MCR_RMTEN : 0)
+ 492              		.loc 1 269 0
+ 493 0278 384083E2 		add	r4, r3, #56
+ 494              	.LVL25:
+ 273:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA2R = 0;
+ 495              		.loc 1 273 0
+ 496 027c B024C3E1 		strh	r2, [r3, #64]	@ movhi
+ 279:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 497              		.loc 1 279 0
+ 498 0280 0100A0E3 		mov	r0, #1
+ 274:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB1R = 0;
+ 499              		.loc 1 274 0
+ 500 0284 B424C3E1 		strh	r2, [r3, #68]	@ movhi
+ 275:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB2R = 0;
+ 501              		.loc 1 275 0
+ 502 0288 B824C3E1 		strh	r2, [r3, #72]	@ movhi
+ 277:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 503              		.loc 1 277 0
+ 504 028c B012C3E1 		strh	r1, [r3, #32]	@ movhi
+ 505              	.L25:
+ 280:libstr91x/src/91x_can.c **** }
+ 506              		.loc 1 280 0
+ 507 0290 7000BDE8 		ldmfd	sp!, {r4, r5, r6}
+ 508 0294 1EFF2FE1 		bx	lr
+ 509              	.LVL26:
+ 510              	.L32:
+ 511              	.LBB59:
+ 512              	.LBB58:
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 513              		.loc 1 171 0
+ 514 0298 B038D3E1 		ldrh	r3, [r3, #128]
+ 515 029c 020913E3 		tst	r3, #32768
+ 172:libstr91x/src/91x_can.c ****     return 1;
+ 516              		.loc 1 172 0
+ 517 02a0 0130A003 		moveq	r3, #1
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 518              		.loc 1 171 0
+ 519 02a4 D1FFFF0A 		beq	.L24
+ 245:libstr91x/src/91x_can.c ****     return ERROR;
+ 520              		.loc 1 245 0
+ 521 02a8 0000A0E3 		mov	r0, #0
+ 522              	.LVL27:
+ 523 02ac F7FFFFEA 		b	.L25
+ 524              	.L34:
+ 525              		.align	2
+ 526              	.L33:
+ 527 02b0 0090005C 		.word	1543540736
+ 528              	.LBE58:
+ 529              	.LBE59:
+ 530              		.cfi_endproc
+ 531              	.LFE7:
+ 533              		.align	2
+ 534              		.global	CAN_SetRxMsgObj
+ 536              	CAN_SetRxMsgObj:
+ 537              	.LFB8:
+ 307:libstr91x/src/91x_can.c **** {
+ 538              		.loc 1 307 0
+ 539              		.cfi_startproc
+ 540              		@ args = 4, pretend = 0, frame = 0
+ 541              		@ frame_needed = 0, uses_anonymous_args = 0
+ 542              		@ link register save eliminated.
+ 543              	.LVL28:
+ 544 02b4 F00F2DE9 		stmfd	sp!, {r4, r5, r6, r7, r8, r9, sl, fp}
+ 545              	.LCFI4:
+ 546              		.cfi_def_cfa_offset 32
+ 547              	.LBB60:
+ 548              	.LBB62:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 549              		.loc 1 169 0
+ 550 02b8 4CC19FE5 		ldr	ip, .L46
+ 551              	.LBE62:
+ 552              	.LBE60:
+ 307:libstr91x/src/91x_can.c **** {
+ 553              		.loc 1 307 0
+ 554 02bc 2060DDE5 		ldrb	r6, [sp, #32]	@ zero_extendqisi2
+ 555              		.cfi_offset 11, -4
+ 556              		.cfi_offset 10, -8
+ 557              		.cfi_offset 9, -12
+ 558              		.cfi_offset 8, -16
+ 559              		.cfi_offset 7, -20
+ 560              		.cfi_offset 6, -24
+ 561              		.cfi_offset 5, -28
+ 562              		.cfi_offset 4, -32
+ 563              	.LBB64:
+ 564              	.LBB61:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 565              		.loc 1 169 0
+ 566 02c0 B042DCE1 		ldrh	r4, [ip, #32]
+ 567 02c4 020914E3 		tst	r4, #32768
+ 170:libstr91x/src/91x_can.c ****     return 0;
+ 568              		.loc 1 170 0
+ 569 02c8 0040A003 		moveq	r4, #0
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 570              		.loc 1 169 0
+ 571 02cc 4800001A 		bne	.L44
+ 572              	.L36:
+ 573              	.LVL29:
+ 574              	.LBE61:
+ 575              	.LBE64:
+ 315:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 576              		.loc 1 315 0
+ 577 02d0 8450A0E1 		mov	r5, r4, asl #1
+ 578 02d4 04C085E0 		add	ip, r5, r4
+ 579 02d8 8CA2A0E1 		mov	sl, ip, asl #5
+ 580 02dc 17738AE2 		add	r7, sl, #1543503872
+ 581 02e0 09CA87E2 		add	ip, r7, #36864
+ 582 02e4 F380A0E3 		mov	r8, #243	@ movhi
+ 322:libstr91x/src/91x_can.c ****   if (idType == CAN_STD_ID)
+ 583              		.loc 1 322 0
+ 584 02e8 000051E3 		cmp	r1, #0
+ 315:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD
+ 585              		.loc 1 315 0
+ 586 02ec B482CCE1 		strh	r8, [ip, #36]	@ movhi
+ 322:libstr91x/src/91x_can.c ****   if (idType == CAN_STD_ID)
+ 587              		.loc 1 322 0
+ 588 02f0 2A00000A 		beq	.L45
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 589              		.loc 1 332 0
+ 590 02f4 03A8A0E1 		mov	sl, r3, asl #16
+ 591 02f8 0288A0E1 		mov	r8, r2, asl #16
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 592              		.loc 1 333 0
+ 593 02fc 039062E0 		rsb	r9, r2, r3
+ 594 0300 08719FE5 		ldr	r7, .L46+4
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 595              		.loc 1 332 0
+ 596 0304 2AA8A0E1 		mov	sl, sl, lsr #16
+ 597 0308 2888A0E1 		mov	r8, r8, lsr #16
+ 598 030c 0AB068E0 		rsb	fp, r8, sl
+ 336:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_XTD | EXT_RANGE_ID_ARB_H(idLow, idHigh);
+ 599              		.loc 1 336 0
+ 600 0310 022003E0 		and	r2, r3, r2
+ 601              	.LVL30:
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 602              		.loc 1 333 0
+ 603 0314 0990E0E1 		mvn	r9, r9
+ 336:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_XTD | EXT_RANGE_ID_ARB_H(idLow, idHigh);
+ 604              		.loc 1 336 0
+ 605 0318 072002E0 		and	r2, r2, r7
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 606              		.loc 1 332 0
+ 607 031c 0BB0E0E1 		mvn	fp, fp
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 608              		.loc 1 333 0
+ 609 0320 073009E0 		and	r3, r9, r7
+ 610              	.LVL31:
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 611              		.loc 1 332 0
+ 612 0324 0BB8A0E1 		mov	fp, fp, asl #16
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 613              		.loc 1 333 0
+ 614 0328 027183E2 		add	r7, r3, #-2147483648
+ 336:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_XTD | EXT_RANGE_ID_ARB_H(idLow, idHigh);
+ 615              		.loc 1 336 0
+ 616 032c 031182E3 		orr	r1, r2, #-1073741824
+ 617              	.LVL32:
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 618              		.loc 1 332 0
+ 619 0330 2BB8A0E1 		mov	fp, fp, lsr #16
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 620              		.loc 1 333 0
+ 621 0334 2778A0E1 		mov	r7, r7, lsr #16
+ 335:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A1R = EXT_RANGE_ID_ARB_L(idLow, idHigh);
+ 622              		.loc 1 335 0
+ 623 0338 08800AE0 		and	r8, sl, r8
+ 336:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_XTD | EXT_RANGE_ID_ARB_H(idLow, idHigh);
+ 624              		.loc 1 336 0
+ 625 033c 2118A0E1 		mov	r1, r1, lsr #16
+ 332:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = EXT_RANGE_ID_MSK_L(idLow, idHigh);
+ 626              		.loc 1 332 0
+ 627 0340 B8B2CCE1 		strh	fp, [ip, #40]	@ movhi
+ 333:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | EXT_RANGE_ID_MSK_H(idLow, idHigh);
+ 628              		.loc 1 333 0
+ 629 0344 BC72CCE1 		strh	r7, [ip, #44]	@ movhi
+ 335:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A1R = EXT_RANGE_ID_ARB_L(idLow, idHigh);
+ 630              		.loc 1 335 0
+ 631 0348 B083CCE1 		strh	r8, [ip, #48]	@ movhi
+ 336:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | CAN_A2R_XTD | EXT_RANGE_ID_ARB_H(idLow, idHigh);
+ 632              		.loc 1 336 0
+ 633 034c B413CCE1 		strh	r1, [ip, #52]	@ movhi
+ 634              	.L39:
+ 339:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_RXIE | CAN_MCR_UMASK | (singleOrFifoLast ? CAN_MCR_EOB : 0);
+ 635              		.loc 1 339 0
+ 636 0350 042085E0 		add	r2, r5, r4
+ 637 0354 8212A0E1 		mov	r1, r2, asl #5
+ 346:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 638              		.loc 1 346 0
+ 639 0358 013080E2 		add	r3, r0, #1
+ 640 035c 0308A0E1 		mov	r0, r3, asl #16
+ 641              	.LVL33:
+ 339:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_RXIE | CAN_MCR_UMASK | (singleOrFifoLast ? CAN_MCR_EOB : 0);
+ 642              		.loc 1 339 0
+ 643 0360 000056E3 		cmp	r6, #0
+ 644 0364 174381E2 		add	r4, r1, #1543503872
+ 645 0368 094A84E2 		add	r4, r4, #36864
+ 341:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 646              		.loc 1 341 0
+ 647 036c 0080A0E3 		mov	r8, #0	@ movhi
+ 346:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 648              		.loc 1 346 0
+ 649 0370 20C8A0E1 		mov	ip, r0, lsr #16
+ 339:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].MCR = CAN_MCR_RXIE | CAN_MCR_UMASK | (singleOrFifoLast ? CAN_MCR_EOB : 0);
+ 650              		.loc 1 339 0
+ 651 0374 056BA003 		moveq	r6, #5120
+ 652 0378 526DA013 		movne	r6, #5248
+ 653 037c B863C4E1 		strh	r6, [r4, #56]	@ movhi
+ 348:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 654              		.loc 1 348 0
+ 655 0380 0100A0E3 		mov	r0, #1
+ 341:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA1R = 0;
+ 656              		.loc 1 341 0
+ 657 0384 BC83C4E1 		strh	r8, [r4, #60]	@ movhi
+ 342:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DA2R = 0;
+ 658              		.loc 1 342 0
+ 659 0388 B084C4E1 		strh	r8, [r4, #64]	@ movhi
+ 343:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB1R = 0;
+ 660              		.loc 1 343 0
+ 661 038c B484C4E1 		strh	r8, [r4, #68]	@ movhi
+ 344:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].DB2R = 0;
+ 662              		.loc 1 344 0
+ 663 0390 B884C4E1 		strh	r8, [r4, #72]	@ movhi
+ 346:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 664              		.loc 1 346 0
+ 665 0394 B0C2C4E1 		strh	ip, [r4, #32]	@ movhi
+ 666              	.LVL34:
+ 667              	.L37:
+ 349:libstr91x/src/91x_can.c **** }
+ 668              		.loc 1 349 0
+ 669 0398 F00FBDE8 		ldmfd	sp!, {r4, r5, r6, r7, r8, r9, sl, fp}
+ 670 039c 1EFF2FE1 		bx	lr
+ 671              	.LVL35:
+ 672              	.L45:
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 673              		.loc 1 325 0
+ 674 03a0 0338A0E1 		mov	r3, r3, asl #16
+ 675              	.LVL36:
+ 676 03a4 0278A0E1 		mov	r7, r2, asl #16
+ 677 03a8 2728A0E1 		mov	r2, r7, lsr #16
+ 678              	.LVL37:
+ 679 03ac 23A8A0E1 		mov	sl, r3, lsr #16
+ 680 03b0 0A8062E0 		rsb	r8, r2, sl
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 681              		.loc 1 328 0
+ 682 03b4 02300AE0 		and	r3, sl, r2
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 683              		.loc 1 325 0
+ 684 03b8 0870E0E1 		mvn	r7, r8
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 685              		.loc 1 328 0
+ 686 03bc 8329E0E1 		mvn	r2, r3, asl #19
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 687              		.loc 1 325 0
+ 688 03c0 87AAA0E1 		mov	sl, r7, asl #21
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 689              		.loc 1 328 0
+ 690 03c4 A288E0E1 		mvn	r8, r2, lsr #17
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 691              		.loc 1 325 0
+ 692 03c8 AA79A0E1 		mov	r7, sl, lsr #19
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 693              		.loc 1 328 0
+ 694 03cc 0838A0E1 		mov	r3, r8, asl #16
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 695              		.loc 1 325 0
+ 696 03d0 02A987E3 		orr	sl, r7, #32768
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 697              		.loc 1 328 0
+ 698 03d4 2338A0E1 		mov	r3, r3, lsr #16
+ 324:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M1R = 0xFFFF;
+ 699              		.loc 1 324 0
+ 700 03d8 0020E0E3 		mvn	r2, #0	@ movhi
+ 701 03dc B822CCE1 		strh	r2, [ip, #40]	@ movhi
+ 327:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A1R = 0;
+ 702              		.loc 1 327 0
+ 703 03e0 30708CE2 		add	r7, ip, #48
+ 325:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].M2R = CAN_M2R_MXTD | STD_RANGE_ID_MSK(idLow, idHigh);
+ 704              		.loc 1 325 0
+ 705 03e4 BCA2CCE1 		strh	sl, [ip, #44]	@ movhi
+ 327:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A1R = 0;
+ 706              		.loc 1 327 0
+ 707 03e8 B013CCE1 		strh	r1, [ip, #48]	@ movhi
+ 328:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].A2R = CAN_A2R_MSGVAL | STD_RANGE_ID_ARB(idLow, idHigh);
+ 708              		.loc 1 328 0
+ 709 03ec B433CCE1 		strh	r3, [ip, #52]	@ movhi
+ 710 03f0 D6FFFFEA 		b	.L39
+ 711              	.LVL38:
+ 712              	.L44:
+ 713              	.LBB65:
+ 714              	.LBB63:
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 715              		.loc 1 171 0
+ 716 03f4 B0C8DCE1 		ldrh	ip, [ip, #128]
+ 717 03f8 02091CE3 		tst	ip, #32768
+ 172:libstr91x/src/91x_can.c ****     return 1;
+ 718              		.loc 1 172 0
+ 719 03fc 0140A003 		moveq	r4, #1
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 720              		.loc 1 171 0
+ 721 0400 B2FFFF0A 		beq	.L36
+ 312:libstr91x/src/91x_can.c ****     return ERROR;
+ 722              		.loc 1 312 0
+ 723 0404 0000A0E3 		mov	r0, #0
+ 724              	.LVL39:
+ 725 0408 E2FFFFEA 		b	.L37
+ 726              	.L47:
+ 727              		.align	2
+ 728              	.L46:
+ 729 040c 0090005C 		.word	1543540736
+ 730 0410 0000FF1F 		.word	536805376
+ 731              	.LBE63:
+ 732              	.LBE65:
+ 733              		.cfi_endproc
+ 734              	.LFE8:
+ 736              		.align	2
+ 737              		.global	CAN_SetUnusedAllMsgObj
+ 739              	CAN_SetUnusedAllMsgObj:
+ 740              	.LFB9:
+ 361:libstr91x/src/91x_can.c **** {
+ 741              		.loc 1 361 0
+ 742              		.cfi_startproc
+ 743              		@ args = 0, pretend = 0, frame = 0
+ 744              		@ frame_needed = 0, uses_anonymous_args = 0
+ 745              	.LVL40:
+ 746 0414 38402DE9 		stmfd	sp!, {r3, r4, r5, lr}
+ 747              	.LCFI5:
+ 748              		.cfi_def_cfa_offset 16
+ 363:libstr91x/src/91x_can.c ****   for (i = 0; i < 32; i++)
+ 749              		.loc 1 363 0
+ 750 0418 0040A0E3 		mov	r4, #0
+ 751              		.cfi_offset 14, -4
+ 752              		.cfi_offset 5, -8
+ 753              		.cfi_offset 4, -12
+ 754              		.cfi_offset 3, -16
+ 755 041c 040000EA 		b	.L50
+ 756              	.LVL41:
+ 757              	.L57:
+ 365:libstr91x/src/91x_can.c ****     if ( CAN_SetUnusedMsgObj(i) == ERROR)
+ 758              		.loc 1 365 0
+ 759 0420 FEFFFFEB 		bl	CAN_SetUnusedMsgObj
+ 760 0424 003050E2 		subs	r3, r0, #0
+ 761 0428 0800000A 		beq	.L51
+ 762              	.LVL42:
+ 363:libstr91x/src/91x_can.c ****   for (i = 0; i < 32; i++)
+ 763              		.loc 1 363 0
+ 764 042c 200054E3 		cmp	r4, #32
+ 765 0430 0800000A 		beq	.L56
+ 766              	.LVL43:
+ 767              	.L50:
+ 365:libstr91x/src/91x_can.c ****     if ( CAN_SetUnusedMsgObj(i) == ERROR)
+ 768              		.loc 1 365 0
+ 769 0434 0400A0E1 		mov	r0, r4
+ 770 0438 FEFFFFEB 		bl	CAN_SetUnusedMsgObj
+ 363:libstr91x/src/91x_can.c ****   for (i = 0; i < 32; i++)
+ 771              		.loc 1 363 0
+ 772 043c 015084E2 		add	r5, r4, #1
+ 365:libstr91x/src/91x_can.c ****     if ( CAN_SetUnusedMsgObj(i) == ERROR)
+ 773              		.loc 1 365 0
+ 774 0440 003050E2 		subs	r3, r0, #0
+ 363:libstr91x/src/91x_can.c ****   for (i = 0; i < 32; i++)
+ 775              		.loc 1 363 0
+ 776 0444 024084E2 		add	r4, r4, #2
+ 365:libstr91x/src/91x_can.c ****     if ( CAN_SetUnusedMsgObj(i) == ERROR)
+ 777              		.loc 1 365 0
+ 778 0448 0500A0E1 		mov	r0, r5
+ 779 044c F3FFFF1A 		bne	.L57
+ 780              	.L51:
+ 366:libstr91x/src/91x_can.c ****       return ERROR;
+ 781              		.loc 1 366 0
+ 782 0450 0300A0E1 		mov	r0, r3
+ 369:libstr91x/src/91x_can.c **** }
+ 783              		.loc 1 369 0
+ 784 0454 3880BDE8 		ldmfd	sp!, {r3, r4, r5, pc}
+ 785              	.LVL44:
+ 786              	.L56:
+ 368:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 787              		.loc 1 368 0
+ 788 0458 0100A0E3 		mov	r0, #1
+ 789 045c 3880BDE8 		ldmfd	sp!, {r3, r4, r5, pc}
+ 790              		.cfi_endproc
+ 791              	.LFE9:
+ 793              		.align	2
+ 794              		.global	CAN_ReleaseMessage
+ 796              	CAN_ReleaseMessage:
+ 797              	.LFB10:
+ 381:libstr91x/src/91x_can.c **** {
+ 798              		.loc 1 381 0
+ 799              		.cfi_startproc
+ 800              		@ args = 0, pretend = 0, frame = 0
+ 801              		@ frame_needed = 0, uses_anonymous_args = 0
+ 802              		@ link register save eliminated.
+ 803              	.LVL45:
+ 804              	.LBB66:
+ 805              	.LBB67:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 806              		.loc 1 169 0
+ 807 0460 58309FE5 		ldr	r3, .L64
+ 808 0464 B022D3E1 		ldrh	r2, [r3, #32]
+ 809 0468 020912E3 		tst	r2, #32768
+ 170:libstr91x/src/91x_can.c ****     return 0;
+ 810              		.loc 1 170 0
+ 811 046c 0030A003 		moveq	r3, #0
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 812              		.loc 1 169 0
+ 813 0470 0C00001A 		bne	.L63
+ 814              	.L59:
+ 815              	.LVL46:
+ 816              	.LBE67:
+ 817              	.LBE66:
+ 389:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 818              		.loc 1 389 0
+ 819 0474 8320A0E1 		mov	r2, r3, asl #1
+ 820 0478 03C082E0 		add	ip, r2, r3
+ 821 047c 8C32A0E1 		mov	r3, ip, asl #5
+ 390:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 822              		.loc 1 390 0
+ 823 0480 012080E2 		add	r2, r0, #1
+ 389:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 824              		.loc 1 389 0
+ 825 0484 171383E2 		add	r1, r3, #1543503872
+ 390:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 826              		.loc 1 390 0
+ 827 0488 02C8A0E1 		mov	ip, r2, asl #16
+ 389:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 828              		.loc 1 389 0
+ 829 048c 093A81E2 		add	r3, r1, #36864
+ 830 0490 0C00A0E3 		mov	r0, #12	@ movhi
+ 831              	.LVL47:
+ 390:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 832              		.loc 1 390 0
+ 833 0494 2C18A0E1 		mov	r1, ip, lsr #16
+ 389:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 834              		.loc 1 389 0
+ 835 0498 B402C3E1 		strh	r0, [r3, #36]	@ movhi
+ 392:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 836              		.loc 1 392 0
+ 837 049c 0100A0E3 		mov	r0, #1
+ 390:libstr91x/src/91x_can.c ****   CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 838              		.loc 1 390 0
+ 839 04a0 B012C3E1 		strh	r1, [r3, #32]	@ movhi
+ 392:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 840              		.loc 1 392 0
+ 841 04a4 1EFF2FE1 		bx	lr
+ 842              	.LVL48:
+ 843              	.L63:
+ 844              	.LBB69:
+ 845              	.LBB68:
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 846              		.loc 1 171 0
+ 847 04a8 B038D3E1 		ldrh	r3, [r3, #128]
+ 848 04ac 020913E3 		tst	r3, #32768
+ 172:libstr91x/src/91x_can.c ****     return 1;
+ 849              		.loc 1 172 0
+ 850 04b0 0130A003 		moveq	r3, #1
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 851              		.loc 1 171 0
+ 852 04b4 EEFFFF0A 		beq	.L59
+ 386:libstr91x/src/91x_can.c ****     return ERROR;
+ 853              		.loc 1 386 0
+ 854 04b8 0000A0E3 		mov	r0, #0
+ 855              	.LVL49:
+ 856              	.LBE68:
+ 857              	.LBE69:
+ 393:libstr91x/src/91x_can.c **** }
+ 858              		.loc 1 393 0
+ 859 04bc 1EFF2FE1 		bx	lr
+ 860              	.L65:
+ 861              		.align	2
+ 862              	.L64:
+ 863 04c0 0090005C 		.word	1543540736
+ 864              		.cfi_endproc
+ 865              	.LFE10:
+ 867              		.align	2
+ 868              		.global	CAN_UpdateMsgObj
+ 870              	CAN_UpdateMsgObj:
+ 871              	.LFB11:
+ 408:libstr91x/src/91x_can.c **** {
+ 872              		.loc 1 408 0
+ 873              		.cfi_startproc
+ 874              		@ args = 0, pretend = 0, frame = 0
+ 875              		@ frame_needed = 0, uses_anonymous_args = 0
+ 876              		@ link register save eliminated.
+ 877              	.LVL50:
+ 878 04c4 04402DE5 		str	r4, [sp, #-4]!
+ 879              	.LCFI6:
+ 880              		.cfi_def_cfa_offset 4
+ 409:libstr91x/src/91x_can.c ****  if (CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 881              		.loc 1 409 0
+ 882 04c8 20319FE5 		ldr	r3, .L76
+ 883 04cc B022D3E1 		ldrh	r2, [r3, #32]
+ 884 04d0 020912E3 		tst	r2, #32768
+ 410:libstr91x/src/91x_can.c ****   return ERROR;
+ 885              		.loc 1 410 0
+ 886 04d4 0000A013 		movne	r0, #0
+ 887              	.LVL51:
+ 409:libstr91x/src/91x_can.c ****  if (CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 888              		.loc 1 409 0
+ 889 04d8 3900001A 		bne	.L67
+ 890              		.cfi_offset 4, -4
+ 415:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = 1 + msgobj;
+ 891              		.loc 1 415 0
+ 892 04dc 01C080E2 		add	ip, r0, #1
+ 893 04e0 0C08A0E1 		mov	r0, ip, asl #16
+ 894 04e4 2008A0E1 		mov	r0, r0, lsr #16
+ 413:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_ARB | CAN_CMR_CONTROL;
+ 895              		.loc 1 413 0
+ 896 04e8 3040A0E3 		mov	r4, #48	@ movhi
+ 897 04ec B442C3E1 		strh	r4, [r3, #36]	@ movhi
+ 417:libstr91x/src/91x_can.c ****   while (CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 898              		.loc 1 417 0
+ 899 04f0 03C0A0E1 		mov	ip, r3
+ 415:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = 1 + msgobj;
+ 900              		.loc 1 415 0
+ 901 04f4 B002C3E1 		strh	r0, [r3, #32]	@ movhi
+ 902              	.L68:
+ 417:libstr91x/src/91x_can.c ****   while (CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 903              		.loc 1 417 0 discriminator 1
+ 904 04f8 B032DCE1 		ldrh	r3, [ip, #32]
+ 905 04fc EC209FE5 		ldr	r2, .L76
+ 906 0500 020913E3 		tst	r3, #32768
+ 907 0504 FBFFFF1A 		bne	.L68
+ 423:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR =   CAN_CMR_WRRD
+ 908              		.loc 1 423 0
+ 909 0508 B3C0A0E3 		mov	ip, #179	@ movhi
+ 910 050c B4C2C2E1 		strh	ip, [r2, #36]	@ movhi
+ 429:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].A2R & CAN_A2R_XTD) == 0)
+ 911              		.loc 1 429 0
+ 912 0510 B443D2E1 		ldrh	r4, [r2, #52]
+ 913 0514 013914E2 		ands	r3, r4, #16384
+ 914 0518 2B00000A 		beq	.L75
+ 439:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = EXT_FIXED_ID_ARB_L(pCanMsg->Id);
+ 915              		.loc 1 439 0
+ 916 051c 043091E5 		ldr	r3, [r1, #4]
+ 917 0520 03C8A0E1 		mov	ip, r3, asl #16
+ 918 0524 2C48A0E1 		mov	r4, ip, lsr #16
+ 919 0528 B043C2E1 		strh	r4, [r2, #48]	@ movhi
+ 440:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000)
+ 920              		.loc 1 440 0
+ 921 052c B4C3D2E1 		ldrh	ip, [r2, #52]
+ 922 0530 8341A0E1 		mov	r4, r3, asl #3
+ 923 0534 0ECA0CE2 		and	ip, ip, #57344
+ 924 0538 A4398CE1 		orr	r3, ip, r4, lsr #19
+ 925 053c B433C2E1 		strh	r3, [r2, #52]	@ movhi
+ 926              	.L70:
+ 444:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].MCR = (CAN->sMsgObj[0].MCR & 0xFEF0) | CAN_MCR_NEWDAT
+ 927              		.loc 1 444 0
+ 928 0540 A8309FE5 		ldr	r3, .L76
+ 929 0544 08C0D1E5 		ldrb	ip, [r1, #8]	@ zero_extendqisi2
+ 930 0548 B843D3E1 		ldrh	r4, [r3, #56]
+ 931 054c A0209FE5 		ldr	r2, .L76+4
+ 932 0550 8CC8E0E1 		mvn	ip, ip, asl #17
+ 933 0554 ACC8E0E1 		mvn	ip, ip, lsr #17
+ 934 0558 022004E0 		and	r2, r4, r2
+ 935 055c 02408CE1 		orr	r4, ip, r2
+ 936 0560 04C8A0E1 		mov	ip, r4, asl #16
+ 937 0564 2C28A0E1 		mov	r2, ip, lsr #16
+ 938 0568 B823C3E1 		strh	r2, [r3, #56]	@ movhi
+ 447:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA1R = ((u16)pCanMsg->Data[1] << 8) | pCanMsg->Data[0];
+ 939              		.loc 1 447 0
+ 940 056c 0A40D1E5 		ldrb	r4, [r1, #10]	@ zero_extendqisi2
+ 941 0570 09C0D1E5 		ldrb	ip, [r1, #9]	@ zero_extendqisi2
+ 454:libstr91x/src/91x_can.c ****   while ( CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 942              		.loc 1 454 0
+ 943 0574 0320A0E1 		mov	r2, r3
+ 447:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA1R = ((u16)pCanMsg->Data[1] << 8) | pCanMsg->Data[0];
+ 944              		.loc 1 447 0
+ 945 0578 04C48CE1 		orr	ip, ip, r4, asl #8
+ 946 057c BCC3C3E1 		strh	ip, [r3, #60]	@ movhi
+ 448:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA2R = ((u16)pCanMsg->Data[3] << 8) | pCanMsg->Data[2];
+ 947              		.loc 1 448 0
+ 948 0580 0BC0D1E5 		ldrb	ip, [r1, #11]	@ zero_extendqisi2
+ 949 0584 0C40D1E5 		ldrb	r4, [r1, #12]	@ zero_extendqisi2
+ 950 0588 04448CE1 		orr	r4, ip, r4, asl #8
+ 951 058c B044C3E1 		strh	r4, [r3, #64]	@ movhi
+ 449:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB1R = ((u16)pCanMsg->Data[5] << 8) | pCanMsg->Data[4];
+ 952              		.loc 1 449 0
+ 953 0590 0E40D1E5 		ldrb	r4, [r1, #14]	@ zero_extendqisi2
+ 954 0594 0DC0D1E5 		ldrb	ip, [r1, #13]	@ zero_extendqisi2
+ 955 0598 04C48CE1 		orr	ip, ip, r4, asl #8
+ 956 059c B4C4C3E1 		strh	ip, [r3, #68]	@ movhi
+ 450:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB2R = ((u16)pCanMsg->Data[7] << 8) | pCanMsg->Data[6];
+ 957              		.loc 1 450 0
+ 958 05a0 10C0D1E5 		ldrb	ip, [r1, #16]	@ zero_extendqisi2
+ 959 05a4 0F10D1E5 		ldrb	r1, [r1, #15]	@ zero_extendqisi2
+ 960              	.LVL52:
+ 961 05a8 0C1481E1 		orr	r1, r1, ip, asl #8
+ 962 05ac B814C3E1 		strh	r1, [r3, #72]	@ movhi
+ 452:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = 1 + msgobj;
+ 963              		.loc 1 452 0
+ 964 05b0 B002C3E1 		strh	r0, [r3, #32]	@ movhi
+ 965              	.L71:
+ 454:libstr91x/src/91x_can.c ****   while ( CAN->sMsgObj[0].CRR & CAN_CRR_BUSY)
+ 966              		.loc 1 454 0 discriminator 1
+ 967 05b4 B002D2E1 		ldrh	r0, [r2, #32]
+ 968 05b8 020910E3 		tst	r0, #32768
+ 969 05bc FCFFFF1A 		bne	.L71
+ 458:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 970              		.loc 1 458 0
+ 971 05c0 0100A0E3 		mov	r0, #1
+ 972              	.L67:
+ 459:libstr91x/src/91x_can.c **** }
+ 973              		.loc 1 459 0
+ 974 05c4 04409DE4 		ldmfd	sp!, {r4}
+ 975 05c8 1EFF2FE1 		bx	lr
+ 976              	.LVL53:
+ 977              	.L75:
+ 432:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = 0;
+ 978              		.loc 1 432 0
+ 979 05cc B033C2E1 		strh	r3, [r2, #48]	@ movhi
+ 433:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000)
+ 980              		.loc 1 433 0
+ 981 05d0 B4C3D2E1 		ldrh	ip, [r2, #52]
+ 434:libstr91x/src/91x_can.c ****                           | STD_FIXED_ID_ARB(pCanMsg->Id);
+ 982              		.loc 1 434 0
+ 983 05d4 044091E5 		ldr	r4, [r1, #4]
+ 433:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000)
+ 984              		.loc 1 433 0
+ 985 05d8 0E3A0CE2 		and	r3, ip, #57344
+ 986 05dc 04C183E1 		orr	ip, r3, r4, asl #2
+ 987 05e0 0C48A0E1 		mov	r4, ip, asl #16
+ 988 05e4 2438A0E1 		mov	r3, r4, lsr #16
+ 989 05e8 B433C2E1 		strh	r3, [r2, #52]	@ movhi
+ 990 05ec D3FFFFEA 		b	.L70
+ 991              	.L77:
+ 992              		.align	2
+ 993              	.L76:
+ 994 05f0 0090005C 		.word	1543540736
+ 995 05f4 F07E0000 		.word	32496
+ 996              		.cfi_endproc
+ 997              	.LFE11:
+ 999              		.align	2
+ 1000              		.global	CAN_SendMessage
+ 1002              	CAN_SendMessage:
+ 1003              	.LFB12:
+ 473:libstr91x/src/91x_can.c **** {
+ 1004              		.loc 1 473 0
+ 1005              		.cfi_startproc
+ 1006              		@ args = 0, pretend = 0, frame = 0
+ 1007              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1008              	.LVL54:
+ 1009 05f8 10402DE9 		stmfd	sp!, {r4, lr}
+ 1010              	.LCFI7:
+ 1011              		.cfi_def_cfa_offset 8
+ 473:libstr91x/src/91x_can.c **** {
+ 1012              		.loc 1 473 0
+ 1013 05fc 0040A0E1 		mov	r4, r0
+ 1014              		.cfi_offset 14, -4
+ 1015              		.cfi_offset 4, -8
+ 475:libstr91x/src/91x_can.c ****   if (CAN_UpdateMsgObj(msgobj, pCanMsg) == ERROR)
+ 1016              		.loc 1 475 0
+ 1017 0600 FEFFFFEB 		bl	CAN_UpdateMsgObj
+ 1018              	.LVL55:
+ 1019 0604 000050E3 		cmp	r0, #0
+ 1020 0608 1080BD08 		ldmeqfd	sp!, {r4, pc}
+ 478:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 1021              		.loc 1 478 0
+ 1022 060c 68309FE5 		ldr	r3, .L85
+ 1023 0610 68C09FE5 		ldr	ip, .L85+4
+ 1024 0614 B410D3E1 		ldrh	r1, [r3, #4]
+ 1025 0618 0C0001E0 		and	r0, r1, ip
+ 1026 061c B400C3E1 		strh	r0, [r3, #4]	@ movhi
+ 1027              	.LVL56:
+ 1028              	.LBB70:
+ 1029              	.LBB71:
+ 1030              	.LBB72:
+ 1031              	.LBB73:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 1032              		.loc 1 169 0
+ 1033 0620 B022D3E1 		ldrh	r2, [r3, #32]
+ 1034 0624 020912E3 		tst	r2, #32768
+ 1035 0628 0030A003 		moveq	r3, #0
+ 1036 062c 0C00001A 		bne	.L84
+ 1037              	.L80:
+ 1038              	.LBE73:
+ 1039              	.LBE72:
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1040              		.loc 1 501 0
+ 1041 0630 83E0A0E1 		mov	lr, r3, asl #1
+ 1042 0634 03108EE0 		add	r1, lr, r3
+ 1043 0638 81C2A0E1 		mov	ip, r1, asl #5
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1044              		.loc 1 504 0
+ 1045 063c 012084E2 		add	r2, r4, #1
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1046              		.loc 1 501 0
+ 1047 0640 17038CE2 		add	r0, ip, #1543503872
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1048              		.loc 1 504 0
+ 1049 0644 0248A0E1 		mov	r4, r2, asl #16
+ 1050              	.LVL57:
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1051              		.loc 1 501 0
+ 1052 0648 093A80E2 		add	r3, r0, #36864
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1053              		.loc 1 504 0
+ 1054 064c 2448A0E1 		mov	r4, r4, lsr #16
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1055              		.loc 1 501 0
+ 1056 0650 84E0A0E3 		mov	lr, #132	@ movhi
+ 1057 0654 B4E2C3E1 		strh	lr, [r3, #36]	@ movhi
+ 506:libstr91x/src/91x_can.c ****     return SUCCESS;
+ 1058              		.loc 1 506 0
+ 1059 0658 0100A0E3 		mov	r0, #1
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1060              		.loc 1 504 0
+ 1061 065c B042C3E1 		strh	r4, [r3, #32]	@ movhi
+ 1062 0660 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 1063              	.LVL58:
+ 1064              	.L84:
+ 1065              	.LBB75:
+ 1066              	.LBB74:
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 1067              		.loc 1 171 0
+ 1068 0664 B038D3E1 		ldrh	r3, [r3, #128]
+ 1069 0668 020913E3 		tst	r3, #32768
+ 1070 066c 0130A003 		moveq	r3, #1
+ 1071 0670 EEFFFF0A 		beq	.L80
+ 498:libstr91x/src/91x_can.c ****     return ERROR;
+ 1072              		.loc 1 498 0
+ 1073 0674 0000A0E3 		mov	r0, #0
+ 1074              	.LBE74:
+ 1075              	.LBE75:
+ 1076              	.LBE71:
+ 1077              	.LBE70:
+ 481:libstr91x/src/91x_can.c **** }
+ 1078              		.loc 1 481 0
+ 1079 0678 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 1080              	.L86:
+ 1081              		.align	2
+ 1082              	.L85:
+ 1083 067c 0090005C 		.word	1543540736
+ 1084 0680 F7FF0000 		.word	65527
+ 1085              		.cfi_endproc
+ 1086              	.LFE12:
+ 1088              		.align	2
+ 1089              		.global	CAN_TransmitRequest
+ 1091              	CAN_TransmitRequest:
+ 1092              	.LFB13:
+ 494:libstr91x/src/91x_can.c **** {
+ 1093              		.loc 1 494 0
+ 1094              		.cfi_startproc
+ 1095              		@ args = 0, pretend = 0, frame = 0
+ 1096              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1097              		@ link register save eliminated.
+ 1098              	.LVL59:
+ 1099              	.LBB76:
+ 1100              	.LBB77:
+ 169:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[0].CRR & CAN_CRR_BUSY) == 0)
+ 1101              		.loc 1 169 0
+ 1102 0684 58309FE5 		ldr	r3, .L93
+ 1103 0688 B022D3E1 		ldrh	r2, [r3, #32]
+ 1104 068c 020912E3 		tst	r2, #32768
+ 1105 0690 0030A003 		moveq	r3, #0
+ 1106 0694 0C00001A 		bne	.L92
+ 1107              	.L88:
+ 1108              	.LBE77:
+ 1109              	.LBE76:
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1110              		.loc 1 501 0
+ 1111 0698 8320A0E1 		mov	r2, r3, asl #1
+ 1112 069c 03C082E0 		add	ip, r2, r3
+ 1113 06a0 8C32A0E1 		mov	r3, ip, asl #5
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1114              		.loc 1 504 0
+ 1115 06a4 012080E2 		add	r2, r0, #1
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1116              		.loc 1 501 0
+ 1117 06a8 171383E2 		add	r1, r3, #1543503872
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1118              		.loc 1 504 0
+ 1119 06ac 02C8A0E1 		mov	ip, r2, asl #16
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1120              		.loc 1 501 0
+ 1121 06b0 093A81E2 		add	r3, r1, #36864
+ 1122 06b4 8400A0E3 		mov	r0, #132	@ movhi
+ 1123              	.LVL60:
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1124              		.loc 1 504 0
+ 1125 06b8 2C18A0E1 		mov	r1, ip, lsr #16
+ 501:libstr91x/src/91x_can.c ****      CAN->sMsgObj[msg_if].CMR = CAN_CMR_WRRD | CAN_CMR_TXRQSTNEWDAT;
+ 1126              		.loc 1 501 0
+ 1127 06bc B402C3E1 		strh	r0, [r3, #36]	@ movhi
+ 506:libstr91x/src/91x_can.c ****     return SUCCESS;
+ 1128              		.loc 1 506 0
+ 1129 06c0 0100A0E3 		mov	r0, #1
+ 504:libstr91x/src/91x_can.c ****     CAN->sMsgObj[msg_if].CRR = 1 + msgobj;
+ 1130              		.loc 1 504 0
+ 1131 06c4 B012C3E1 		strh	r1, [r3, #32]	@ movhi
+ 506:libstr91x/src/91x_can.c ****     return SUCCESS;
+ 1132              		.loc 1 506 0
+ 1133 06c8 1EFF2FE1 		bx	lr
+ 1134              	.LVL61:
+ 1135              	.L92:
+ 1136              	.LBB79:
+ 1137              	.LBB78:
+ 171:libstr91x/src/91x_can.c ****   else if ((CAN->sMsgObj[1].CRR & CAN_CRR_BUSY) == 0)
+ 1138              		.loc 1 171 0
+ 1139 06cc B038D3E1 		ldrh	r3, [r3, #128]
+ 1140 06d0 020913E3 		tst	r3, #32768
+ 1141 06d4 0130A003 		moveq	r3, #1
+ 1142 06d8 EEFFFF0A 		beq	.L88
+ 498:libstr91x/src/91x_can.c ****     return ERROR;
+ 1143              		.loc 1 498 0
+ 1144 06dc 0000A0E3 		mov	r0, #0
+ 1145              	.LVL62:
+ 1146              	.LBE78:
+ 1147              	.LBE79:
+ 507:libstr91x/src/91x_can.c **** }
+ 1148              		.loc 1 507 0
+ 1149 06e0 1EFF2FE1 		bx	lr
+ 1150              	.L94:
+ 1151              		.align	2
+ 1152              	.L93:
+ 1153 06e4 0090005C 		.word	1543540736
+ 1154              		.cfi_endproc
+ 1155              	.LFE13:
+ 1157              		.align	2
+ 1158              		.global	CAN_WaitEndOfTx
+ 1160              	CAN_WaitEndOfTx:
+ 1161              	.LFB15:
+ 588:libstr91x/src/91x_can.c **** {
+ 1162              		.loc 1 588 0
+ 1163              		.cfi_startproc
+ 1164              		@ args = 0, pretend = 0, frame = 0
+ 1165              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1166              		@ link register save eliminated.
+ 589:libstr91x/src/91x_can.c ****   while ((CAN->SR & CAN_SR_TXOK) == 0)
+ 1167              		.loc 1 589 0
+ 1168 06e8 20109FE5 		ldr	r1, .L98
+ 1169              	.L96:
+ 589:libstr91x/src/91x_can.c ****   while ((CAN->SR & CAN_SR_TXOK) == 0)
+ 1170              		.loc 1 589 0 is_stmt 0 discriminator 1
+ 1171 06ec B430D1E1 		ldrh	r3, [r1, #4]
+ 1172 06f0 18209FE5 		ldr	r2, .L98
+ 1173 06f4 080013E3 		tst	r3, #8
+ 1174 06f8 FBFFFF0A 		beq	.L96
+ 593:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 1175              		.loc 1 593 0 is_stmt 1
+ 1176 06fc B410D2E1 		ldrh	r1, [r2, #4]
+ 1177 0700 0CC09FE5 		ldr	ip, .L98+4
+ 1178 0704 0C0001E0 		and	r0, r1, ip
+ 1179 0708 B400C2E1 		strh	r0, [r2, #4]	@ movhi
+ 594:libstr91x/src/91x_can.c **** }
+ 1180              		.loc 1 594 0
+ 1181 070c 1EFF2FE1 		bx	lr
+ 1182              	.L99:
+ 1183              		.align	2
+ 1184              	.L98:
+ 1185 0710 0090005C 		.word	1543540736
+ 1186 0714 F7FF0000 		.word	65527
+ 1187              		.cfi_endproc
+ 1188              	.LFE15:
+ 1190              		.align	2
+ 1191              		.global	CAN_BasicSendMessage
+ 1193              	CAN_BasicSendMessage:
+ 1194              	.LFB16:
+ 608:libstr91x/src/91x_can.c **** {
+ 1195              		.loc 1 608 0
+ 1196              		.cfi_startproc
+ 1197              		@ args = 0, pretend = 0, frame = 0
+ 1198              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1199              		@ link register save eliminated.
+ 1200              	.LVL63:
+ 610:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].MCR &= ~CAN_MCR_NEWDAT;
+ 1201              		.loc 1 610 0
+ 1202 0718 EC209FE5 		ldr	r2, .L104
+ 608:libstr91x/src/91x_can.c **** {
+ 1203              		.loc 1 608 0
+ 1204 071c 0030A0E1 		mov	r3, r0
+ 610:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].MCR &= ~CAN_MCR_NEWDAT;
+ 1205              		.loc 1 610 0
+ 1206 0720 B809D2E1 		ldrh	r0, [r2, #152]
+ 1207              	.LVL64:
+ 612:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 1208              		.loc 1 612 0
+ 1209 0724 E4109FE5 		ldr	r1, .L104+4
+ 610:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].MCR &= ~CAN_MCR_NEWDAT;
+ 1210              		.loc 1 610 0
+ 1211 0728 80C8A0E1 		mov	ip, r0, asl #17
+ 1212 072c AC08A0E1 		mov	r0, ip, lsr #17
+ 1213 0730 B809C2E1 		strh	r0, [r2, #152]	@ movhi
+ 612:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 1214              		.loc 1 612 0
+ 1215 0734 B4C0D2E1 		ldrh	ip, [r2, #4]
+ 620:libstr91x/src/91x_can.c ****   if (pCanMsg->IdType == CAN_STD_ID)
+ 1216              		.loc 1 620 0
+ 1217 0738 000093E5 		ldr	r0, [r3, #0]
+ 612:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 1218              		.loc 1 612 0
+ 1219 073c 01C00CE0 		and	ip, ip, r1
+ 620:libstr91x/src/91x_can.c ****   if (pCanMsg->IdType == CAN_STD_ID)
+ 1220              		.loc 1 620 0
+ 1221 0740 000050E3 		cmp	r0, #0
+ 614:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_WRRD
+ 1222              		.loc 1 614 0
+ 1223 0744 B310A0E3 		mov	r1, #179	@ movhi
+ 612:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_TXOK;
+ 1224              		.loc 1 612 0
+ 1225 0748 B4C0C2E1 		strh	ip, [r2, #4]	@ movhi
+ 614:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_WRRD
+ 1226              		.loc 1 614 0
+ 1227 074c B412C2E1 		strh	r1, [r2, #36]	@ movhi
+ 620:libstr91x/src/91x_can.c ****   if (pCanMsg->IdType == CAN_STD_ID)
+ 1228              		.loc 1 620 0
+ 1229 0750 2400000A 		beq	.L103
+ 629:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = EXT_FIXED_ID_ARB_L(pCanMsg->Id);
+ 1230              		.loc 1 629 0
+ 1231 0754 04C093E5 		ldr	ip, [r3, #4]
+ 1232 0758 0C08A0E1 		mov	r0, ip, asl #16
+ 1233 075c 2018A0E1 		mov	r1, r0, lsr #16
+ 1234 0760 B013C2E1 		strh	r1, [r2, #48]	@ movhi
+ 630:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000) | CAN_A2R_XTD | EXT_FIXED_ID_ARB_H(pCanMsg
+ 1235              		.loc 1 630 0
+ 1236 0764 B403D2E1 		ldrh	r0, [r2, #52]
+ 1237 0768 8CC1A0E1 		mov	ip, ip, asl #3
+ 1238 076c 0A1A00E2 		and	r1, r0, #40960
+ 1239 0770 010981E3 		orr	r0, r1, #16384
+ 1240 0774 AC1980E1 		orr	r1, r0, ip, lsr #19
+ 1241 0778 B413C2E1 		strh	r1, [r2, #52]	@ movhi
+ 1242              	.L102:
+ 633:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].MCR = (CAN->sMsgObj[0].MCR & 0xFCF0) | pCanMsg->Dlc;
+ 1243              		.loc 1 633 0
+ 1244 077c 88209FE5 		ldr	r2, .L104
+ 1245 0780 8C109FE5 		ldr	r1, .L104+8
+ 1246 0784 B8C3D2E1 		ldrh	ip, [r2, #56]
+ 1247 0788 0800D3E5 		ldrb	r0, [r3, #8]	@ zero_extendqisi2
+ 1248 078c 01100CE0 		and	r1, ip, r1
+ 1249 0790 000081E1 		orr	r0, r1, r0
+ 1250 0794 B803C2E1 		strh	r0, [r2, #56]	@ movhi
+ 635:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA1R = ((u16)pCanMsg->Data[1]<<8) | pCanMsg->Data[0];
+ 1251              		.loc 1 635 0
+ 1252 0798 0AC0D3E5 		ldrb	ip, [r3, #10]	@ zero_extendqisi2
+ 1253 079c 0910D3E5 		ldrb	r1, [r3, #9]	@ zero_extendqisi2
+ 1254 07a0 0C0481E1 		orr	r0, r1, ip, asl #8
+ 1255 07a4 BC03C2E1 		strh	r0, [r2, #60]	@ movhi
+ 636:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA2R = ((u16)pCanMsg->Data[3]<<8) | pCanMsg->Data[2];
+ 1256              		.loc 1 636 0
+ 1257 07a8 0CC0D3E5 		ldrb	ip, [r3, #12]	@ zero_extendqisi2
+ 1258 07ac 0B10D3E5 		ldrb	r1, [r3, #11]	@ zero_extendqisi2
+ 644:libstr91x/src/91x_can.c **** }
+ 1259              		.loc 1 644 0
+ 1260 07b0 0100A0E3 		mov	r0, #1
+ 636:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DA2R = ((u16)pCanMsg->Data[3]<<8) | pCanMsg->Data[2];
+ 1261              		.loc 1 636 0
+ 1262 07b4 0C1481E1 		orr	r1, r1, ip, asl #8
+ 1263 07b8 B014C2E1 		strh	r1, [r2, #64]	@ movhi
+ 637:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB1R = ((u16)pCanMsg->Data[5]<<8) | pCanMsg->Data[4];
+ 1264              		.loc 1 637 0
+ 1265 07bc 0D10D3E5 		ldrb	r1, [r3, #13]	@ zero_extendqisi2
+ 1266 07c0 0EC0D3E5 		ldrb	ip, [r3, #14]	@ zero_extendqisi2
+ 1267 07c4 0CC481E1 		orr	ip, r1, ip, asl #8
+ 1268 07c8 B4C4C2E1 		strh	ip, [r2, #68]	@ movhi
+ 638:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB2R = ((u16)pCanMsg->Data[7]<<8) | pCanMsg->Data[6];
+ 1269              		.loc 1 638 0
+ 1270 07cc 1010D3E5 		ldrb	r1, [r3, #16]	@ zero_extendqisi2
+ 1271 07d0 0F30D3E5 		ldrb	r3, [r3, #15]	@ zero_extendqisi2
+ 1272              	.LVL65:
+ 1273 07d4 01C483E1 		orr	ip, r3, r1, asl #8
+ 641:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = CAN_CRR_BUSY;
+ 1274              		.loc 1 641 0
+ 1275 07d8 0239A0E3 		mov	r3, #32768
+ 638:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].DB2R = ((u16)pCanMsg->Data[7]<<8) | pCanMsg->Data[6];
+ 1276              		.loc 1 638 0
+ 1277 07dc B8C4C2E1 		strh	ip, [r2, #72]	@ movhi
+ 641:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = CAN_CRR_BUSY;
+ 1278              		.loc 1 641 0
+ 1279 07e0 B032C2E1 		strh	r3, [r2, #32]	@ movhi
+ 644:libstr91x/src/91x_can.c **** }
+ 1280              		.loc 1 644 0
+ 1281 07e4 1EFF2FE1 		bx	lr
+ 1282              	.LVL66:
+ 1283              	.L103:
+ 623:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A1R = 0;
+ 1284              		.loc 1 623 0
+ 1285 07e8 B003C2E1 		strh	r0, [r2, #48]	@ movhi
+ 624:libstr91x/src/91x_can.c ****     CAN->sMsgObj[0].A2R = (CAN->sMsgObj[0].A2R & 0xE000) | STD_FIXED_ID_ARB(pCanMsg->Id);
+ 1286              		.loc 1 624 0
+ 1287 07ec B403D2E1 		ldrh	r0, [r2, #52]
+ 1288 07f0 04C093E5 		ldr	ip, [r3, #4]
+ 1289 07f4 0E1A00E2 		and	r1, r0, #57344
+ 1290 07f8 0C0181E1 		orr	r0, r1, ip, asl #2
+ 1291 07fc 00C8A0E1 		mov	ip, r0, asl #16
+ 1292 0800 2C18A0E1 		mov	r1, ip, lsr #16
+ 1293 0804 B413C2E1 		strh	r1, [r2, #52]	@ movhi
+ 1294 0808 DBFFFFEA 		b	.L102
+ 1295              	.L105:
+ 1296              		.align	2
+ 1297              	.L104:
+ 1298 080c 0090005C 		.word	1543540736
+ 1299 0810 F7FF0000 		.word	65527
+ 1300 0814 F0FC0000 		.word	64752
+ 1301              		.cfi_endproc
+ 1302              	.LFE16:
+ 1304              		.align	2
+ 1305              		.global	CAN_BasicReceiveMessage
+ 1307              	CAN_BasicReceiveMessage:
+ 1308              	.LFB17:
+ 657:libstr91x/src/91x_can.c **** {
+ 1309              		.loc 1 657 0
+ 1310              		.cfi_startproc
+ 1311              		@ args = 0, pretend = 0, frame = 0
+ 1312              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1313              		@ link register save eliminated.
+ 1314              	.LVL67:
+ 660:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].MCR & CAN_MCR_NEWDAT) == 0)
+ 1315              		.loc 1 660 0
+ 1316 0818 C8309FE5 		ldr	r3, .L112
+ 657:libstr91x/src/91x_can.c **** {
+ 1317              		.loc 1 657 0
+ 1318 081c 0020A0E1 		mov	r2, r0
+ 660:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].MCR & CAN_MCR_NEWDAT) == 0)
+ 1319              		.loc 1 660 0
+ 1320 0820 B819D3E1 		ldrh	r1, [r3, #152]
+ 1321 0824 020911E3 		tst	r1, #32768
+ 1322 0828 0100001A 		bne	.L111
+ 662:libstr91x/src/91x_can.c ****     return ERROR;
+ 1323              		.loc 1 662 0
+ 1324 082c 0000A0E3 		mov	r0, #0
+ 1325              	.LVL68:
+ 698:libstr91x/src/91x_can.c **** }
+ 1326              		.loc 1 698 0
+ 1327 0830 1EFF2FE1 		bx	lr
+ 1328              	.L111:
+ 665:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 1329              		.loc 1 665 0
+ 1330 0834 B400D3E1 		ldrh	r0, [r3, #4]
+ 1331 0838 AC109FE5 		ldr	r1, .L112+4
+ 1332 083c 01C000E0 		and	ip, r0, r1
+ 667:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_ARB
+ 1333              		.loc 1 667 0
+ 1334 0840 3310A0E3 		mov	r1, #51	@ movhi
+ 665:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 1335              		.loc 1 665 0
+ 1336 0844 B4C0C3E1 		strh	ip, [r3, #4]	@ movhi
+ 667:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_ARB
+ 1337              		.loc 1 667 0
+ 1338 0848 B418C3E1 		strh	r1, [r3, #132]	@ movhi
+ 672:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].A2R & CAN_A2R_XTD) == 0)
+ 1339              		.loc 1 672 0
+ 1340 084c B4C9D3E1 		ldrh	ip, [r3, #148]
+ 1341 0850 01191CE2 		ands	r1, ip, #16384
+ 681:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_EXT_ID;
+ 1342              		.loc 1 681 0
+ 1343 0854 0110A013 		movne	r1, #1
+ 1344 0858 00108215 		strne	r1, [r2, #0]
+ 675:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_STD_ID;
+ 1345              		.loc 1 675 0
+ 1346 085c 00108205 		streq	r1, [r2, #0]
+ 682:libstr91x/src/91x_can.c ****     tmpId = ((u32)(CAN->sMsgObj[1].A2R & 0x1FFF) << 16);
+ 1347              		.loc 1 682 0
+ 1348 0860 B409D311 		ldrneh	r0, [r3, #148]
+ 1349              	.LVL69:
+ 676:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 1350              		.loc 1 676 0
+ 1351 0864 B439D301 		ldreqh	r3, [r3, #148]
+ 683:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tmpId;
+ 1352              		.loc 1 683 0
+ 1353 0868 B019D311 		ldrneh	r1, [r3, #144]
+ 676:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 1354              		.loc 1 676 0
+ 1355 086c 8339A001 		moveq	r3, r3, asl #19
+ 682:libstr91x/src/91x_can.c ****     tmpId = ((u32)(CAN->sMsgObj[1].A2R & 0x1FFF) << 16);
+ 1356              		.loc 1 682 0
+ 1357 0870 8039A011 		movne	r3, r0, asl #19
+ 683:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tmpId;
+ 1358              		.loc 1 683 0
+ 1359 0874 A3318111 		orrne	r3, r1, r3, lsr #3
+ 676:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 1360              		.loc 1 676 0
+ 1361 0878 A33AA001 		moveq	r3, r3, lsr #21
+ 683:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tmpId;
+ 1362              		.loc 1 683 0
+ 1363 087c 043082E5 		str	r3, [r2, #4]
+ 686:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 1364              		.loc 1 686 0
+ 1365 0880 60309FE5 		ldr	r3, .L112
+ 697:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 1366              		.loc 1 697 0
+ 1367 0884 0100A0E3 		mov	r0, #1
+ 1368              	.LVL70:
+ 686:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 1369              		.loc 1 686 0
+ 1370 0888 B8C9D3E1 		ldrh	ip, [r3, #152]
+ 1371 088c 0F100CE2 		and	r1, ip, #15
+ 1372 0890 0810C2E5 		strb	r1, [r2, #8]
+ 688:libstr91x/src/91x_can.c ****   pCanMsg->Data[0] = (u8) CAN->sMsgObj[1].DA1R;
+ 1373              		.loc 1 688 0
+ 1374 0894 BCC9D3E1 		ldrh	ip, [r3, #156]
+ 1375 0898 09C0C2E5 		strb	ip, [r2, #9]
+ 689:libstr91x/src/91x_can.c ****   pCanMsg->Data[1] = (u8)(CAN->sMsgObj[1].DA1R >> 8);
+ 1376              		.loc 1 689 0
+ 1377 089c BC19D3E1 		ldrh	r1, [r3, #156]
+ 1378 08a0 21C4A0E1 		mov	ip, r1, lsr #8
+ 1379 08a4 0AC0C2E5 		strb	ip, [r2, #10]
+ 690:libstr91x/src/91x_can.c ****   pCanMsg->Data[2] = (u8) CAN->sMsgObj[1].DA2R;
+ 1380              		.loc 1 690 0
+ 1381 08a8 B01AD3E1 		ldrh	r1, [r3, #160]
+ 1382 08ac 0B10C2E5 		strb	r1, [r2, #11]
+ 691:libstr91x/src/91x_can.c ****   pCanMsg->Data[3] = (u8)(CAN->sMsgObj[1].DA2R >> 8);
+ 1383              		.loc 1 691 0
+ 1384 08b0 B0CAD3E1 		ldrh	ip, [r3, #160]
+ 1385 08b4 2C14A0E1 		mov	r1, ip, lsr #8
+ 1386 08b8 0C10C2E5 		strb	r1, [r2, #12]
+ 692:libstr91x/src/91x_can.c ****   pCanMsg->Data[4] = (u8) CAN->sMsgObj[1].DB1R;
+ 1387              		.loc 1 692 0
+ 1388 08bc B4CAD3E1 		ldrh	ip, [r3, #164]
+ 1389 08c0 0DC0C2E5 		strb	ip, [r2, #13]
+ 693:libstr91x/src/91x_can.c ****   pCanMsg->Data[5] = (u8)(CAN->sMsgObj[1].DB1R >> 8);
+ 1390              		.loc 1 693 0
+ 1391 08c4 B41AD3E1 		ldrh	r1, [r3, #164]
+ 1392 08c8 21C4A0E1 		mov	ip, r1, lsr #8
+ 1393 08cc 0EC0C2E5 		strb	ip, [r2, #14]
+ 694:libstr91x/src/91x_can.c ****   pCanMsg->Data[6] = (u8) CAN->sMsgObj[1].DB2R;
+ 1394              		.loc 1 694 0
+ 1395 08d0 B81AD3E1 		ldrh	r1, [r3, #168]
+ 1396 08d4 0F10C2E5 		strb	r1, [r2, #15]
+ 695:libstr91x/src/91x_can.c ****   pCanMsg->Data[7] = (u8)(CAN->sMsgObj[1].DB2R >> 8);
+ 1397              		.loc 1 695 0
+ 1398 08d8 B8CAD3E1 		ldrh	ip, [r3, #168]
+ 1399 08dc 2C34A0E1 		mov	r3, ip, lsr #8
+ 1400 08e0 1030C2E5 		strb	r3, [r2, #16]
+ 697:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 1401              		.loc 1 697 0
+ 1402 08e4 1EFF2FE1 		bx	lr
+ 1403              	.L113:
+ 1404              		.align	2
+ 1405              	.L112:
+ 1406 08e8 0090005C 		.word	1543540736
+ 1407 08ec EFFF0000 		.word	65519
+ 1408              		.cfi_endproc
+ 1409              	.LFE17:
+ 1411              		.align	2
+ 1412              		.global	CAN_EnterInitMode
+ 1414              	CAN_EnterInitMode:
+ 1415              	.LFB18:
+ 709:libstr91x/src/91x_can.c **** {
+ 1416              		.loc 1 709 0
+ 1417              		.cfi_startproc
+ 1418              		@ args = 0, pretend = 0, frame = 0
+ 1419              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1420              		@ link register save eliminated.
+ 1421              	.LVL71:
+ 710:libstr91x/src/91x_can.c ****   CAN->CR = InitMask | CAN_CR_INIT;
+ 1422              		.loc 1 710 0
+ 1423 08f0 10309FE5 		ldr	r3, .L115
+ 1424 08f4 010080E3 		orr	r0, r0, #1
+ 1425              	.LVL72:
+ 711:libstr91x/src/91x_can.c ****   CAN->SR = 0;					/* reset the status*/
+ 1426              		.loc 1 711 0
+ 1427 08f8 0020A0E3 		mov	r2, #0	@ movhi
+ 710:libstr91x/src/91x_can.c ****   CAN->CR = InitMask | CAN_CR_INIT;
+ 1428              		.loc 1 710 0
+ 1429 08fc B000C3E1 		strh	r0, [r3, #0]	@ movhi
+ 711:libstr91x/src/91x_can.c ****   CAN->SR = 0;					/* reset the status*/
+ 1430              		.loc 1 711 0
+ 1431 0900 B420C3E1 		strh	r2, [r3, #4]	@ movhi
+ 712:libstr91x/src/91x_can.c **** }
+ 1432              		.loc 1 712 0
+ 1433 0904 1EFF2FE1 		bx	lr
+ 1434              	.L116:
+ 1435              		.align	2
+ 1436              	.L115:
+ 1437 0908 0090005C 		.word	1543540736
+ 1438              		.cfi_endproc
+ 1439              	.LFE18:
+ 1441              		.align	2
+ 1442              		.global	CAN_LeaveInitMode
+ 1444              	CAN_LeaveInitMode:
+ 1445              	.LFB19:
+ 723:libstr91x/src/91x_can.c **** {
+ 1446              		.loc 1 723 0
+ 1447              		.cfi_startproc
+ 1448              		@ args = 0, pretend = 0, frame = 0
+ 1449              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1450              		@ link register save eliminated.
+ 724:libstr91x/src/91x_can.c ****   CAN->CR &= ~(CAN_CR_INIT | CAN_CR_CCE);
+ 1451              		.loc 1 724 0
+ 1452 090c 10209FE5 		ldr	r2, .L118
+ 1453 0910 10009FE5 		ldr	r0, .L118+4
+ 1454 0914 B010D2E1 		ldrh	r1, [r2, #0]
+ 1455 0918 003001E0 		and	r3, r1, r0
+ 1456 091c B030C2E1 		strh	r3, [r2, #0]	@ movhi
+ 725:libstr91x/src/91x_can.c **** }
+ 1457              		.loc 1 725 0
+ 1458 0920 1EFF2FE1 		bx	lr
+ 1459              	.L119:
+ 1460              		.align	2
+ 1461              	.L118:
+ 1462 0924 0090005C 		.word	1543540736
+ 1463 0928 BEFF0000 		.word	65470
+ 1464              		.cfi_endproc
+ 1465              	.LFE19:
+ 1467              		.align	2
+ 1468              		.global	CAN_EnterTestMode
+ 1470              	CAN_EnterTestMode:
+ 1471              	.LFB20:
+ 736:libstr91x/src/91x_can.c **** {
+ 1472              		.loc 1 736 0
+ 1473              		.cfi_startproc
+ 1474              		@ args = 0, pretend = 0, frame = 0
+ 1475              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1476              		@ link register save eliminated.
+ 1477              	.LVL73:
+ 737:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 1478              		.loc 1 737 0
+ 1479 092c 18309FE5 		ldr	r3, .L121
+ 1480 0930 B020D3E1 		ldrh	r2, [r3, #0]
+ 1481 0934 80C082E3 		orr	ip, r2, #128
+ 1482 0938 B0C0C3E1 		strh	ip, [r3, #0]	@ movhi
+ 738:libstr91x/src/91x_can.c ****   CAN->TESTR |= TestMask;
+ 1483              		.loc 1 738 0
+ 1484 093c B411D3E1 		ldrh	r1, [r3, #20]
+ 1485 0940 012080E1 		orr	r2, r0, r1
+ 1486 0944 B421C3E1 		strh	r2, [r3, #20]	@ movhi
+ 739:libstr91x/src/91x_can.c **** }
+ 1487              		.loc 1 739 0
+ 1488 0948 1EFF2FE1 		bx	lr
+ 1489              	.L122:
+ 1490              		.align	2
+ 1491              	.L121:
+ 1492 094c 0090005C 		.word	1543540736
+ 1493              		.cfi_endproc
+ 1494              	.LFE20:
+ 1496              		.align	2
+ 1497              		.global	CAN_LeaveTestMode
+ 1499              	CAN_LeaveTestMode:
+ 1500              	.LFB21:
+ 750:libstr91x/src/91x_can.c **** {
+ 1501              		.loc 1 750 0
+ 1502              		.cfi_startproc
+ 1503              		@ args = 0, pretend = 0, frame = 0
+ 1504              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1505              		@ link register save eliminated.
+ 751:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 1506              		.loc 1 751 0
+ 1507 0950 2C309FE5 		ldr	r3, .L124
+ 752:libstr91x/src/91x_can.c ****   CAN->TESTR &= ~(CAN_TESTR_LBACK | CAN_TESTR_SILENT | CAN_TESTR_BASIC);
+ 1508              		.loc 1 752 0
+ 1509 0954 2C209FE5 		ldr	r2, .L124+4
+ 751:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 1510              		.loc 1 751 0
+ 1511 0958 B010D3E1 		ldrh	r1, [r3, #0]
+ 1512              		.loc 1 753 0
+ 1513 095c 28C09FE5 		ldr	ip, .L124+8
+ 751:libstr91x/src/91x_can.c ****   CAN->CR |= CAN_CR_TEST;
+ 1514              		.loc 1 751 0
+ 1515 0960 800081E3 		orr	r0, r1, #128
+ 1516 0964 B000C3E1 		strh	r0, [r3, #0]	@ movhi
+ 752:libstr91x/src/91x_can.c ****   CAN->TESTR &= ~(CAN_TESTR_LBACK | CAN_TESTR_SILENT | CAN_TESTR_BASIC);
+ 1517              		.loc 1 752 0
+ 1518 0968 B411D3E1 		ldrh	r1, [r3, #20]
+ 1519 096c 020001E0 		and	r0, r1, r2
+ 1520 0970 B401C3E1 		strh	r0, [r3, #20]	@ movhi
+ 1521              		.loc 1 753 0
+ 1522 0974 B010D3E1 		ldrh	r1, [r3, #0]
+ 1523 0978 0C2001E0 		and	r2, r1, ip
+ 1524 097c B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 754:libstr91x/src/91x_can.c **** }
+ 1525              		.loc 1 754 0
+ 1526 0980 1EFF2FE1 		bx	lr
+ 1527              	.L125:
+ 1528              		.align	2
+ 1529              	.L124:
+ 1530 0984 0090005C 		.word	1543540736
+ 1531 0988 E3FF0000 		.word	65507
+ 1532 098c 7FFF0000 		.word	65407
+ 1533              		.cfi_endproc
+ 1534              	.LFE21:
+ 1536              		.align	2
+ 1537              		.global	CAN_ReleaseTxMessage
+ 1539              	CAN_ReleaseTxMessage:
+ 1540              	.LFB22:
+ 755:libstr91x/src/91x_can.c **** 
+ 756:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 757:libstr91x/src/91x_can.c **** * Function Name  : CAN_ReleaseTxMessage                                      
+ 758:libstr91x/src/91x_can.c **** * Description    : Releases the transmit message object.
+ 759:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 760:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 761:libstr91x/src/91x_can.c **** * Return         : None                                                                        
+ 762:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 763:libstr91x/src/91x_can.c **** void CAN_ReleaseTxMessage(u32 msgobj)
+ 764:libstr91x/src/91x_can.c **** {
+ 1541              		.loc 1 764 0
+ 1542              		.cfi_startproc
+ 1543              		@ args = 0, pretend = 0, frame = 0
+ 1544              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1545              		@ link register save eliminated.
+ 1546              	.LVL74:
+ 765:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 766:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CRR = 1 + msgobj;
+ 1547              		.loc 1 766 0
+ 1548 0990 01C080E2 		add	ip, r0, #1
+ 765:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 1549              		.loc 1 765 0
+ 1550 0994 14309FE5 		ldr	r3, .L127
+ 1551              		.loc 1 766 0
+ 1552 0998 0C08A0E1 		mov	r0, ip, asl #16
+ 1553              	.LVL75:
+ 1554 099c 2028A0E1 		mov	r2, r0, lsr #16
+ 765:libstr91x/src/91x_can.c ****   CAN->sMsgObj[0].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 1555              		.loc 1 765 0
+ 1556 09a0 0C10A0E3 		mov	r1, #12	@ movhi
+ 1557 09a4 B412C3E1 		strh	r1, [r3, #36]	@ movhi
+ 1558              		.loc 1 766 0
+ 1559 09a8 B022C3E1 		strh	r2, [r3, #32]	@ movhi
+ 767:libstr91x/src/91x_can.c **** }
+ 1560              		.loc 1 767 0
+ 1561 09ac 1EFF2FE1 		bx	lr
+ 1562              	.L128:
+ 1563              		.align	2
+ 1564              	.L127:
+ 1565 09b0 0090005C 		.word	1543540736
+ 1566              		.cfi_endproc
+ 1567              	.LFE22:
+ 1569              		.align	2
+ 1570              		.global	CAN_ReleaseRxMessage
+ 1572              	CAN_ReleaseRxMessage:
+ 1573              	.LFB23:
+ 768:libstr91x/src/91x_can.c **** 
+ 769:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 770:libstr91x/src/91x_can.c **** * Function Name  : CAN_ReleaseRxMessage                                      
+ 771:libstr91x/src/91x_can.c **** * Description    : Releases the receive message object.                        
+ 772:libstr91x/src/91x_can.c **** * Input          : - msgobj: specifies the Message object number, from 0 to 31.                    
+ 773:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 774:libstr91x/src/91x_can.c **** * Return         : None                                                                      
+ 775:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 776:libstr91x/src/91x_can.c **** void CAN_ReleaseRxMessage(u32 msgobj)
+ 777:libstr91x/src/91x_can.c **** {
+ 1574              		.loc 1 777 0
+ 1575              		.cfi_startproc
+ 1576              		@ args = 0, pretend = 0, frame = 0
+ 1577              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1578              		@ link register save eliminated.
+ 1579              	.LVL76:
+ 778:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 779:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CRR = 1 + msgobj;
+ 1580              		.loc 1 779 0
+ 1581 09b4 01C080E2 		add	ip, r0, #1
+ 778:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 1582              		.loc 1 778 0
+ 1583 09b8 14309FE5 		ldr	r3, .L130
+ 1584              		.loc 1 779 0
+ 1585 09bc 0C08A0E1 		mov	r0, ip, asl #16
+ 1586              	.LVL77:
+ 1587 09c0 2028A0E1 		mov	r2, r0, lsr #16
+ 778:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_CLRINTPND | CAN_CMR_TXRQSTNEWDAT;
+ 1588              		.loc 1 778 0
+ 1589 09c4 0C10A0E3 		mov	r1, #12	@ movhi
+ 1590 09c8 B418C3E1 		strh	r1, [r3, #132]	@ movhi
+ 1591              		.loc 1 779 0
+ 1592 09cc B028C3E1 		strh	r2, [r3, #128]	@ movhi
+ 780:libstr91x/src/91x_can.c **** }
+ 1593              		.loc 1 780 0
+ 1594 09d0 1EFF2FE1 		bx	lr
+ 1595              	.L131:
+ 1596              		.align	2
+ 1597              	.L130:
+ 1598 09d4 0090005C 		.word	1543540736
+ 1599              		.cfi_endproc
+ 1600              	.LFE23:
+ 1602              		.align	2
+ 1603              		.global	CAN_GetMsgReceiveStatus
+ 1605              	CAN_GetMsgReceiveStatus:
+ 1606              	.LFB24:
+ 781:libstr91x/src/91x_can.c **** 
+ 782:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 783:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetMsgReceiveStatus
+ 784:libstr91x/src/91x_can.c **** * Description    : Test the waiting status of a received message
+ 785:libstr91x/src/91x_can.c **** * Input 1        : message object number, from 0 to 31
+ 786:libstr91x/src/91x_can.c **** * Output         : None
+ 787:libstr91x/src/91x_can.c **** * Return         : SET value if the corresponding message object has
+ 788:libstr91x/src/91x_can.c **** *                  received a message waiting to be copied, else RESET
+ 789:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 790:libstr91x/src/91x_can.c **** FlagStatus CAN_GetMsgReceiveStatus(u32 msgobj)
+ 791:libstr91x/src/91x_can.c **** {
+ 1607              		.loc 1 791 0
+ 1608              		.cfi_startproc
+ 1609              		@ args = 0, pretend = 0, frame = 0
+ 1610              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1611              		@ link register save eliminated.
+ 1612              	.LVL78:
+ 792:libstr91x/src/91x_can.c ****   if( msgobj < 16 )
+ 1613              		.loc 1 792 0
+ 1614 09d8 0F0050E3 		cmp	r0, #15
+ 1615 09dc 0500008A 		bhi	.L133
+ 793:libstr91x/src/91x_can.c ****   {
+ 794:libstr91x/src/91x_can.c ****     if ( CAN->ND1R & (1 << msgobj) ) 
+ 1616              		.loc 1 794 0
+ 1617 09e0 2C209FE5 		ldr	r2, .L135
+ 1618 09e4 121EA0E3 		mov	r1, #288
+ 1619 09e8 B13092E1 		ldrh	r3, [r2, r1]
+ 1620 09ec 5300A0E1 		mov	r0, r3, asr r0
+ 1621              	.LVL79:
+ 795:libstr91x/src/91x_can.c ****         return SET;
+ 1622              		.loc 1 795 0
+ 1623 09f0 010000E2 		and	r0, r0, #1
+ 1624 09f4 1EFF2FE1 		bx	lr
+ 1625              	.LVL80:
+ 1626              	.L133:
+ 796:libstr91x/src/91x_can.c ****     else
+ 797:libstr91x/src/91x_can.c ****         return RESET;
+ 798:libstr91x/src/91x_can.c ****   } 
+ 799:libstr91x/src/91x_can.c ****   else
+ 800:libstr91x/src/91x_can.c ****   {
+ 801:libstr91x/src/91x_can.c ****      if ( CAN->ND2R & (1 << (msgobj - 16) ) )
+ 1627              		.loc 1 801 0
+ 1628 09f8 14209FE5 		ldr	r2, .L135
+ 1629 09fc 491FA0E3 		mov	r1, #292
+ 1630 0a00 B13092E1 		ldrh	r3, [r2, r1]
+ 1631 0a04 100040E2 		sub	r0, r0, #16
+ 1632              	.LVL81:
+ 1633 0a08 53C0A0E1 		mov	ip, r3, asr r0
+ 795:libstr91x/src/91x_can.c ****         return SET;
+ 1634              		.loc 1 795 0
+ 1635 0a0c 01000CE2 		and	r0, ip, #1
+ 1636              	.LVL82:
+ 802:libstr91x/src/91x_can.c ****          return SET;
+ 803:libstr91x/src/91x_can.c ****      else
+ 804:libstr91x/src/91x_can.c ****          return RESET;
+ 805:libstr91x/src/91x_can.c ****   } 
+ 806:libstr91x/src/91x_can.c **** }
+ 1637              		.loc 1 806 0
+ 1638 0a10 1EFF2FE1 		bx	lr
+ 1639              	.L136:
+ 1640              		.align	2
+ 1641              	.L135:
+ 1642 0a14 0090005C 		.word	1543540736
+ 1643              		.cfi_endproc
+ 1644              	.LFE24:
+ 1646              		.align	2
+ 1647              		.global	CAN_ReceiveMessage
+ 1649              	CAN_ReceiveMessage:
+ 1650              	.LFB14:
+ 526:libstr91x/src/91x_can.c **** { 
+ 1651              		.loc 1 526 0
+ 1652              		.cfi_startproc
+ 1653              		@ args = 0, pretend = 0, frame = 0
+ 1654              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1655              	.LVL83:
+ 1656 0a18 70402DE9 		stmfd	sp!, {r4, r5, r6, lr}
+ 1657              	.LCFI8:
+ 1658              		.cfi_def_cfa_offset 16
+ 526:libstr91x/src/91x_can.c **** { 
+ 1659              		.loc 1 526 0
+ 1660 0a1c 0040A0E1 		mov	r4, r0
+ 1661              		.cfi_offset 14, -4
+ 1662              		.cfi_offset 6, -8
+ 1663              		.cfi_offset 5, -12
+ 1664              		.cfi_offset 4, -16
+ 1665 0a20 0150A0E1 		mov	r5, r1
+ 1666 0a24 0260A0E1 		mov	r6, r2
+ 529:libstr91x/src/91x_can.c ****   if (!CAN_GetMsgReceiveStatus(msgobj))
+ 1667              		.loc 1 529 0
+ 1668 0a28 FEFFFFEB 		bl	CAN_GetMsgReceiveStatus
+ 1669              	.LVL84:
+ 1670 0a2c 000050E3 		cmp	r0, #0
+ 1671 0a30 7080BD08 		ldmeqfd	sp!, {r4, r5, r6, pc}
+ 534:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 1672              		.loc 1 534 0
+ 1673 0a34 DC309FE5 		ldr	r3, .L145
+ 1674 0a38 DCC09FE5 		ldr	ip, .L145+4
+ 1675 0a3c B410D3E1 		ldrh	r1, [r3, #4]
+ 545:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CRR = 1 + msgobj;
+ 1676              		.loc 1 545 0
+ 1677 0a40 01E084E2 		add	lr, r4, #1
+ 537:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_MASK
+ 1678              		.loc 1 537 0
+ 1679 0a44 000055E3 		cmp	r5, #0
+ 545:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CRR = 1 + msgobj;
+ 1680              		.loc 1 545 0
+ 1681 0a48 0E48A0E1 		mov	r4, lr, asl #16
+ 1682              	.LVL85:
+ 537:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_MASK
+ 1683              		.loc 1 537 0
+ 1684 0a4c 7B50A003 		moveq	r5, #123
+ 1685 0a50 7F50A013 		movne	r5, #127
+ 534:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 1686              		.loc 1 534 0
+ 1687 0a54 0C0001E0 		and	r0, r1, ip
+ 545:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CRR = 1 + msgobj;
+ 1688              		.loc 1 545 0
+ 1689 0a58 2448A0E1 		mov	r4, r4, lsr #16
+ 534:libstr91x/src/91x_can.c ****   CAN->SR &= ~CAN_SR_RXOK;
+ 1690              		.loc 1 534 0
+ 1691 0a5c B400C3E1 		strh	r0, [r3, #4]	@ movhi
+ 537:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CMR = CAN_CMR_MASK
+ 1692              		.loc 1 537 0
+ 1693 0a60 B458C3E1 		strh	r5, [r3, #132]	@ movhi
+ 545:libstr91x/src/91x_can.c ****   CAN->sMsgObj[1].CRR = 1 + msgobj;
+ 1694              		.loc 1 545 0
+ 1695 0a64 B048C3E1 		strh	r4, [r3, #128]	@ movhi
+ 547:libstr91x/src/91x_can.c ****   if (CAN->sMsgObj[1].CRR & CAN_CRR_BUSY)
+ 1696              		.loc 1 547 0
+ 1697 0a68 B028D3E1 		ldrh	r2, [r3, #128]
+ 1698 0a6c 020912E3 		tst	r2, #32768
+ 1699 0a70 2600001A 		bne	.L144
+ 552:libstr91x/src/91x_can.c ****   if ((CAN->sMsgObj[1].A2R & CAN_A2R_XTD) == 0)
+ 1700              		.loc 1 552 0
+ 1701 0a74 B4C9D3E1 		ldrh	ip, [r3, #148]
+ 1702 0a78 01091CE2 		ands	r0, ip, #16384
+ 561:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_EXT_ID;
+ 1703              		.loc 1 561 0
+ 1704 0a7c 0100A013 		movne	r0, #1
+ 1705 0a80 00008615 		strne	r0, [r6, #0]
+ 555:libstr91x/src/91x_can.c ****     pCanMsg->IdType = CAN_STD_ID;
+ 1706              		.loc 1 555 0
+ 1707 0a84 00008605 		streq	r0, [r6, #0]
+ 562:libstr91x/src/91x_can.c ****     tempId = ((u32)(CAN->sMsgObj[1].A2R & 0x1FFF) << 16);
+ 1708              		.loc 1 562 0
+ 1709 0a88 B419D311 		ldrneh	r1, [r3, #148]
+ 1710              	.LVL86:
+ 556:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 1711              		.loc 1 556 0
+ 1712 0a8c B439D301 		ldreqh	r3, [r3, #148]
+ 563:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tempId;
+ 1713              		.loc 1 563 0
+ 1714 0a90 B009D311 		ldrneh	r0, [r3, #144]
+ 556:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 1715              		.loc 1 556 0
+ 1716 0a94 8339A001 		moveq	r3, r3, asl #19
+ 562:libstr91x/src/91x_can.c ****     tempId = ((u32)(CAN->sMsgObj[1].A2R & 0x1FFF) << 16);
+ 1717              		.loc 1 562 0
+ 1718 0a98 8139A011 		movne	r3, r1, asl #19
+ 566:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 1719              		.loc 1 566 0
+ 1720 0a9c 74C09FE5 		ldr	ip, .L145
+ 563:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tempId;
+ 1721              		.loc 1 563 0
+ 1722 0aa0 A3318011 		orrne	r3, r0, r3, lsr #3
+ 556:libstr91x/src/91x_can.c ****     pCanMsg->Id = (CAN->sMsgObj[1].A2R >> 2) & 0x07FF;
+ 1723              		.loc 1 556 0
+ 1724 0aa4 A33AA001 		moveq	r3, r3, lsr #21
+ 563:libstr91x/src/91x_can.c ****     pCanMsg->Id  = CAN->sMsgObj[1].A1R | tempId;
+ 1725              		.loc 1 563 0
+ 1726 0aa8 043086E5 		str	r3, [r6, #4]
+ 566:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 1727              		.loc 1 566 0
+ 1728 0aac B819DCE1 		ldrh	r1, [ip, #152]
+ 1729              	.LVL87:
+ 577:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 1730              		.loc 1 577 0
+ 1731 0ab0 0100A0E3 		mov	r0, #1
+ 566:libstr91x/src/91x_can.c ****   pCanMsg->Dlc = CAN->sMsgObj[1].MCR & 0x0F;
+ 1732              		.loc 1 566 0
+ 1733 0ab4 0F3001E2 		and	r3, r1, #15
+ 1734 0ab8 0830C6E5 		strb	r3, [r6, #8]
+ 568:libstr91x/src/91x_can.c ****   pCanMsg->Data[0] = (u8) CAN->sMsgObj[1].DA1R;
+ 1735              		.loc 1 568 0
+ 1736 0abc BCE9DCE1 		ldrh	lr, [ip, #156]
+ 1737              	.LVL88:
+ 1738 0ac0 09E0C6E5 		strb	lr, [r6, #9]
+ 569:libstr91x/src/91x_can.c ****   pCanMsg->Data[1] = (u8)(CAN->sMsgObj[1].DA1R >> 8);
+ 1739              		.loc 1 569 0
+ 1740 0ac4 BC29DCE1 		ldrh	r2, [ip, #156]
+ 1741 0ac8 2214A0E1 		mov	r1, r2, lsr #8
+ 1742 0acc 0A10C6E5 		strb	r1, [r6, #10]
+ 570:libstr91x/src/91x_can.c ****   pCanMsg->Data[2] = (u8) CAN->sMsgObj[1].DA2R;
+ 1743              		.loc 1 570 0
+ 1744 0ad0 B03ADCE1 		ldrh	r3, [ip, #160]
+ 1745 0ad4 0B30C6E5 		strb	r3, [r6, #11]
+ 571:libstr91x/src/91x_can.c ****   pCanMsg->Data[3] = (u8)(CAN->sMsgObj[1].DA2R >> 8);
+ 1746              		.loc 1 571 0
+ 1747 0ad8 B0EADCE1 		ldrh	lr, [ip, #160]
+ 1748 0adc 2E24A0E1 		mov	r2, lr, lsr #8
+ 1749 0ae0 0C20C6E5 		strb	r2, [r6, #12]
+ 572:libstr91x/src/91x_can.c ****   pCanMsg->Data[4] = (u8) CAN->sMsgObj[1].DB1R;
+ 1750              		.loc 1 572 0
+ 1751 0ae4 B41ADCE1 		ldrh	r1, [ip, #164]
+ 1752 0ae8 0D10C6E5 		strb	r1, [r6, #13]
+ 573:libstr91x/src/91x_can.c ****   pCanMsg->Data[5] = (u8)(CAN->sMsgObj[1].DB1R >> 8);
+ 1753              		.loc 1 573 0
+ 1754 0aec B43ADCE1 		ldrh	r3, [ip, #164]
+ 1755 0af0 23E4A0E1 		mov	lr, r3, lsr #8
+ 1756 0af4 0EE0C6E5 		strb	lr, [r6, #14]
+ 574:libstr91x/src/91x_can.c ****   pCanMsg->Data[6] = (u8) CAN->sMsgObj[1].DB2R;
+ 1757              		.loc 1 574 0
+ 1758 0af8 B82ADCE1 		ldrh	r2, [ip, #168]
+ 1759 0afc 0F20C6E5 		strb	r2, [r6, #15]
+ 575:libstr91x/src/91x_can.c ****   pCanMsg->Data[7] = (u8)(CAN->sMsgObj[1].DB2R >> 8);
+ 1760              		.loc 1 575 0
+ 1761 0b00 B81ADCE1 		ldrh	r1, [ip, #168]
+ 1762 0b04 2134A0E1 		mov	r3, r1, lsr #8
+ 1763 0b08 1030C6E5 		strb	r3, [r6, #16]
+ 577:libstr91x/src/91x_can.c ****   return SUCCESS;
+ 1764              		.loc 1 577 0
+ 1765 0b0c 7080BDE8 		ldmfd	sp!, {r4, r5, r6, pc}
+ 1766              	.LVL89:
+ 1767              	.L144:
+ 549:libstr91x/src/91x_can.c ****     return ERROR;                    
+ 1768              		.loc 1 549 0
+ 1769 0b10 0000A0E3 		mov	r0, #0
+ 578:libstr91x/src/91x_can.c **** }
+ 1770              		.loc 1 578 0
+ 1771 0b14 7080BDE8 		ldmfd	sp!, {r4, r5, r6, pc}
+ 1772              	.L146:
+ 1773              		.align	2
+ 1774              	.L145:
+ 1775 0b18 0090005C 		.word	1543540736
+ 1776 0b1c EFFF0000 		.word	65519
+ 1777              		.cfi_endproc
+ 1778              	.LFE14:
+ 1780              		.align	2
+ 1781              		.global	CAN_GetMsgTransmitRequestStatus
+ 1783              	CAN_GetMsgTransmitRequestStatus:
+ 1784              	.LFB25:
+ 807:libstr91x/src/91x_can.c **** 
+ 808:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 809:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetMsgTransmitRequestStatus
+ 810:libstr91x/src/91x_can.c **** * Description    : Test the request status of a transmitted message
+ 811:libstr91x/src/91x_can.c **** * Input 1        : message object number, from 0 to 31
+ 812:libstr91x/src/91x_can.c **** * Output         : None
+ 813:libstr91x/src/91x_can.c **** * Return         : SET if the corresponding message is requested
+ 814:libstr91x/src/91x_can.c **** *                  to transmit, else RESET
+ 815:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 816:libstr91x/src/91x_can.c **** FlagStatus CAN_GetMsgTransmitRequestStatus(u32 msgobj)
+ 817:libstr91x/src/91x_can.c **** {
+ 1785              		.loc 1 817 0
+ 1786              		.cfi_startproc
+ 1787              		@ args = 0, pretend = 0, frame = 0
+ 1788              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1789              		@ link register save eliminated.
+ 1790              	.LVL90:
+ 818:libstr91x/src/91x_can.c ****    if( msgobj < 16 )
+ 1791              		.loc 1 818 0
+ 1792 0b20 0F0050E3 		cmp	r0, #15
+ 1793 0b24 0500008A 		bhi	.L148
+ 819:libstr91x/src/91x_can.c ****   {
+ 820:libstr91x/src/91x_can.c ****     if ( CAN->TXR1R & (1 << msgobj) ) 
+ 1794              		.loc 1 820 0
+ 1795 0b28 2C209FE5 		ldr	r2, .L150
+ 1796 0b2c 011CA0E3 		mov	r1, #256
+ 1797 0b30 B13092E1 		ldrh	r3, [r2, r1]
+ 1798 0b34 5300A0E1 		mov	r0, r3, asr r0
+ 1799              	.LVL91:
+ 821:libstr91x/src/91x_can.c ****         return SET;
+ 1800              		.loc 1 821 0
+ 1801 0b38 010000E2 		and	r0, r0, #1
+ 1802 0b3c 1EFF2FE1 		bx	lr
+ 1803              	.LVL92:
+ 1804              	.L148:
+ 822:libstr91x/src/91x_can.c ****     else
+ 823:libstr91x/src/91x_can.c ****         return RESET;
+ 824:libstr91x/src/91x_can.c ****   } 
+ 825:libstr91x/src/91x_can.c ****   else
+ 826:libstr91x/src/91x_can.c ****   {
+ 827:libstr91x/src/91x_can.c ****      if ( CAN->TXR2R & (1 << (msgobj - 16) ) )
+ 1805              		.loc 1 827 0
+ 1806 0b40 14209FE5 		ldr	r2, .L150
+ 1807 0b44 411FA0E3 		mov	r1, #260
+ 1808 0b48 B13092E1 		ldrh	r3, [r2, r1]
+ 1809 0b4c 100040E2 		sub	r0, r0, #16
+ 1810              	.LVL93:
+ 1811 0b50 53C0A0E1 		mov	ip, r3, asr r0
+ 821:libstr91x/src/91x_can.c ****         return SET;
+ 1812              		.loc 1 821 0
+ 1813 0b54 01000CE2 		and	r0, ip, #1
+ 1814              	.LVL94:
+ 828:libstr91x/src/91x_can.c ****          return SET;
+ 829:libstr91x/src/91x_can.c ****      else
+ 830:libstr91x/src/91x_can.c ****          return RESET;
+ 831:libstr91x/src/91x_can.c ****   }  
+ 832:libstr91x/src/91x_can.c **** }
+ 1815              		.loc 1 832 0
+ 1816 0b58 1EFF2FE1 		bx	lr
+ 1817              	.L151:
+ 1818              		.align	2
+ 1819              	.L150:
+ 1820 0b5c 0090005C 		.word	1543540736
+ 1821              		.cfi_endproc
+ 1822              	.LFE25:
+ 1824              		.align	2
+ 1825              		.global	CAN_GetMsgInterruptStatus
+ 1827              	CAN_GetMsgInterruptStatus:
+ 1828              	.LFB26:
+ 833:libstr91x/src/91x_can.c **** 
+ 834:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 835:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetMsgInterruptStatus
+ 836:libstr91x/src/91x_can.c **** * Description    : Test the interrupt status of a message object
+ 837:libstr91x/src/91x_can.c **** * Input 1        : message object number, from 0 to 31
+ 838:libstr91x/src/91x_can.c **** * Output         : None
+ 839:libstr91x/src/91x_can.c **** * Return         : SET if the corresponding message has an
+ 840:libstr91x/src/91x_can.c **** *                  interrupt pending, else RESET
+ 841:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 842:libstr91x/src/91x_can.c **** FlagStatus CAN_GetMsgInterruptStatus(u32 msgobj)
+ 843:libstr91x/src/91x_can.c **** {
+ 1829              		.loc 1 843 0
+ 1830              		.cfi_startproc
+ 1831              		@ args = 0, pretend = 0, frame = 0
+ 1832              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1833              		@ link register save eliminated.
+ 1834              	.LVL95:
+ 844:libstr91x/src/91x_can.c ****    if( msgobj < 16 )
+ 1835              		.loc 1 844 0
+ 1836 0b60 0F0050E3 		cmp	r0, #15
+ 1837 0b64 0500008A 		bhi	.L153
+ 845:libstr91x/src/91x_can.c ****   {
+ 846:libstr91x/src/91x_can.c ****     if ( CAN->IP1R & (1 << msgobj) ) 
+ 1838              		.loc 1 846 0
+ 1839 0b68 2C209FE5 		ldr	r2, .L155
+ 1840 0b6c 051DA0E3 		mov	r1, #320
+ 1841 0b70 B13092E1 		ldrh	r3, [r2, r1]
+ 1842 0b74 5300A0E1 		mov	r0, r3, asr r0
+ 1843              	.LVL96:
+ 847:libstr91x/src/91x_can.c ****         return SET;
+ 1844              		.loc 1 847 0
+ 1845 0b78 010000E2 		and	r0, r0, #1
+ 1846 0b7c 1EFF2FE1 		bx	lr
+ 1847              	.LVL97:
+ 1848              	.L153:
+ 848:libstr91x/src/91x_can.c ****     else
+ 849:libstr91x/src/91x_can.c ****         return RESET;
+ 850:libstr91x/src/91x_can.c ****   } 
+ 851:libstr91x/src/91x_can.c ****   else
+ 852:libstr91x/src/91x_can.c ****   {
+ 853:libstr91x/src/91x_can.c ****      if ( CAN->IP2R & (1 << (msgobj - 16) ) ) 
+ 1849              		.loc 1 853 0
+ 1850 0b80 14209FE5 		ldr	r2, .L155
+ 1851 0b84 511FA0E3 		mov	r1, #324
+ 1852 0b88 B13092E1 		ldrh	r3, [r2, r1]
+ 1853 0b8c 100040E2 		sub	r0, r0, #16
+ 1854              	.LVL98:
+ 1855 0b90 53C0A0E1 		mov	ip, r3, asr r0
+ 847:libstr91x/src/91x_can.c ****         return SET;
+ 1856              		.loc 1 847 0
+ 1857 0b94 01000CE2 		and	r0, ip, #1
+ 1858              	.LVL99:
+ 854:libstr91x/src/91x_can.c ****          return SET;
+ 855:libstr91x/src/91x_can.c ****      else
+ 856:libstr91x/src/91x_can.c ****          return RESET;
+ 857:libstr91x/src/91x_can.c ****   }   
+ 858:libstr91x/src/91x_can.c **** }
+ 1859              		.loc 1 858 0
+ 1860 0b98 1EFF2FE1 		bx	lr
+ 1861              	.L156:
+ 1862              		.align	2
+ 1863              	.L155:
+ 1864 0b9c 0090005C 		.word	1543540736
+ 1865              		.cfi_endproc
+ 1866              	.LFE26:
+ 1868              		.align	2
+ 1869              		.global	CAN_GetMsgValidStatus
+ 1871              	CAN_GetMsgValidStatus:
+ 1872              	.LFB27:
+ 859:libstr91x/src/91x_can.c **** 
+ 860:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 861:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetMsgValidStatus
+ 862:libstr91x/src/91x_can.c **** * Description    : Test the validity of a message object (ready to use)
+ 863:libstr91x/src/91x_can.c **** * Input 1        : message object number, from 0 to 31
+ 864:libstr91x/src/91x_can.c **** * Output         : None
+ 865:libstr91x/src/91x_can.c **** * Return         : SET if the corresponding message object is valid
+ 866:libstr91x/src/91x_can.c **** *                  else RESET
+ 867:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 868:libstr91x/src/91x_can.c **** FlagStatus CAN_GetMsgValidStatus(u32 msgobj)
+ 869:libstr91x/src/91x_can.c **** {
+ 1873              		.loc 1 869 0
+ 1874              		.cfi_startproc
+ 1875              		@ args = 0, pretend = 0, frame = 0
+ 1876              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1877              		@ link register save eliminated.
+ 1878              	.LVL100:
+ 870:libstr91x/src/91x_can.c ****   if( msgobj < 16 )
+ 1879              		.loc 1 870 0
+ 1880 0ba0 0F0050E3 		cmp	r0, #15
+ 1881 0ba4 0500008A 		bhi	.L158
+ 871:libstr91x/src/91x_can.c ****   {
+ 872:libstr91x/src/91x_can.c ****     if ( CAN->MV1R & (1 << msgobj) ) 
+ 1882              		.loc 1 872 0
+ 1883 0ba8 2C209FE5 		ldr	r2, .L160
+ 1884 0bac 161EA0E3 		mov	r1, #352
+ 1885 0bb0 B13092E1 		ldrh	r3, [r2, r1]
+ 1886 0bb4 5300A0E1 		mov	r0, r3, asr r0
+ 1887              	.LVL101:
+ 873:libstr91x/src/91x_can.c ****         return SET;
+ 1888              		.loc 1 873 0
+ 1889 0bb8 010000E2 		and	r0, r0, #1
+ 1890 0bbc 1EFF2FE1 		bx	lr
+ 1891              	.LVL102:
+ 1892              	.L158:
+ 874:libstr91x/src/91x_can.c ****     else
+ 875:libstr91x/src/91x_can.c ****         return RESET;
+ 876:libstr91x/src/91x_can.c ****   } 
+ 877:libstr91x/src/91x_can.c ****   else
+ 878:libstr91x/src/91x_can.c ****   {
+ 879:libstr91x/src/91x_can.c ****      if ( CAN->MV2R & (1 << (msgobj - 16) ) ) 
+ 1893              		.loc 1 879 0
+ 1894 0bc0 14209FE5 		ldr	r2, .L160
+ 1895 0bc4 591FA0E3 		mov	r1, #356
+ 1896 0bc8 B13092E1 		ldrh	r3, [r2, r1]
+ 1897 0bcc 100040E2 		sub	r0, r0, #16
+ 1898              	.LVL103:
+ 1899 0bd0 53C0A0E1 		mov	ip, r3, asr r0
+ 873:libstr91x/src/91x_can.c ****         return SET;
+ 1900              		.loc 1 873 0
+ 1901 0bd4 01000CE2 		and	r0, ip, #1
+ 1902              	.LVL104:
+ 880:libstr91x/src/91x_can.c ****          return SET;
+ 881:libstr91x/src/91x_can.c ****      else
+ 882:libstr91x/src/91x_can.c ****          return RESET;
+ 883:libstr91x/src/91x_can.c ****   }   
+ 884:libstr91x/src/91x_can.c **** }
+ 1903              		.loc 1 884 0
+ 1904 0bd8 1EFF2FE1 		bx	lr
+ 1905              	.L161:
+ 1906              		.align	2
+ 1907              	.L160:
+ 1908 0bdc 0090005C 		.word	1543540736
+ 1909              		.cfi_endproc
+ 1910              	.LFE27:
+ 1912              		.align	2
+ 1913              		.global	CAN_GetFlagStatus
+ 1915              	CAN_GetFlagStatus:
+ 1916              	.LFB28:
+ 885:libstr91x/src/91x_can.c **** 
+ 886:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 887:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetFlagStatus                                          
+ 888:libstr91x/src/91x_can.c **** * Description    : Returns the flasg status of the flag passed in parameter       
+ 889:libstr91x/src/91x_can.c **** * Input          : One of the following parameters:
+ 890:libstr91x/src/91x_can.c **** *                  - CAN_SR_TXOK
+ 891:libstr91x/src/91x_can.c **** *                  - CAN_SR_RXOK
+ 892:libstr91x/src/91x_can.c **** *                  - CAN_SR_EPASS
+ 893:libstr91x/src/91x_can.c **** *                  - CAN_SR_EWARN
+ 894:libstr91x/src/91x_can.c **** *                  - CAN_SR_BOFF          
+ 895:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 896:libstr91x/src/91x_can.c **** * Return         : 1 if the flag is set else 0                                           
+ 897:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 898:libstr91x/src/91x_can.c **** FlagStatus CAN_GetFlagStatus ( u32 CAN_Flag )
+ 899:libstr91x/src/91x_can.c **** {
+ 1917              		.loc 1 899 0
+ 1918              		.cfi_startproc
+ 1919              		@ args = 0, pretend = 0, frame = 0
+ 1920              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1921              		@ link register save eliminated.
+ 1922              	.LVL105:
+ 900:libstr91x/src/91x_can.c ****   if( CAN->SR & CAN_Flag) 
+ 1923              		.loc 1 900 0
+ 1924 0be0 10109FE5 		ldr	r1, .L163
+ 1925 0be4 B430D1E1 		ldrh	r3, [r1, #4]
+ 901:libstr91x/src/91x_can.c ****    {
+ 902:libstr91x/src/91x_can.c ****      return SET;
+ 1926              		.loc 1 902 0
+ 1927 0be8 030010E1 		tst	r0, r3
+ 903:libstr91x/src/91x_can.c ****    }
+ 904:libstr91x/src/91x_can.c ****      else 
+ 905:libstr91x/src/91x_can.c ****       return RESET;
+ 906:libstr91x/src/91x_can.c **** }
+ 1928              		.loc 1 906 0
+ 1929 0bec 0000A003 		moveq	r0, #0
+ 1930 0bf0 0100A013 		movne	r0, #1
+ 1931              	.LVL106:
+ 1932 0bf4 1EFF2FE1 		bx	lr
+ 1933              	.L164:
+ 1934              		.align	2
+ 1935              	.L163:
+ 1936 0bf8 0090005C 		.word	1543540736
+ 1937              		.cfi_endproc
+ 1938              	.LFE28:
+ 1940              		.align	2
+ 1941              		.global	CAN_GetTransmitErrorCounter
+ 1943              	CAN_GetTransmitErrorCounter:
+ 1944              	.LFB29:
+ 907:libstr91x/src/91x_can.c **** 
+ 908:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 909:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetTransmitErrorCounter                                            
+ 910:libstr91x/src/91x_can.c **** * Description    : Reads the CAN cell transmit error counter        
+ 911:libstr91x/src/91x_can.c **** * Input          : None                      
+ 912:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 913:libstr91x/src/91x_can.c **** * Return         : Transmit Error Counter value between 0..255                                     
+ 914:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 915:libstr91x/src/91x_can.c **** u32 CAN_GetTransmitErrorCounter ( void )
+ 916:libstr91x/src/91x_can.c **** {
+ 1945              		.loc 1 916 0
+ 1946              		.cfi_startproc
+ 1947              		@ args = 0, pretend = 0, frame = 0
+ 1948              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1949              		@ link register save eliminated.
+ 917:libstr91x/src/91x_can.c ****  return( CAN->ERR & 0x00FF );
+ 1950              		.loc 1 917 0
+ 1951 0bfc 08309FE5 		ldr	r3, .L166
+ 1952 0c00 B800D3E1 		ldrh	r0, [r3, #8]
+ 918:libstr91x/src/91x_can.c **** }
+ 1953              		.loc 1 918 0
+ 1954 0c04 FF0000E2 		and	r0, r0, #255
+ 1955 0c08 1EFF2FE1 		bx	lr
+ 1956              	.L167:
+ 1957              		.align	2
+ 1958              	.L166:
+ 1959 0c0c 0090005C 		.word	1543540736
+ 1960              		.cfi_endproc
+ 1961              	.LFE29:
+ 1963              		.align	2
+ 1964              		.global	CAN_GetReceiveErrorCounter
+ 1966              	CAN_GetReceiveErrorCounter:
+ 1967              	.LFB30:
+ 919:libstr91x/src/91x_can.c **** 
+ 920:libstr91x/src/91x_can.c **** /*******************************************************************************
+ 921:libstr91x/src/91x_can.c **** * Function Name  : CAN_GetReceiveErrorCounter                                            
+ 922:libstr91x/src/91x_can.c **** * Description    : Reads the CAN cell receive error counter        
+ 923:libstr91x/src/91x_can.c **** * Input          : None                      
+ 924:libstr91x/src/91x_can.c **** * Output         : None                                                      
+ 925:libstr91x/src/91x_can.c **** * Return         : Receive Error Counter value between 0..127                                      
+ 926:libstr91x/src/91x_can.c **** *******************************************************************************/
+ 927:libstr91x/src/91x_can.c **** u32 CAN_GetReceiveErrorCounter ( void )
+ 928:libstr91x/src/91x_can.c **** {
+ 1968              		.loc 1 928 0
+ 1969              		.cfi_startproc
+ 1970              		@ args = 0, pretend = 0, frame = 0
+ 1971              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1972              		@ link register save eliminated.
+ 929:libstr91x/src/91x_can.c ****  return ( ( CAN->ERR & 0x7F00 ) >> 8);
+ 1973              		.loc 1 929 0
+ 1974 0c10 0C309FE5 		ldr	r3, .L169
+ 1975 0c14 B810D3E1 		ldrh	r1, [r3, #8]
+ 1976 0c18 7F0C01E2 		and	r0, r1, #32512
+ 930:libstr91x/src/91x_can.c **** }
+ 1977              		.loc 1 930 0
+ 1978 0c1c 2004A0E1 		mov	r0, r0, lsr #8
+ 1979 0c20 1EFF2FE1 		bx	lr
+ 1980              	.L170:
+ 1981              		.align	2
+ 1982              	.L169:
+ 1983 0c24 0090005C 		.word	1543540736
+ 1984              		.cfi_endproc
+ 1985              	.LFE30:
+ 1987              		.global	CanTimings
+ 1988              		.data
+ 1989              		.align	2
+ 1990              		.set	.LANCHOR0,. + 0
+ 1993              	CanTimings:
+ 1994 0000 C43A     		.short	15044
+ 1995 0002 C33A     		.short	15043
+ 1996 0004 8323     		.short	9091
+ 1997 0006 001C     		.short	7168
+ 1998 0008 0023     		.short	8960
+ 1999 000a 0000     		.text
+ 2000              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_can.c
+     /tmp/cc6Y0LUz.s:21     .text:00000000 $a
+     /tmp/cc6Y0LUz.s:24     .text:00000000 CAN_DeInit
+     /tmp/cc6Y0LUz.s:53     .text:00000020 CAN_Init
+     /tmp/cc6Y0LUz.s:170    .text:00000090 $d
+     /tmp/cc6Y0LUz.s:178    .text:000000a4 $a
+     /tmp/cc6Y0LUz.s:181    .text:000000a4 CAN_StructInit
+     /tmp/cc6Y0LUz.s:201    .text:000000b8 $d
+     /tmp/cc6Y0LUz.s:205    .text:000000bc $a
+     /tmp/cc6Y0LUz.s:208    .text:000000bc CAN_SetBitrate
+     /tmp/cc6Y0LUz.s:233    .text:000000dc $d
+     /tmp/cc6Y0LUz.s:238    .text:000000e4 $a
+     /tmp/cc6Y0LUz.s:241    .text:000000e4 CAN_SetTiming
+     /tmp/cc6Y0LUz.s:291    .text:00000138 $d
+     /tmp/cc6Y0LUz.s:295    .text:0000013c $a
+     /tmp/cc6Y0LUz.s:298    .text:0000013c CAN_SetUnusedMsgObj
+     /tmp/cc6Y0LUz.s:395    .text:000001d4 $d
+     /tmp/cc6Y0LUz.s:401    .text:000001d8 $a
+     /tmp/cc6Y0LUz.s:404    .text:000001d8 CAN_SetTxMsgObj
+     /tmp/cc6Y0LUz.s:527    .text:000002b0 $d
+     /tmp/cc6Y0LUz.s:533    .text:000002b4 $a
+     /tmp/cc6Y0LUz.s:536    .text:000002b4 CAN_SetRxMsgObj
+     /tmp/cc6Y0LUz.s:729    .text:0000040c $d
+     /tmp/cc6Y0LUz.s:736    .text:00000414 $a
+     /tmp/cc6Y0LUz.s:739    .text:00000414 CAN_SetUnusedAllMsgObj
+     /tmp/cc6Y0LUz.s:796    .text:00000460 CAN_ReleaseMessage
+     /tmp/cc6Y0LUz.s:863    .text:000004c0 $d
+     /tmp/cc6Y0LUz.s:867    .text:000004c4 $a
+     /tmp/cc6Y0LUz.s:870    .text:000004c4 CAN_UpdateMsgObj
+     /tmp/cc6Y0LUz.s:994    .text:000005f0 $d
+     /tmp/cc6Y0LUz.s:999    .text:000005f8 $a
+     /tmp/cc6Y0LUz.s:1002   .text:000005f8 CAN_SendMessage
+     /tmp/cc6Y0LUz.s:1083   .text:0000067c $d
+     /tmp/cc6Y0LUz.s:1088   .text:00000684 $a
+     /tmp/cc6Y0LUz.s:1091   .text:00000684 CAN_TransmitRequest
+     /tmp/cc6Y0LUz.s:1153   .text:000006e4 $d
+     /tmp/cc6Y0LUz.s:1157   .text:000006e8 $a
+     /tmp/cc6Y0LUz.s:1160   .text:000006e8 CAN_WaitEndOfTx
+     /tmp/cc6Y0LUz.s:1185   .text:00000710 $d
+     /tmp/cc6Y0LUz.s:1190   .text:00000718 $a
+     /tmp/cc6Y0LUz.s:1193   .text:00000718 CAN_BasicSendMessage
+     /tmp/cc6Y0LUz.s:1298   .text:0000080c $d
+     /tmp/cc6Y0LUz.s:1304   .text:00000818 $a
+     /tmp/cc6Y0LUz.s:1307   .text:00000818 CAN_BasicReceiveMessage
+     /tmp/cc6Y0LUz.s:1406   .text:000008e8 $d
+     /tmp/cc6Y0LUz.s:1411   .text:000008f0 $a
+     /tmp/cc6Y0LUz.s:1414   .text:000008f0 CAN_EnterInitMode
+     /tmp/cc6Y0LUz.s:1437   .text:00000908 $d
+     /tmp/cc6Y0LUz.s:1441   .text:0000090c $a
+     /tmp/cc6Y0LUz.s:1444   .text:0000090c CAN_LeaveInitMode
+     /tmp/cc6Y0LUz.s:1462   .text:00000924 $d
+     /tmp/cc6Y0LUz.s:1467   .text:0000092c $a
+     /tmp/cc6Y0LUz.s:1470   .text:0000092c CAN_EnterTestMode
+     /tmp/cc6Y0LUz.s:1492   .text:0000094c $d
+     /tmp/cc6Y0LUz.s:1496   .text:00000950 $a
+     /tmp/cc6Y0LUz.s:1499   .text:00000950 CAN_LeaveTestMode
+     /tmp/cc6Y0LUz.s:1530   .text:00000984 $d
+     /tmp/cc6Y0LUz.s:1536   .text:00000990 $a
+     /tmp/cc6Y0LUz.s:1539   .text:00000990 CAN_ReleaseTxMessage
+     /tmp/cc6Y0LUz.s:1565   .text:000009b0 $d
+     /tmp/cc6Y0LUz.s:1569   .text:000009b4 $a
+     /tmp/cc6Y0LUz.s:1572   .text:000009b4 CAN_ReleaseRxMessage
+     /tmp/cc6Y0LUz.s:1598   .text:000009d4 $d
+     /tmp/cc6Y0LUz.s:1602   .text:000009d8 $a
+     /tmp/cc6Y0LUz.s:1605   .text:000009d8 CAN_GetMsgReceiveStatus
+     /tmp/cc6Y0LUz.s:1642   .text:00000a14 $d
+     /tmp/cc6Y0LUz.s:1646   .text:00000a18 $a
+     /tmp/cc6Y0LUz.s:1649   .text:00000a18 CAN_ReceiveMessage
+     /tmp/cc6Y0LUz.s:1775   .text:00000b18 $d
+     /tmp/cc6Y0LUz.s:1780   .text:00000b20 $a
+     /tmp/cc6Y0LUz.s:1783   .text:00000b20 CAN_GetMsgTransmitRequestStatus
+     /tmp/cc6Y0LUz.s:1820   .text:00000b5c $d
+     /tmp/cc6Y0LUz.s:1824   .text:00000b60 $a
+     /tmp/cc6Y0LUz.s:1827   .text:00000b60 CAN_GetMsgInterruptStatus
+     /tmp/cc6Y0LUz.s:1864   .text:00000b9c $d
+     /tmp/cc6Y0LUz.s:1868   .text:00000ba0 $a
+     /tmp/cc6Y0LUz.s:1871   .text:00000ba0 CAN_GetMsgValidStatus
+     /tmp/cc6Y0LUz.s:1908   .text:00000bdc $d
+     /tmp/cc6Y0LUz.s:1912   .text:00000be0 $a
+     /tmp/cc6Y0LUz.s:1915   .text:00000be0 CAN_GetFlagStatus
+     /tmp/cc6Y0LUz.s:1936   .text:00000bf8 $d
+     /tmp/cc6Y0LUz.s:1940   .text:00000bfc $a
+     /tmp/cc6Y0LUz.s:1943   .text:00000bfc CAN_GetTransmitErrorCounter
+     /tmp/cc6Y0LUz.s:1959   .text:00000c0c $d
+     /tmp/cc6Y0LUz.s:1963   .text:00000c10 $a
+     /tmp/cc6Y0LUz.s:1966   .text:00000c10 CAN_GetReceiveErrorCounter
+     /tmp/cc6Y0LUz.s:1983   .text:00000c24 $d
+     /tmp/cc6Y0LUz.s:1993   .data:00000000 CanTimings
+     /tmp/cc6Y0LUz.s:1989   .data:00000000 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset

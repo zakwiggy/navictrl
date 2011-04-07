@@ -1,0 +1,152 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"usb_init.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	USB_Init
+  24              	USB_Init:
+  25              	.LFB0:
+  26              		.file 1 "usblibrary/src/usb_init.c"
+   1:usblibrary/src/usb_init.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:usblibrary/src/usb_init.c **** * File Name          : usb_init.c
+   3:usblibrary/src/usb_init.c **** * Author             : MCD Application Team
+   4:usblibrary/src/usb_init.c **** * Version            : V4.0.0
+   5:usblibrary/src/usb_init.c **** * Date               : 09/29/2008
+   6:usblibrary/src/usb_init.c **** * Description        : Initialization routines & global variables.
+   7:usblibrary/src/usb_init.c **** ********************************************************************************
+   8:usblibrary/src/usb_init.c **** * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:usblibrary/src/usb_init.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:usblibrary/src/usb_init.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:usblibrary/src/usb_init.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:usblibrary/src/usb_init.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:usblibrary/src/usb_init.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:usblibrary/src/usb_init.c **** *******************************************************************************/
+  15:usblibrary/src/usb_init.c **** 
+  16:usblibrary/src/usb_init.c **** /* Includes ------------------------------------------------------------------*/
+  17:usblibrary/src/usb_init.c **** #include "usb_lib.h"
+  18:usblibrary/src/usb_init.c **** /* Private typedef -----------------------------------------------------------*/
+  19:usblibrary/src/usb_init.c **** /* Private define ------------------------------------------------------------*/
+  20:usblibrary/src/usb_init.c **** /* Private macro -------------------------------------------------------------*/
+  21:usblibrary/src/usb_init.c **** /* Private variables ---------------------------------------------------------*/
+  22:usblibrary/src/usb_init.c **** 
+  23:usblibrary/src/usb_init.c **** /*  The number of current endpoint, it will be used to specify an endpoint */
+  24:usblibrary/src/usb_init.c **** u8 EPindex;
+  25:usblibrary/src/usb_init.c **** 
+  26:usblibrary/src/usb_init.c **** /*  The number of current device, it is an index to the Device_Table */
+  27:usblibrary/src/usb_init.c **** /* u8 Device_no; */
+  28:usblibrary/src/usb_init.c **** /*  Points to the DEVICE_INFO structure of current device */
+  29:usblibrary/src/usb_init.c **** /*  The purpose of this register is to speed up the execution */
+  30:usblibrary/src/usb_init.c **** DEVICE_INFO *pInformation;
+  31:usblibrary/src/usb_init.c **** 
+  32:usblibrary/src/usb_init.c **** /*  Points to the DEVICE_PROP structure of current device */
+  33:usblibrary/src/usb_init.c **** /*  The purpose of this register is to speed up the execution */
+  34:usblibrary/src/usb_init.c **** DEVICE_PROP *pProperty;
+  35:usblibrary/src/usb_init.c **** 
+  36:usblibrary/src/usb_init.c **** /*  Temporary save the state of Rx & Tx status. */
+  37:usblibrary/src/usb_init.c **** /*  Whenever the Rx or Tx state is changed, its value is saved */
+  38:usblibrary/src/usb_init.c **** /*  in this variable first and will be set to the EPRB or EPRA */
+  39:usblibrary/src/usb_init.c **** /*  at the end of interrupt process */
+  40:usblibrary/src/usb_init.c **** u16 SaveState ;
+  41:usblibrary/src/usb_init.c **** u16 wInterrupt_Mask;
+  42:usblibrary/src/usb_init.c **** DEVICE_INFO Device_Info;
+  43:usblibrary/src/usb_init.c **** USER_STANDARD_REQUESTS *pUser_Standard_Requests;
+  44:usblibrary/src/usb_init.c **** /* Private function prototypes -----------------------------------------------*/
+  45:usblibrary/src/usb_init.c **** /* Private functions ---------------------------------------------------------*/
+  46:usblibrary/src/usb_init.c **** 
+  47:usblibrary/src/usb_init.c **** /*******************************************************************************
+  48:usblibrary/src/usb_init.c **** * Function Name  : USB_Init
+  49:usblibrary/src/usb_init.c **** * Description    : USB system initialization
+  50:usblibrary/src/usb_init.c **** * Input          : None.
+  51:usblibrary/src/usb_init.c **** * Output         : None.
+  52:usblibrary/src/usb_init.c **** * Return         : None.
+  53:usblibrary/src/usb_init.c **** *******************************************************************************/
+  54:usblibrary/src/usb_init.c **** void USB_Init(void)
+  55:usblibrary/src/usb_init.c **** {
+  27              		.loc 1 55 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 08402DE9 		stmfd	sp!, {r3, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  56:usblibrary/src/usb_init.c ****   pInformation = &Device_Info;
+  34              		.loc 1 56 0
+  35 0004 30109FE5 		ldr	r1, .L2
+  36 0008 30309FE5 		ldr	r3, .L2+4
+  37              		.cfi_offset 14, -4
+  38              		.cfi_offset 3, -8
+  57:usblibrary/src/usb_init.c ****   pInformation->ControlState = 2;
+  58:usblibrary/src/usb_init.c ****   pProperty = &Device_Property;
+  39              		.loc 1 58 0
+  40 000c 30009FE5 		ldr	r0, .L2+8
+  56:usblibrary/src/usb_init.c ****   pInformation = &Device_Info;
+  41              		.loc 1 56 0
+  42 0010 003081E5 		str	r3, [r1, #0]
+  43              		.loc 1 58 0
+  44 0014 2CC09FE5 		ldr	ip, .L2+12
+  59:usblibrary/src/usb_init.c ****   pUser_Standard_Requests = &User_Standard_Requests;
+  45              		.loc 1 59 0
+  46 0018 2C109FE5 		ldr	r1, .L2+16
+  47 001c 2C209FE5 		ldr	r2, .L2+20
+  57:usblibrary/src/usb_init.c ****   pInformation->ControlState = 2;
+  48              		.loc 1 57 0
+  49 0020 02E0A0E3 		mov	lr, #2
+  50 0024 08E0C3E5 		strb	lr, [r3, #8]
+  58:usblibrary/src/usb_init.c ****   pProperty = &Device_Property;
+  51              		.loc 1 58 0
+  52 0028 00008CE5 		str	r0, [ip, #0]
+  53              		.loc 1 59 0
+  54 002c 001082E5 		str	r1, [r2, #0]
+  60:usblibrary/src/usb_init.c ****   /* Initialize devices one by one */
+  61:usblibrary/src/usb_init.c ****   pProperty->Init();
+  55              		.loc 1 61 0
+  56 0030 003090E5 		ldr	r3, [r0, #0]
+  57 0034 33FF2FE1 		blx	r3
+  62:usblibrary/src/usb_init.c **** }
+  58              		.loc 1 62 0
+  59 0038 0880BDE8 		ldmfd	sp!, {r3, pc}
+  60              	.L3:
+  61              		.align	2
+  62              	.L2:
+  63 003c 00000000 		.word	pInformation
+  64 0040 00000000 		.word	Device_Info
+  65 0044 00000000 		.word	Device_Property
+  66 0048 00000000 		.word	pProperty
+  67 004c 00000000 		.word	User_Standard_Requests
+  68 0050 00000000 		.word	pUser_Standard_Requests
+  69              		.cfi_endproc
+  70              	.LFE0:
+  72              		.comm	Device_Info,28,4
+  73              		.comm	EPindex,1,1
+  74              		.comm	pInformation,4,4
+  75              		.comm	pProperty,4,4
+  76              		.comm	pUser_Standard_Requests,4,4
+  77              		.comm	SaveState,2,2
+  78              		.comm	wInterrupt_Mask,2,2
+  79              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 usb_init.c
+     /tmp/ccgKhZjB.s:21     .text:00000000 $a
+     /tmp/ccgKhZjB.s:24     .text:00000000 USB_Init
+     /tmp/ccgKhZjB.s:63     .text:0000003c $d
+                            *COM*:00000004 pInformation
+                            *COM*:0000001c Device_Info
+                            *COM*:00000004 pProperty
+                            *COM*:00000004 pUser_Standard_Requests
+                            *COM*:00000001 EPindex
+                            *COM*:00000002 SaveState
+                            *COM*:00000002 wInterrupt_Mask
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+Device_Property
+User_Standard_Requests

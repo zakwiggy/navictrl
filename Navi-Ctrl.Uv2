@@ -1,0 +1,201 @@
+### uVision2 Project, (C) Keil Software
+### Do not modify !
+
+Target (Navi-Ctrl), 0x0003 // Tools: 'ARM-GNU'
+
+Group (Source Code)
+Group (Header Files)
+Group (Startup Code)
+Group (Str9-Lib)
+Group (Documentation)
+Group (USB-Lib)
+
+File 1,1,<.\main.c><main.c>
+File 1,1,<.\ramfunc.c><ramfunc.c>
+File 1,1,<.\menu.c><menu.c>
+File 1,1,<.\spi_slave.c><spi_slave.c>
+File 1,1,<.\i2c.c><i2c.c>
+File 1,1,<.\usb.c><usb.c>
+File 1,1,<.\fat16.c><fat16.c>
+File 1,1,<.\sdc.c><sdc.c>
+File 1,1,<.\settings.c><settings.c>
+File 1,1,<.\ssc.c><ssc.c>
+File 1,1,<.\usb_desc.c><usb_desc.c>
+File 1,1,<.\usb_endp.c><usb_endp.c>
+File 1,1,<.\usb_istr.c><usb_istr.c>
+File 1,1,<.\usb_prop.c><usb_prop.c>
+File 1,1,<.\usb_pwr.c><usb_pwr.c>
+File 1,1,<.\led.c><led.c>
+File 1,1,<.\crc16.c><crc16.c>
+File 1,1,<.\ubx.c><ubx.c>
+File 1,1,<.\uart0.c><uart0.c>
+File 1,1,<.\uart1.c><uart1.c>
+File 1,1,<.\uart2.c><uart2.c>
+File 1,1,<.\kml.c><kml.c>
+File 1,1,<.\fifo.c><fifo.c>
+File 1,1,<.\waypoints.c><waypoints.c>
+File 1,1,<.\logging.c><logging.c>
+File 1,1,<.\gpx.c><gpx.c>
+File 1,1,<.\mkprotocol.c><mkprotocol.c>
+File 1,1,<.\timer1.c><timer1.c>
+File 1,1,<.\timer2.c><timer2.c>
+File 1,1,<.\analog.c><analog.c>
+File 1,1,<.\params.c><params.c>
+File 1,1,<.\printf_P.c><printf_P.c>
+File 1,1,<.\GPS.c><GPS.c>
+File 1,1,<.\mk3mag.c><mk3mag.c>
+File 1,1,<.\compass.c><compass.c>
+File 1,1,<.\buffer.c><buffer.c>
+File 1,1,<.\eeprom.c><eeprom.c>
+File 1,1,<.\ncmag.c><ncmag.c>
+File 1,1,<.\mymath.c><mymath.c>
+File 2,5,<.\ramfunc.h><ramfunc.h>
+File 2,5,<.\main.h><main.h>
+File 2,5,<.\menu.h><menu.h>
+File 2,5,<.\settings.h><settings.h>
+File 2,5,<.\usb.h><usb.h>
+File 2,5,<.\spi_slave.h><spi_slave.h>
+File 2,5,<.\i2c.h><i2c.h>
+File 2,5,<.\sdc.h><sdc.h>
+File 2,5,<.\ssc.h><ssc.h>
+File 2,5,<.\fat16.h><fat16.h>
+File 2,5,<.\GPS.h><GPS.h>
+File 2,5,<.\libstr91x\include\91x_lib.h><91x_lib.h>
+File 2,5,<.\led.h><led.h>
+File 2,5,<.\crc16.h><crc16.h>
+File 2,5,<.\ubx.h><ubx.h>
+File 2,5,<.\uart0.h><uart0.h>
+File 2,5,<.\uart1.h><uart1.h>
+File 2,5,<.\uart2.h><uart2.h>
+File 2,5,<.\kml_header.h><kml_header.h>
+File 2,5,<.\kml.h><kml.h>
+File 2,5,<.\fifo.h><fifo.h>
+File 2,5,<.\waypoints.h><waypoints.h>
+File 2,5,<.\logging.h><logging.h>
+File 2,5,<.\gpx_header.h><gpx_header.h>
+File 2,5,<.\gpx.h><gpx.h>
+File 2,5,<.\mkprotocol.h><mkprotocol.h>
+File 2,5,<.\timer1.h><timer1.h>
+File 2,5,<.\timer2.h><timer2.h>
+File 2,5,<.\analog.h><analog.h>
+File 2,5,<.\config.h><config.h>
+File 2,5,<.\params.h><params.h>
+File 2,5,<.\libstr91x\include\91x_conf.h><91x_conf.h>
+File 2,5,<.\libstr91x\include\91x_it.h><91x_it.h>
+File 2,5,<.\printf_P.h><printf_P.h>
+File 2,5,<.\mk3mag.h><mk3mag.h>
+File 2,5,<.\compass.h><compass.h>
+File 2,5,<.\buffer.h><buffer.h>
+File 2,5,<.\eeprom.h><eeprom.h>
+File 2,5,<.\ncmag.h><ncmag.h>
+File 2,5,<.\mymath.h><mymath.h>
+File 2,5,<.\usbinc\usb_pwr.h><usb_pwr.h>
+File 2,5,<.\usbinc\usb_conf.h><usb_conf.h>
+File 2,5,<.\usbinc\usb_desc.h><usb_desc.h>
+File 2,5,<.\usbinc\usb_prop.h><usb_prop.h>
+File 3,2,<.\startup912.s><startup912.s>
+File 4,1,<.\libstr91x\src\91x_scu.c><91x_scu.c>
+File 4,1,<.\libstr91x\src\91x_gpio.c><91x_gpio.c>
+File 4,1,<.\libstr91x\src\91x_uart.c><91x_uart.c>
+File 4,1,<.\libstr91x\src\91x_vic.c><91x_vic.c>
+File 4,1,<.\libstr91x\src\91x_tim.c><91x_tim.c>
+File 4,1,<.\libstr91x\src\91x_ssp.c><91x_ssp.c>
+File 4,1,<.\libstr91x\src\91x_i2c.c><91x_i2c.c>
+File 4,1,<.\libstr91x\src\91x_fmi.c><91x_fmi.c>
+File 4,1,<.\libstr91x\src\91x_wiu.c><91x_wiu.c>
+File 4,1,<.\libstr91x\src\91x_adc.c><91x_adc.c>
+File 4,1,<.\libstr91x\src\91x_it.c><91x_it.c>
+File 6,1,<.\usblibrary\src\usb_regs.c><usb_regs.c>
+File 6,1,<.\usblibrary\src\usb_core.c><usb_core.c>
+File 6,1,<.\usblibrary\src\usb_int.c><usb_int.c>
+File 6,1,<.\usblibrary\src\usb_init.c><usb_init.c>
+File 6,1,<.\usblibrary\src\usb_mem.c><usb_mem.c>
+
+
+Options 1,0,0  // Target 'Navi-Ctrl'
+ Device (STR911FM44)
+ Vendor (STMicroelectronics)
+ Cpu (IRAM(0x04000000-0x04017FFF) IROM(0x0-0x7FFFF) IROM2(0x400000-0x407FFF) CLOCK(25000000) CPUTYPE(ARM9E))
+ FlashUt ()
+ StupF ("STARTUP\ST\STR91x.s" ("STR91x Startup Code"))
+ FlashDR (UL2ARM(-UU0639C7E -O15 -S0 -C1 -N00("ST uPSD Flash") -D00(04570041) -L00(8) -N01("ARM966E-S Core") -D01(25966041) -L01(4) -N02("ST Boundary Scan") -D02(0457F041) -L02(5) -FO15 -FD4000000 -FC800 -FN2 -FF0STR91xFxx4 -FS00 -FL080000 -FF1STR91xB1 -FS1400000 -FL18000))
+ DevID (4069)
+ Rgf (91x_lib.H)
+ Mem ()
+ C ()
+ A ()
+ RL ()
+ OH ()
+ DBC_IFX ()
+ DBC_CMS ()
+ DBC_AMS ()
+ DBC_LMS ()
+ UseEnv=0
+ EnvBin ()
+ EnvInc ()
+ EnvLib ()
+ EnvReg (ÿST\91x\)
+ OrgReg (ÿST\91x\)
+ TgStat=16
+ OutDir (.\Obj\)
+ OutName (Navi-Ctrl_STR9)
+ GenApp=1
+ GenLib=0
+ GenHex=1
+ Debug=0
+ Browse=0
+ LstDir (.\Lst\)
+ HexSel=1
+ MG32K=0
+ TGMORE=0
+ RunUsr 0 0 <>
+ RunUsr 1 0 <>
+ BrunUsr 0 0 <>
+ BrunUsr 1 0 <>
+ CrunUsr 0 0 <>
+ CrunUsr 1 0 <>
+ SVCSID <>
+ GLFLAGS=2047
+ GCPUTYP (ARM9E)
+ TFlagsA { 0,12,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ OCMARM { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ OCMARAM { 0,0,0,0,4,0,128,1,0 }
+ OCMAROM { 1,0,0,0,0,0,0,8,0 }
+ OCMXRAM { 0,0,0,0,0,0,0,0,0 }
+ OCMIRAM2 { 0,0,0,48,0,0,16,0,0 }
+ OCMIROM2 { 1,0,0,64,0,0,128,0,0 }
+ ACCFLG { 1,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ ACMISC ()
+ ACDEFN ()
+ ACUDEF ()
+ ACINCD (.\libstr91x\include;.\usblibrary\inc;.\usbinc;.\)
+ AASFLG { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ AAMISC ()
+ AADEFN ()
+ AAUDEF ()
+ AAINCD ()
+ PropFld { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ IncBld=1
+ AlwaysBuild=0
+ GenAsm=0
+ AsmAsm=0
+ PublicsOnly=0
+ StopCode=3
+ CustArgs ()
+ LibMods ()
+ ALDFLAG { 21,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }
+ ALDTADR (0x000000)
+ ALDDADR (0x4000000)
+ ALDBSSR ()
+ ALDICLB ()
+ ALDICDR ()
+ ALDMISC ()
+ ALDSCAT (.\scripts\flash_str9.ld)
+  OPTDL (SARM.DLL)(-cSTR91x)(DARMST9.DLL)(-pSTR910)(SARM.DLL)(-cSTR91x)(TARMST9.DLL)(-pSTR910)
+  OPTDBG 48126,0,()()()()()()()()()() (BIN\UL2ARM.DLL)()()()
+ FLASH1 { 9,0,0,0,1,0,0,0,0,16,0,0,0,0,0,0,0,0,0,0 }
+ FLASH2 (BIN\UL2ARM.DLL)
+ FLASH3 ("" ())
+ FLASH4 ()
+EndOpt
+

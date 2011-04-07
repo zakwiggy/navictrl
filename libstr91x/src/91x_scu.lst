@@ -1,0 +1,2231 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_scu.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	SCU_MCLKSourceConfig
+  24              	SCU_MCLKSourceConfig:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_scu.c"
+   1:libstr91x/src/91x_scu.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_scu.c **** * File Name          : 91x_scu.c
+   3:libstr91x/src/91x_scu.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_scu.c **** * Version            : V2.1
+   5:libstr91x/src/91x_scu.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_scu.c **** * Description        : This file provides the SCU library firmware functions
+   7:libstr91x/src/91x_scu.c **** ********************************************************************************
+   8:libstr91x/src/91x_scu.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_scu.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME. AS
+  10:libstr91x/src/91x_scu.c **** * A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_scu.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_scu.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_scu.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_scu.c **** *******************************************************************************/
+  15:libstr91x/src/91x_scu.c **** 
+  16:libstr91x/src/91x_scu.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_scu.c **** #include "91x_scu.h"
+  18:libstr91x/src/91x_scu.c **** 
+  19:libstr91x/src/91x_scu.c **** /* Include of other module interface headers ---------------------------------*/
+  20:libstr91x/src/91x_scu.c **** /* Local includes ------------------------------------------------------------*/
+  21:libstr91x/src/91x_scu.c **** /* Private typedef -----------------------------------------------------------*/
+  22:libstr91x/src/91x_scu.c **** /* Private define ------------------------------------------------------------*/
+  23:libstr91x/src/91x_scu.c **** #define SCU_PLLEN 0x80000
+  24:libstr91x/src/91x_scu.c **** /* Private macro -------------------------------------------------------------*/
+  25:libstr91x/src/91x_scu.c **** /* Private variables ---------------------------------------------------------*/
+  26:libstr91x/src/91x_scu.c **** /* Private function prototypes -----------------------------------------------*/
+  27:libstr91x/src/91x_scu.c **** /* Interface functions -------------------------------------------------------*/
+  28:libstr91x/src/91x_scu.c **** /* Private functions ---------------------------------------------------------*/
+  29:libstr91x/src/91x_scu.c **** 
+  30:libstr91x/src/91x_scu.c **** /*******************************************************************************
+  31:libstr91x/src/91x_scu.c **** * Function Name  : SCU_MCLKSourceConfig
+  32:libstr91x/src/91x_scu.c **** * Description    : Configures the MCLK source clock
+  33:libstr91x/src/91x_scu.c **** * Input          : MCLK_Source = SCU_MCLK_OSC, SCU_MCLK_PLL or SCU_MCLK_RTC
+  34:libstr91x/src/91x_scu.c **** * Output         : None
+  35:libstr91x/src/91x_scu.c **** * Return         : ErrorStatus: SUCCESS or ERROR
+  36:libstr91x/src/91x_scu.c **** * Note           : this function returns ERROR if trying to select the PLL as
+  37:libstr91x/src/91x_scu.c **** *                  clock source while the PLL is disabled or not locked.
+  38:libstr91x/src/91x_scu.c **** *******************************************************************************/
+  39:libstr91x/src/91x_scu.c **** ErrorStatus SCU_MCLKSourceConfig(u32 MCLK_Source)
+  40:libstr91x/src/91x_scu.c **** {
+  27              		.loc 1 40 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  41:libstr91x/src/91x_scu.c ****   u32 CLKCNTR_Value;
+  42:libstr91x/src/91x_scu.c **** 
+  43:libstr91x/src/91x_scu.c ****   CLKCNTR_Value = SCU->CLKCNTR;         /*get CLKCNTR register value*/
+  33              		.loc 1 43 0
+  34 0000 38309FE5 		ldr	r3, .L8
+  44:libstr91x/src/91x_scu.c ****   CLKCNTR_Value &=~0x3;                 /*clear field MCLKSEL*/
+  45:libstr91x/src/91x_scu.c ****   if (MCLK_Source == SCU_MCLK_PLL)      /*PLL selected as clock source*/
+  35              		.loc 1 45 0
+  36 0004 000050E3 		cmp	r0, #0
+  43:libstr91x/src/91x_scu.c ****   CLKCNTR_Value = SCU->CLKCNTR;         /*get CLKCNTR register value*/
+  37              		.loc 1 43 0
+  38 0008 002093E5 		ldr	r2, [r3, #0]
+  39              	.LVL1:
+  44:libstr91x/src/91x_scu.c ****   CLKCNTR_Value &=~0x3;                 /*clear field MCLKSEL*/
+  40              		.loc 1 44 0
+  41 000c 0320C2E3 		bic	r2, r2, #3
+  42              	.LVL2:
+  46:libstr91x/src/91x_scu.c ****   {
+  47:libstr91x/src/91x_scu.c ****     /*check if PLL enabled & locked*/
+  48:libstr91x/src/91x_scu.c ****     if (!((SCU->PLLCONF&SCU_PLLEN)&&(SCU->SYSSTATUS&SCU_FLAG_LOCK)))
+  49:libstr91x/src/91x_scu.c ****     return ERROR;
+  50:libstr91x/src/91x_scu.c ****   }
+  51:libstr91x/src/91x_scu.c ****   else CLKCNTR_Value |=MCLK_Source;     /*OSC or RTC selected as clock source*/
+  43              		.loc 1 51 0
+  44 0010 00208211 		orrne	r2, r2, r0
+  45              	.LVL3:
+  45:libstr91x/src/91x_scu.c ****   if (MCLK_Source == SCU_MCLK_PLL)      /*PLL selected as clock source*/
+  46              		.loc 1 45 0
+  47 0014 0500001A 		bne	.L4
+  48:libstr91x/src/91x_scu.c ****     if (!((SCU->PLLCONF&SCU_PLLEN)&&(SCU->SYSSTATUS&SCU_FLAG_LOCK)))
+  48              		.loc 1 48 0
+  49 0018 040093E5 		ldr	r0, [r3, #4]
+  50              	.LVL4:
+  51 001c 020710E2 		ands	r0, r0, #524288
+  52 0020 1EFF2F01 		bxeq	lr
+  48:libstr91x/src/91x_scu.c ****     if (!((SCU->PLLCONF&SCU_PLLEN)&&(SCU->SYSSTATUS&SCU_FLAG_LOCK)))
+  53              		.loc 1 48 0 is_stmt 0 discriminator 1
+  54 0024 081093E5 		ldr	r1, [r3, #8]
+  55 0028 010011E2 		ands	r0, r1, #1
+  56 002c 1EFF2F01 		bxeq	lr
+  57              	.L4:
+  58              	.LVL5:
+  52:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR = CLKCNTR_Value;         /*Update CLKCNTR register value*/
+  59              		.loc 1 52 0 is_stmt 1
+  60 0030 08309FE5 		ldr	r3, .L8
+  53:libstr91x/src/91x_scu.c ****   return SUCCESS;
+  61              		.loc 1 53 0
+  62 0034 0100A0E3 		mov	r0, #1
+  52:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR = CLKCNTR_Value;         /*Update CLKCNTR register value*/
+  63              		.loc 1 52 0
+  64 0038 002083E5 		str	r2, [r3, #0]
+  54:libstr91x/src/91x_scu.c **** }
+  65              		.loc 1 54 0
+  66 003c 1EFF2FE1 		bx	lr
+  67              	.L9:
+  68              		.align	2
+  69              	.L8:
+  70 0040 0020005C 		.word	1543512064
+  71              		.cfi_endproc
+  72              	.LFE0:
+  74              		.align	2
+  75              		.global	SCU_PLLCmd
+  77              	SCU_PLLCmd:
+  78              	.LFB2:
+  55:libstr91x/src/91x_scu.c **** 
+  56:libstr91x/src/91x_scu.c **** /*******************************************************************************
+  57:libstr91x/src/91x_scu.c **** * Function Name  : SCU_PLLFactorsConfig
+  58:libstr91x/src/91x_scu.c **** * Description    : Sets the PLL factors
+  59:libstr91x/src/91x_scu.c **** * Input          : PLLN, PLLM and PLLP
+  60:libstr91x/src/91x_scu.c **** * Output         : None
+  61:libstr91x/src/91x_scu.c **** * Return         : ErrorStatus: ERROR or SUCCESS
+  62:libstr91x/src/91x_scu.c **** * Notes          : -The PLL factors must respect the PLL specification requirements
+  63:libstr91x/src/91x_scu.c **** *                  -The function returns ERROR if trying to change PLL
+  64:libstr91x/src/91x_scu.c **** *                   factors while PLL is selected as Main Clock source (MCLK)
+  65:libstr91x/src/91x_scu.c **** *                  -This function disables the PLL, to enable the PLL use
+  66:libstr91x/src/91x_scu.c **** *                   function" SCU_PLLCmd(ENABLE)" after setting the PLL factors
+  67:libstr91x/src/91x_scu.c **** ******************************************************************************/
+  68:libstr91x/src/91x_scu.c **** ErrorStatus SCU_PLLFactorsConfig(u8 PLLN, u8 PLLM, u8 PLLP)
+  69:libstr91x/src/91x_scu.c **** {
+  70:libstr91x/src/91x_scu.c ****   if (SCU_PLLCmd(DISABLE)==SUCCESS)      /*Disable PLL*/
+  71:libstr91x/src/91x_scu.c ****   {
+  72:libstr91x/src/91x_scu.c ****     SCU->PLLCONF =0;                     /*clear PLLCONF register*/
+  73:libstr91x/src/91x_scu.c ****     SCU->PLLCONF |=(PLLN<<8);            /*update PLLN field*/
+  74:libstr91x/src/91x_scu.c ****     SCU->PLLCONF |=PLLM;                 /*update PLLM field*/
+  75:libstr91x/src/91x_scu.c ****     SCU->PLLCONF |=PLLP<<16;             /*update PLLP field*/
+  76:libstr91x/src/91x_scu.c ****     return SUCCESS;
+  77:libstr91x/src/91x_scu.c ****   }
+  78:libstr91x/src/91x_scu.c ****   return ERROR;
+  79:libstr91x/src/91x_scu.c **** }
+  80:libstr91x/src/91x_scu.c **** 
+  81:libstr91x/src/91x_scu.c **** /*******************************************************************************
+  82:libstr91x/src/91x_scu.c **** * Function Name  : SCU_PLLCmd
+  83:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable the PLL
+  84:libstr91x/src/91x_scu.c **** * Input          : NewState = ENABLE or DISABLE
+  85:libstr91x/src/91x_scu.c **** * Output         : None
+  86:libstr91x/src/91x_scu.c **** * Return         : ErrorStatus: SUCCESS or ERROR
+  87:libstr91x/src/91x_scu.c **** * Note           : -The function returns ERROR if:
+  88:libstr91x/src/91x_scu.c **** *                   *trying to disable the PLL while it is selected as the MCLK
+  89:libstr91x/src/91x_scu.c **** *                   *trying to enable the PLL while it is already enabled and
+  90:libstr91x/src/91x_scu.c **** *                    locked
+  91:libstr91x/src/91x_scu.c **** *******************************************************************************/
+  92:libstr91x/src/91x_scu.c **** ErrorStatus SCU_PLLCmd(FunctionalState NewState)
+  93:libstr91x/src/91x_scu.c **** {
+  79              		.loc 1 93 0
+  80              		.cfi_startproc
+  81              		@ args = 0, pretend = 0, frame = 0
+  82              		@ frame_needed = 0, uses_anonymous_args = 0
+  83              		@ link register save eliminated.
+  84              	.LVL6:
+  94:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+  85              		.loc 1 94 0
+  86 0044 010050E3 		cmp	r0, #1
+  87 0048 0700000A 		beq	.L18
+  95:libstr91x/src/91x_scu.c ****   {
+  96:libstr91x/src/91x_scu.c ****     if (!((SCU->PLLCONF&SCU_PLLEN)&&(SCU->SYSSTATUS&SCU_FLAG_LOCK)))
+  97:libstr91x/src/91x_scu.c ****     {
+  98:libstr91x/src/91x_scu.c ****       SCU->SYSSTATUS|=SCU_FLAG_LOCK;               /*clear LOCK bit*/
+  99:libstr91x/src/91x_scu.c ****       SCU->PLLCONF |=SCU_PLLEN;                    /*PLL Enable*/
+ 100:libstr91x/src/91x_scu.c ****       while(!(SCU->SYSSTATUS&SCU_FLAG_LOCK));        /*Wait PLL to lock*/
+ 101:libstr91x/src/91x_scu.c ****       return SUCCESS;
+ 102:libstr91x/src/91x_scu.c ****     }
+ 103:libstr91x/src/91x_scu.c ****     else return ERROR;
+ 104:libstr91x/src/91x_scu.c ****   }
+ 105:libstr91x/src/91x_scu.c ****   else /*NewState = DISABLE*/
+ 106:libstr91x/src/91x_scu.c ****   {
+ 107:libstr91x/src/91x_scu.c ****     if(SCU->CLKCNTR&0x3)                /*check if PLL not sys CLK*/
+  88              		.loc 1 107 0
+  89 004c 70C09FE5 		ldr	ip, .L20
+  90 0050 00309CE5 		ldr	r3, [ip, #0]
+  91 0054 030013E2 		ands	r0, r3, #3
+  92              	.LVL7:
+ 108:libstr91x/src/91x_scu.c ****     {
+ 109:libstr91x/src/91x_scu.c ****       SCU->PLLCONF &=~SCU_PLLEN;        /*PLL Disable*/
+  93              		.loc 1 109 0
+  94 0058 04209C15 		ldrne	r2, [ip, #4]
+ 110:libstr91x/src/91x_scu.c ****       return SUCCESS;
+  95              		.loc 1 110 0
+  96 005c 0100A013 		movne	r0, #1
+ 109:libstr91x/src/91x_scu.c ****       SCU->PLLCONF &=~SCU_PLLEN;        /*PLL Disable*/
+  97              		.loc 1 109 0
+  98 0060 0227C213 		bicne	r2, r2, #524288
+  99 0064 04208C15 		strne	r2, [ip, #4]
+ 100              		.loc 1 110 0
+ 101 0068 1EFF2FE1 		bx	lr
+ 102              	.LVL8:
+ 103              	.L18:
+  96:libstr91x/src/91x_scu.c ****     if (!((SCU->PLLCONF&SCU_PLLEN)&&(SCU->SYSSTATUS&SCU_FLAG_LOCK)))
+ 104              		.loc 1 96 0
+ 105 006c 50309FE5 		ldr	r3, .L20
+ 106 0070 042093E5 		ldr	r2, [r3, #4]
+ 107 0074 020712E3 		tst	r2, #524288
+ 108 0078 0C00001A 		bne	.L19
+ 109              	.L12:
+  98:libstr91x/src/91x_scu.c ****       SCU->SYSSTATUS|=SCU_FLAG_LOCK;               /*clear LOCK bit*/
+ 110              		.loc 1 98 0
+ 111 007c 40009FE5 		ldr	r0, .L20
+ 112              	.LVL9:
+ 113 0080 081090E5 		ldr	r1, [r0, #8]
+ 100:libstr91x/src/91x_scu.c ****       while(!(SCU->SYSSTATUS&SCU_FLAG_LOCK));        /*Wait PLL to lock*/
+ 114              		.loc 1 100 0
+ 115 0084 0020A0E1 		mov	r2, r0
+  98:libstr91x/src/91x_scu.c ****       SCU->SYSSTATUS|=SCU_FLAG_LOCK;               /*clear LOCK bit*/
+ 116              		.loc 1 98 0
+ 117 0088 013081E3 		orr	r3, r1, #1
+ 118 008c 083080E5 		str	r3, [r0, #8]
+  99:libstr91x/src/91x_scu.c ****       SCU->PLLCONF |=SCU_PLLEN;                    /*PLL Enable*/
+ 119              		.loc 1 99 0
+ 120 0090 04C090E5 		ldr	ip, [r0, #4]
+ 121 0094 02178CE3 		orr	r1, ip, #524288
+ 122 0098 041080E5 		str	r1, [r0, #4]
+ 123              	.L14:
+ 100:libstr91x/src/91x_scu.c ****       while(!(SCU->SYSSTATUS&SCU_FLAG_LOCK));        /*Wait PLL to lock*/
+ 124              		.loc 1 100 0 discriminator 1
+ 125 009c 080092E5 		ldr	r0, [r2, #8]
+ 126 00a0 010010E3 		tst	r0, #1
+ 127 00a4 FCFFFF0A 		beq	.L14
+ 101:libstr91x/src/91x_scu.c ****       return SUCCESS;
+ 128              		.loc 1 101 0
+ 129 00a8 0100A0E3 		mov	r0, #1
+ 130 00ac 1EFF2FE1 		bx	lr
+ 131              	.LVL10:
+ 132              	.L19:
+  96:libstr91x/src/91x_scu.c ****     if (!((SCU->PLLCONF&SCU_PLLEN)&&(SCU->SYSSTATUS&SCU_FLAG_LOCK)))
+ 133              		.loc 1 96 0 discriminator 1
+ 134 00b0 083093E5 		ldr	r3, [r3, #8]
+ 135 00b4 010013E3 		tst	r3, #1
+ 136 00b8 EFFFFF0A 		beq	.L12
+ 103:libstr91x/src/91x_scu.c ****     else return ERROR;
+ 137              		.loc 1 103 0
+ 138 00bc 0000A0E3 		mov	r0, #0
+ 139              	.LVL11:
+ 111:libstr91x/src/91x_scu.c ****     }
+ 112:libstr91x/src/91x_scu.c ****     else return ERROR;
+ 113:libstr91x/src/91x_scu.c ****   }
+ 114:libstr91x/src/91x_scu.c **** }
+ 140              		.loc 1 114 0
+ 141 00c0 1EFF2FE1 		bx	lr
+ 142              	.L21:
+ 143              		.align	2
+ 144              	.L20:
+ 145 00c4 0020005C 		.word	1543512064
+ 146              		.cfi_endproc
+ 147              	.LFE2:
+ 149              		.align	2
+ 150              		.global	SCU_PLLFactorsConfig
+ 152              	SCU_PLLFactorsConfig:
+ 153              	.LFB1:
+  69:libstr91x/src/91x_scu.c **** {
+ 154              		.loc 1 69 0
+ 155              		.cfi_startproc
+ 156              		@ args = 0, pretend = 0, frame = 0
+ 157              		@ frame_needed = 0, uses_anonymous_args = 0
+ 158              	.LVL12:
+ 159 00c8 70402DE9 		stmfd	sp!, {r4, r5, r6, lr}
+ 160              	.LCFI0:
+ 161              		.cfi_def_cfa_offset 16
+  69:libstr91x/src/91x_scu.c **** {
+ 162              		.loc 1 69 0
+ 163 00cc 0040A0E1 		mov	r4, r0
+ 164              		.cfi_offset 14, -4
+ 165              		.cfi_offset 6, -8
+ 166              		.cfi_offset 5, -12
+ 167              		.cfi_offset 4, -16
+  70:libstr91x/src/91x_scu.c ****   if (SCU_PLLCmd(DISABLE)==SUCCESS)      /*Disable PLL*/
+ 168              		.loc 1 70 0
+ 169 00d0 0000A0E3 		mov	r0, #0
+ 170              	.LVL13:
+  69:libstr91x/src/91x_scu.c **** {
+ 171              		.loc 1 69 0
+ 172 00d4 0150A0E1 		mov	r5, r1
+ 173 00d8 0260A0E1 		mov	r6, r2
+  70:libstr91x/src/91x_scu.c ****   if (SCU_PLLCmd(DISABLE)==SUCCESS)      /*Disable PLL*/
+ 174              		.loc 1 70 0
+ 175 00dc FEFFFFEB 		bl	SCU_PLLCmd
+ 176              	.LVL14:
+ 177 00e0 010050E3 		cmp	r0, #1
+ 178 00e4 0100000A 		beq	.L25
+  78:libstr91x/src/91x_scu.c ****   return ERROR;
+ 179              		.loc 1 78 0
+ 180 00e8 0000A0E3 		mov	r0, #0
+  79:libstr91x/src/91x_scu.c **** }
+ 181              		.loc 1 79 0
+ 182 00ec 7080BDE8 		ldmfd	sp!, {r4, r5, r6, pc}
+ 183              	.L25:
+  72:libstr91x/src/91x_scu.c ****     SCU->PLLCONF =0;                     /*clear PLLCONF register*/
+ 184              		.loc 1 72 0
+ 185 00f0 2C309FE5 		ldr	r3, .L26
+ 186 00f4 00E0A0E3 		mov	lr, #0
+ 187 00f8 04E083E5 		str	lr, [r3, #4]
+  73:libstr91x/src/91x_scu.c ****     SCU->PLLCONF |=(PLLN<<8);            /*update PLLN field*/
+ 188              		.loc 1 73 0
+ 189 00fc 04C093E5 		ldr	ip, [r3, #4]
+ 190 0100 04448CE1 		orr	r4, ip, r4, asl #8
+ 191 0104 044083E5 		str	r4, [r3, #4]
+  74:libstr91x/src/91x_scu.c ****     SCU->PLLCONF |=PLLM;                 /*update PLLM field*/
+ 192              		.loc 1 74 0
+ 193 0108 041093E5 		ldr	r1, [r3, #4]
+ 194 010c 015085E1 		orr	r5, r5, r1
+ 195 0110 045083E5 		str	r5, [r3, #4]
+  75:libstr91x/src/91x_scu.c ****     SCU->PLLCONF |=PLLP<<16;             /*update PLLP field*/
+ 196              		.loc 1 75 0
+ 197 0114 042093E5 		ldr	r2, [r3, #4]
+ 198 0118 066882E1 		orr	r6, r2, r6, asl #16
+ 199 011c 046083E5 		str	r6, [r3, #4]
+  76:libstr91x/src/91x_scu.c ****     return SUCCESS;
+ 200              		.loc 1 76 0
+ 201 0120 7080BDE8 		ldmfd	sp!, {r4, r5, r6, pc}
+ 202              	.L27:
+ 203              		.align	2
+ 204              	.L26:
+ 205 0124 0020005C 		.word	1543512064
+ 206              		.cfi_endproc
+ 207              	.LFE1:
+ 209              		.align	2
+ 210              		.global	SCU_RCLKDivisorConfig
+ 212              	SCU_RCLKDivisorConfig:
+ 213              	.LFB3:
+ 115:libstr91x/src/91x_scu.c **** 
+ 116:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 117:libstr91x/src/91x_scu.c **** * Function Name  : SCU_RCLKDivisorConfig
+ 118:libstr91x/src/91x_scu.c **** * Description    : Sets the RCLK divisor value
+ 119:libstr91x/src/91x_scu.c **** * Input          : RCLK_Divisor
+ 120:libstr91x/src/91x_scu.c **** * Output         : None
+ 121:libstr91x/src/91x_scu.c **** * Return         : None
+ 122:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 123:libstr91x/src/91x_scu.c **** void SCU_RCLKDivisorConfig(u32 RCLK_Divisor)
+ 124:libstr91x/src/91x_scu.c **** {
+ 214              		.loc 1 124 0
+ 215              		.cfi_startproc
+ 216              		@ args = 0, pretend = 0, frame = 0
+ 217              		@ frame_needed = 0, uses_anonymous_args = 0
+ 218              		@ link register save eliminated.
+ 219              	.LVL15:
+ 125:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_RCLK_Div1;              /*clear RCLKDIV[2:0] field*/
+ 220              		.loc 1 125 0
+ 221 0128 1C309FE5 		ldr	r3, .L30
+ 126:libstr91x/src/91x_scu.c ****   if (RCLK_Divisor!=SCU_RCLK_Div1)
+ 222              		.loc 1 126 0
+ 223 012c 1D0070E3 		cmn	r0, #29
+ 125:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_RCLK_Div1;              /*clear RCLKDIV[2:0] field*/
+ 224              		.loc 1 125 0
+ 225 0130 001093E5 		ldr	r1, [r3, #0]
+ 226 0134 1C20C1E3 		bic	r2, r1, #28
+ 227 0138 002083E5 		str	r2, [r3, #0]
+ 127:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= RCLK_Divisor;              /*update field with RCLK divisor*/
+ 228              		.loc 1 127 0
+ 229 013c 00209315 		ldrne	r2, [r3, #0]
+ 230 0140 02008011 		orrne	r0, r0, r2
+ 231              	.LVL16:
+ 232 0144 00008315 		strne	r0, [r3, #0]
+ 233 0148 1EFF2FE1 		bx	lr
+ 234              	.L31:
+ 235              		.align	2
+ 236              	.L30:
+ 237 014c 0020005C 		.word	1543512064
+ 238              		.cfi_endproc
+ 239              	.LFE3:
+ 241              		.align	2
+ 242              		.global	SCU_HCLKDivisorConfig
+ 244              	SCU_HCLKDivisorConfig:
+ 245              	.LFB4:
+ 128:libstr91x/src/91x_scu.c **** }
+ 129:libstr91x/src/91x_scu.c **** 
+ 130:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 131:libstr91x/src/91x_scu.c **** * Function Name  : SCU_HCLKDivisorConfig
+ 132:libstr91x/src/91x_scu.c **** * Description    : Sets the HCLK divisor value
+ 133:libstr91x/src/91x_scu.c **** * Input          : HCLK_Divisor
+ 134:libstr91x/src/91x_scu.c **** * Output         : None
+ 135:libstr91x/src/91x_scu.c **** * Return         : None
+ 136:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 137:libstr91x/src/91x_scu.c **** void SCU_HCLKDivisorConfig(u32 HCLK_Divisor)
+ 138:libstr91x/src/91x_scu.c **** {
+ 246              		.loc 1 138 0
+ 247              		.cfi_startproc
+ 248              		@ args = 0, pretend = 0, frame = 0
+ 249              		@ frame_needed = 0, uses_anonymous_args = 0
+ 250              		@ link register save eliminated.
+ 251              	.LVL17:
+ 139:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_HCLK_Div1;              /*clear AHBDIV[1:0] field*/
+ 252              		.loc 1 139 0
+ 253 0150 1C309FE5 		ldr	r3, .L34
+ 140:libstr91x/src/91x_scu.c ****   if (HCLK_Divisor!=SCU_HCLK_Div1)
+ 254              		.loc 1 140 0
+ 255 0154 610070E3 		cmn	r0, #97
+ 139:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_HCLK_Div1;              /*clear AHBDIV[1:0] field*/
+ 256              		.loc 1 139 0
+ 257 0158 001093E5 		ldr	r1, [r3, #0]
+ 258 015c 6020C1E3 		bic	r2, r1, #96
+ 259 0160 002083E5 		str	r2, [r3, #0]
+ 141:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= HCLK_Divisor;              /*update field with HCLK divisor*/
+ 260              		.loc 1 141 0
+ 261 0164 00209315 		ldrne	r2, [r3, #0]
+ 262 0168 02008011 		orrne	r0, r0, r2
+ 263              	.LVL18:
+ 264 016c 00008315 		strne	r0, [r3, #0]
+ 265 0170 1EFF2FE1 		bx	lr
+ 266              	.L35:
+ 267              		.align	2
+ 268              	.L34:
+ 269 0174 0020005C 		.word	1543512064
+ 270              		.cfi_endproc
+ 271              	.LFE4:
+ 273              		.align	2
+ 274              		.global	SCU_PCLKDivisorConfig
+ 276              	SCU_PCLKDivisorConfig:
+ 277              	.LFB5:
+ 142:libstr91x/src/91x_scu.c **** }
+ 143:libstr91x/src/91x_scu.c **** 
+ 144:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 145:libstr91x/src/91x_scu.c **** * Function Name  : SCU_PCLKDivisorConfig
+ 146:libstr91x/src/91x_scu.c **** * Description    : Sets the PCLK divisor value
+ 147:libstr91x/src/91x_scu.c **** * Input          : PCLK_Divisor
+ 148:libstr91x/src/91x_scu.c **** * Output         : None
+ 149:libstr91x/src/91x_scu.c **** * Return         : None
+ 150:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 151:libstr91x/src/91x_scu.c **** void SCU_PCLKDivisorConfig(u32 PCLK_Divisor)
+ 152:libstr91x/src/91x_scu.c **** {
+ 278              		.loc 1 152 0
+ 279              		.cfi_startproc
+ 280              		@ args = 0, pretend = 0, frame = 0
+ 281              		@ frame_needed = 0, uses_anonymous_args = 0
+ 282              		@ link register save eliminated.
+ 283              	.LVL19:
+ 153:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_PCLK_Div1;              /*clear APBDIV[1:0] field*/
+ 284              		.loc 1 153 0
+ 285 0178 20309FE5 		ldr	r3, .L38
+ 154:libstr91x/src/91x_scu.c ****   if (PCLK_Divisor!=SCU_PCLK_Div1)
+ 286              		.loc 1 154 0
+ 287 017c 061DE0E3 		mvn	r1, #384
+ 153:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_PCLK_Div1;              /*clear APBDIV[1:0] field*/
+ 288              		.loc 1 153 0
+ 289 0180 00C093E5 		ldr	ip, [r3, #0]
+ 290              		.loc 1 154 0
+ 291 0184 010050E1 		cmp	r0, r1
+ 153:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_PCLK_Div1;              /*clear APBDIV[1:0] field*/
+ 292              		.loc 1 153 0
+ 293 0188 062DCCE3 		bic	r2, ip, #384
+ 294 018c 002083E5 		str	r2, [r3, #0]
+ 155:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= PCLK_Divisor;              /*update field with PCLK Divisor*/
+ 295              		.loc 1 155 0
+ 296 0190 00209315 		ldrne	r2, [r3, #0]
+ 297 0194 02008011 		orrne	r0, r0, r2
+ 298              	.LVL20:
+ 299 0198 00008315 		strne	r0, [r3, #0]
+ 300 019c 1EFF2FE1 		bx	lr
+ 301              	.L39:
+ 302              		.align	2
+ 303              	.L38:
+ 304 01a0 0020005C 		.word	1543512064
+ 305              		.cfi_endproc
+ 306              	.LFE5:
+ 308              		.align	2
+ 309              		.global	SCU_APBPeriphClockConfig
+ 311              	SCU_APBPeriphClockConfig:
+ 312              	.LFB6:
+ 156:libstr91x/src/91x_scu.c **** }
+ 157:libstr91x/src/91x_scu.c **** 
+ 158:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 159:libstr91x/src/91x_scu.c **** * Function Name  : SCU_APBPeriphClockConfig
+ 160:libstr91x/src/91x_scu.c **** * Description    : Enable the clock for an APB peripheral
+ 161:libstr91x/src/91x_scu.c **** * Input          : -APBPerip : APB peripherals(__RTC, __ADC ,...)
+ 162:libstr91x/src/91x_scu.c **** *                  -NewState : ENABLE or DISABLE
+ 163:libstr91x/src/91x_scu.c **** * Output         : None
+ 164:libstr91x/src/91x_scu.c **** * Return         : None
+ 165:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 166:libstr91x/src/91x_scu.c **** void SCU_APBPeriphClockConfig(u32 APBPeriph, FunctionalState NewState)
+ 167:libstr91x/src/91x_scu.c **** {
+ 313              		.loc 1 167 0
+ 314              		.cfi_startproc
+ 315              		@ args = 0, pretend = 0, frame = 0
+ 316              		@ frame_needed = 0, uses_anonymous_args = 0
+ 317              		@ link register save eliminated.
+ 318              	.LVL21:
+ 168:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)                     /*Enable clock for APB peripheral*/
+ 169:libstr91x/src/91x_scu.c ****   SCU->PCGR1 |=APBPeriph;
+ 319              		.loc 1 169 0
+ 320 01a4 14309FE5 		ldr	r3, .L43
+ 168:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)                     /*Enable clock for APB peripheral*/
+ 321              		.loc 1 168 0
+ 322 01a8 010051E3 		cmp	r1, #1
+ 323              		.loc 1 169 0
+ 324 01ac 182093E5 		ldr	r2, [r3, #24]
+ 325 01b0 02008001 		orreq	r0, r0, r2
+ 326              	.LVL22:
+ 170:libstr91x/src/91x_scu.c ****   else
+ 171:libstr91x/src/91x_scu.c ****   SCU->PCGR1 &=~APBPeriph;                  /*Disable clock for APB peripheral*/
+ 327              		.loc 1 171 0
+ 328 01b4 0000C211 		bicne	r0, r2, r0
+ 329 01b8 180083E5 		str	r0, [r3, #24]
+ 330 01bc 1EFF2FE1 		bx	lr
+ 331              	.L44:
+ 332              		.align	2
+ 333              	.L43:
+ 334 01c0 0020005C 		.word	1543512064
+ 335              		.cfi_endproc
+ 336              	.LFE6:
+ 338              		.align	2
+ 339              		.global	SCU_AHBPeriphClockConfig
+ 341              	SCU_AHBPeriphClockConfig:
+ 342              	.LFB7:
+ 172:libstr91x/src/91x_scu.c **** }
+ 173:libstr91x/src/91x_scu.c **** 
+ 174:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 175:libstr91x/src/91x_scu.c **** * Function Name  : SCU_AHBPeriphClockConfig
+ 176:libstr91x/src/91x_scu.c **** * Description    : Enable the clock for an AHB peripheral
+ 177:libstr91x/src/91x_scu.c **** * Input          : -AHBPerip: AHB peripherals(__USB, __DMA,...)
+ 178:libstr91x/src/91x_scu.c **** *                  -NewState : ENABLE or DISABLE
+ 179:libstr91x/src/91x_scu.c **** * Output         : None
+ 180:libstr91x/src/91x_scu.c **** * Return         : None
+ 181:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 182:libstr91x/src/91x_scu.c **** void SCU_AHBPeriphClockConfig(u32 AHBPeriph, FunctionalState NewState)
+ 183:libstr91x/src/91x_scu.c **** {
+ 343              		.loc 1 183 0
+ 344              		.cfi_startproc
+ 345              		@ args = 0, pretend = 0, frame = 0
+ 346              		@ frame_needed = 0, uses_anonymous_args = 0
+ 347              		@ link register save eliminated.
+ 348              	.LVL23:
+ 184:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)                     /*Enable clock for AHB peripheral*/
+ 185:libstr91x/src/91x_scu.c ****   SCU->PCGR0 |=AHBPeriph;
+ 349              		.loc 1 185 0
+ 350 01c4 14309FE5 		ldr	r3, .L48
+ 184:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)                     /*Enable clock for AHB peripheral*/
+ 351              		.loc 1 184 0
+ 352 01c8 010051E3 		cmp	r1, #1
+ 353              		.loc 1 185 0
+ 354 01cc 142093E5 		ldr	r2, [r3, #20]
+ 355 01d0 02008001 		orreq	r0, r0, r2
+ 356              	.LVL24:
+ 186:libstr91x/src/91x_scu.c ****   else
+ 187:libstr91x/src/91x_scu.c ****   SCU->PCGR0 &=~AHBPeriph;                  /*Disable clock for AHB peripheral*/
+ 357              		.loc 1 187 0
+ 358 01d4 0000C211 		bicne	r0, r2, r0
+ 359 01d8 140083E5 		str	r0, [r3, #20]
+ 360 01dc 1EFF2FE1 		bx	lr
+ 361              	.L49:
+ 362              		.align	2
+ 363              	.L48:
+ 364 01e0 0020005C 		.word	1543512064
+ 365              		.cfi_endproc
+ 366              	.LFE7:
+ 368              		.align	2
+ 369              		.global	SCU_APBPeriphReset
+ 371              	SCU_APBPeriphReset:
+ 372              	.LFB8:
+ 188:libstr91x/src/91x_scu.c **** }
+ 189:libstr91x/src/91x_scu.c **** 
+ 190:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 191:libstr91x/src/91x_scu.c **** * Function Name  : SCU_APBPeriphReset
+ 192:libstr91x/src/91x_scu.c **** * Description    : Assert or deassert Reset on APB peripheral
+ 193:libstr91x/src/91x_scu.c **** * Input          : -APBPeriph: APB peripherals(__RTC, __ADC,...)
+ 194:libstr91x/src/91x_scu.c ****                    -NewState : ENABLE or DISABLE
+ 195:libstr91x/src/91x_scu.c **** * Output         : None
+ 196:libstr91x/src/91x_scu.c **** * Return         : None
+ 197:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 198:libstr91x/src/91x_scu.c **** void SCU_APBPeriphReset(u32 APBPeriph, FunctionalState NewState)
+ 199:libstr91x/src/91x_scu.c **** {
+ 373              		.loc 1 199 0
+ 374              		.cfi_startproc
+ 375              		@ args = 0, pretend = 0, frame = 0
+ 376              		@ frame_needed = 0, uses_anonymous_args = 0
+ 377              		@ link register save eliminated.
+ 378              	.LVL25:
+ 200:libstr91x/src/91x_scu.c ****   if (NewState==DISABLE)                    /*APB peripheral not held in Reset*/
+ 201:libstr91x/src/91x_scu.c ****   SCU->PRR1 |=APBPeriph;
+ 379              		.loc 1 201 0
+ 380 01e4 14309FE5 		ldr	r3, .L53
+ 200:libstr91x/src/91x_scu.c ****   if (NewState==DISABLE)                    /*APB peripheral not held in Reset*/
+ 381              		.loc 1 200 0
+ 382 01e8 000051E3 		cmp	r1, #0
+ 383              		.loc 1 201 0
+ 384 01ec 202093E5 		ldr	r2, [r3, #32]
+ 385 01f0 02008001 		orreq	r0, r0, r2
+ 386              	.LVL26:
+ 202:libstr91x/src/91x_scu.c ****   else
+ 203:libstr91x/src/91x_scu.c ****   SCU->PRR1 &=~APBPeriph;                   /*APB peripheral held in Reset*/
+ 387              		.loc 1 203 0
+ 388 01f4 0000C211 		bicne	r0, r2, r0
+ 389 01f8 200083E5 		str	r0, [r3, #32]
+ 390 01fc 1EFF2FE1 		bx	lr
+ 391              	.L54:
+ 392              		.align	2
+ 393              	.L53:
+ 394 0200 0020005C 		.word	1543512064
+ 395              		.cfi_endproc
+ 396              	.LFE8:
+ 398              		.align	2
+ 399              		.global	SCU_AHBPeriphReset
+ 401              	SCU_AHBPeriphReset:
+ 402              	.LFB9:
+ 204:libstr91x/src/91x_scu.c **** }
+ 205:libstr91x/src/91x_scu.c **** 
+ 206:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 207:libstr91x/src/91x_scu.c **** * Function Name  : SCU_AHBPeriphReset
+ 208:libstr91x/src/91x_scu.c **** * Description    : Assert or deassert Reset on AHB peripheral
+ 209:libstr91x/src/91x_scu.c **** * Input          : -AHBPeriph: AHB peripherals(__USB, __DMA,...)
+ 210:libstr91x/src/91x_scu.c ****                    -NewState : ENABLE or DISABLE
+ 211:libstr91x/src/91x_scu.c **** * Output         : None
+ 212:libstr91x/src/91x_scu.c **** * Return         : None
+ 213:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 214:libstr91x/src/91x_scu.c **** void SCU_AHBPeriphReset(u32 AHBPeriph, FunctionalState NewState)
+ 215:libstr91x/src/91x_scu.c **** {
+ 403              		.loc 1 215 0
+ 404              		.cfi_startproc
+ 405              		@ args = 0, pretend = 0, frame = 0
+ 406              		@ frame_needed = 0, uses_anonymous_args = 0
+ 407              		@ link register save eliminated.
+ 408              	.LVL27:
+ 216:libstr91x/src/91x_scu.c ****   if (NewState==DISABLE)
+ 217:libstr91x/src/91x_scu.c ****   SCU->PRR0 |=AHBPeriph;                    /*AHB peripheral not held in Reset*/
+ 409              		.loc 1 217 0
+ 410 0204 14309FE5 		ldr	r3, .L58
+ 216:libstr91x/src/91x_scu.c ****   if (NewState==DISABLE)
+ 411              		.loc 1 216 0
+ 412 0208 000051E3 		cmp	r1, #0
+ 413              		.loc 1 217 0
+ 414 020c 1C2093E5 		ldr	r2, [r3, #28]
+ 415 0210 02008001 		orreq	r0, r0, r2
+ 416              	.LVL28:
+ 218:libstr91x/src/91x_scu.c ****   else
+ 219:libstr91x/src/91x_scu.c ****   SCU->PRR0 &=~AHBPeriph;                   /*AHB peripheral held in Reset*/
+ 417              		.loc 1 219 0
+ 418 0214 0000C211 		bicne	r0, r2, r0
+ 419 0218 1C0083E5 		str	r0, [r3, #28]
+ 420 021c 1EFF2FE1 		bx	lr
+ 421              	.L59:
+ 422              		.align	2
+ 423              	.L58:
+ 424 0220 0020005C 		.word	1543512064
+ 425              		.cfi_endproc
+ 426              	.LFE9:
+ 428              		.align	2
+ 429              		.global	SCU_APBPeriphIdleConfig
+ 431              	SCU_APBPeriphIdleConfig:
+ 432              	.LFB10:
+ 220:libstr91x/src/91x_scu.c **** }
+ 221:libstr91x/src/91x_scu.c **** 
+ 222:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 223:libstr91x/src/91x_scu.c **** * Function Name  : SCU_APBPeriphIdleConfig
+ 224:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable Periph Clock during Idle mode
+ 225:libstr91x/src/91x_scu.c **** * Input          : -APBPeriph: APB peripherals(__RTC, __ADC,...)
+ 226:libstr91x/src/91x_scu.c ****                    -NewState : ENABLE or DISABLE
+ 227:libstr91x/src/91x_scu.c **** * Output         : None
+ 228:libstr91x/src/91x_scu.c **** * Return         : None
+ 229:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 230:libstr91x/src/91x_scu.c **** void SCU_APBPeriphIdleConfig(u32 APBPeriph, FunctionalState NewState)
+ 231:libstr91x/src/91x_scu.c **** {
+ 433              		.loc 1 231 0
+ 434              		.cfi_startproc
+ 435              		@ args = 0, pretend = 0, frame = 0
+ 436              		@ frame_needed = 0, uses_anonymous_args = 0
+ 437              		@ link register save eliminated.
+ 438              	.LVL29:
+ 232:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 233:libstr91x/src/91x_scu.c ****   SCU->MGR1 |=APBPeriph;      /*APB peripheral clock enabled during Idle mode*/
+ 439              		.loc 1 233 0
+ 440 0224 14309FE5 		ldr	r3, .L63
+ 232:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 441              		.loc 1 232 0
+ 442 0228 010051E3 		cmp	r1, #1
+ 443              		.loc 1 233 0
+ 444 022c 282093E5 		ldr	r2, [r3, #40]
+ 445 0230 02008001 		orreq	r0, r0, r2
+ 446              	.LVL30:
+ 234:libstr91x/src/91x_scu.c ****   else
+ 235:libstr91x/src/91x_scu.c ****   SCU->MGR1 &=~APBPeriph;     /*APB peripheral clock disabled during Idle mode*/
+ 447              		.loc 1 235 0
+ 448 0234 0000C211 		bicne	r0, r2, r0
+ 449 0238 280083E5 		str	r0, [r3, #40]
+ 450 023c 1EFF2FE1 		bx	lr
+ 451              	.L64:
+ 452              		.align	2
+ 453              	.L63:
+ 454 0240 0020005C 		.word	1543512064
+ 455              		.cfi_endproc
+ 456              	.LFE10:
+ 458              		.align	2
+ 459              		.global	SCU_AHBPeriphIdleConfig
+ 461              	SCU_AHBPeriphIdleConfig:
+ 462              	.LFB11:
+ 236:libstr91x/src/91x_scu.c **** }
+ 237:libstr91x/src/91x_scu.c **** 
+ 238:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 239:libstr91x/src/91x_scu.c **** * Function Name  : SCU_AHBPeriphIdleConfig
+ 240:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable Periph Clock during Idle mode
+ 241:libstr91x/src/91x_scu.c **** * Input          : -AHBPeriph: AHB peripherals(__USB, __DMA,...)
+ 242:libstr91x/src/91x_scu.c ****                    -NewState : ENABLE or DISABLE
+ 243:libstr91x/src/91x_scu.c **** * Output         : None
+ 244:libstr91x/src/91x_scu.c **** * Return         : None
+ 245:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 246:libstr91x/src/91x_scu.c **** void SCU_AHBPeriphIdleConfig(u32 AHBPeriph, FunctionalState NewState)
+ 247:libstr91x/src/91x_scu.c **** {
+ 463              		.loc 1 247 0
+ 464              		.cfi_startproc
+ 465              		@ args = 0, pretend = 0, frame = 0
+ 466              		@ frame_needed = 0, uses_anonymous_args = 0
+ 467              		@ link register save eliminated.
+ 468              	.LVL31:
+ 248:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 249:libstr91x/src/91x_scu.c ****   SCU->MGR0 |=AHBPeriph;      /*AHB peripheral clock enabled during Idle mode*/
+ 469              		.loc 1 249 0
+ 470 0244 14309FE5 		ldr	r3, .L68
+ 248:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 471              		.loc 1 248 0
+ 472 0248 010051E3 		cmp	r1, #1
+ 473              		.loc 1 249 0
+ 474 024c 242093E5 		ldr	r2, [r3, #36]
+ 475 0250 02008001 		orreq	r0, r0, r2
+ 476              	.LVL32:
+ 250:libstr91x/src/91x_scu.c ****   else
+ 251:libstr91x/src/91x_scu.c ****   SCU->MGR0 &=~AHBPeriph;     /*AHB peripheral clock disabled during Idle mode*/
+ 477              		.loc 1 251 0
+ 478 0254 0000C211 		bicne	r0, r2, r0
+ 479 0258 240083E5 		str	r0, [r3, #36]
+ 480 025c 1EFF2FE1 		bx	lr
+ 481              	.L69:
+ 482              		.align	2
+ 483              	.L68:
+ 484 0260 0020005C 		.word	1543512064
+ 485              		.cfi_endproc
+ 486              	.LFE11:
+ 488              		.align	2
+ 489              		.global	SCU_APBPeriphDebugConfig
+ 491              	SCU_APBPeriphDebugConfig:
+ 492              	.LFB12:
+ 252:libstr91x/src/91x_scu.c **** }
+ 253:libstr91x/src/91x_scu.c **** 
+ 254:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 255:libstr91x/src/91x_scu.c **** * Function Name  : SCU_APBPeriphDebugConfig
+ 256:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable Periph Clock during ARM debug state
+ 257:libstr91x/src/91x_scu.c **** * Input          : -APBPeriph: APB peripherals(__RTC, __ADC,...)
+ 258:libstr91x/src/91x_scu.c ****                    -NewState : ENABLE or DISABLE
+ 259:libstr91x/src/91x_scu.c **** * Output         : None
+ 260:libstr91x/src/91x_scu.c **** * Return         : None
+ 261:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 262:libstr91x/src/91x_scu.c **** void SCU_APBPeriphDebugConfig(u32 APBPeriph, FunctionalState NewState)
+ 263:libstr91x/src/91x_scu.c **** {
+ 493              		.loc 1 263 0
+ 494              		.cfi_startproc
+ 495              		@ args = 0, pretend = 0, frame = 0
+ 496              		@ frame_needed = 0, uses_anonymous_args = 0
+ 497              		@ link register save eliminated.
+ 498              	.LVL33:
+ 264:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 265:libstr91x/src/91x_scu.c ****   SCU->PECGR1 |=APBPeriph;    /*APB peripheral clock enabled during ARM debug state*/
+ 499              		.loc 1 265 0
+ 500 0264 14309FE5 		ldr	r3, .L73
+ 264:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 501              		.loc 1 264 0
+ 502 0268 010051E3 		cmp	r1, #1
+ 503              		.loc 1 265 0
+ 504 026c 302093E5 		ldr	r2, [r3, #48]
+ 505 0270 02008001 		orreq	r0, r0, r2
+ 506              	.LVL34:
+ 266:libstr91x/src/91x_scu.c ****   else
+ 267:libstr91x/src/91x_scu.c ****   SCU->PECGR1 &=~APBPeriph;   /*APB peripheral clock disabled during ARM debug state*/
+ 507              		.loc 1 267 0
+ 508 0274 0000C211 		bicne	r0, r2, r0
+ 509 0278 300083E5 		str	r0, [r3, #48]
+ 510 027c 1EFF2FE1 		bx	lr
+ 511              	.L74:
+ 512              		.align	2
+ 513              	.L73:
+ 514 0280 0020005C 		.word	1543512064
+ 515              		.cfi_endproc
+ 516              	.LFE12:
+ 518              		.align	2
+ 519              		.global	SCU_AHBPeriphDebugConfig
+ 521              	SCU_AHBPeriphDebugConfig:
+ 522              	.LFB13:
+ 268:libstr91x/src/91x_scu.c **** }
+ 269:libstr91x/src/91x_scu.c **** 
+ 270:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 271:libstr91x/src/91x_scu.c **** * Function Name  : SCU_AHBPeriphDebugConfig
+ 272:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable Periph Clock during ARM debug state
+ 273:libstr91x/src/91x_scu.c **** * Input          : -AHBPeriph: AHB peripherals(__USB, __DMA,...)
+ 274:libstr91x/src/91x_scu.c ****                    -NewState : ENABLE or DISABLE
+ 275:libstr91x/src/91x_scu.c **** * Output         : None
+ 276:libstr91x/src/91x_scu.c **** * Return         : None
+ 277:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 278:libstr91x/src/91x_scu.c **** void SCU_AHBPeriphDebugConfig(u32 AHBPeriph, FunctionalState NewState)
+ 279:libstr91x/src/91x_scu.c **** {
+ 523              		.loc 1 279 0
+ 524              		.cfi_startproc
+ 525              		@ args = 0, pretend = 0, frame = 0
+ 526              		@ frame_needed = 0, uses_anonymous_args = 0
+ 527              		@ link register save eliminated.
+ 528              	.LVL35:
+ 280:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 281:libstr91x/src/91x_scu.c ****   SCU->PECGR0 |=AHBPeriph;    /*AHB peripheral clock enabled during ARM debug state*/
+ 529              		.loc 1 281 0
+ 530 0284 14309FE5 		ldr	r3, .L78
+ 280:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 531              		.loc 1 280 0
+ 532 0288 010051E3 		cmp	r1, #1
+ 533              		.loc 1 281 0
+ 534 028c 2C2093E5 		ldr	r2, [r3, #44]
+ 535 0290 02008001 		orreq	r0, r0, r2
+ 536              	.LVL36:
+ 282:libstr91x/src/91x_scu.c ****   else
+ 283:libstr91x/src/91x_scu.c ****   SCU->PECGR0 &=~AHBPeriph;   /*AHB peripheral clock disabled during ARM debug state*/
+ 537              		.loc 1 283 0
+ 538 0294 0000C211 		bicne	r0, r2, r0
+ 539 0298 2C0083E5 		str	r0, [r3, #44]
+ 540 029c 1EFF2FE1 		bx	lr
+ 541              	.L79:
+ 542              		.align	2
+ 543              	.L78:
+ 544 02a0 0020005C 		.word	1543512064
+ 545              		.cfi_endproc
+ 546              	.LFE13:
+ 548              		.align	2
+ 549              		.global	SCU_BRCLKDivisorConfig
+ 551              	SCU_BRCLKDivisorConfig:
+ 552              	.LFB14:
+ 284:libstr91x/src/91x_scu.c **** }
+ 285:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 286:libstr91x/src/91x_scu.c **** * Function Name  : SCU_BRCLKDivisorConfig
+ 287:libstr91x/src/91x_scu.c **** * Description    : Sets the BRCLK divisor value
+ 288:libstr91x/src/91x_scu.c **** * Input          : BRCLK_Divisor
+ 289:libstr91x/src/91x_scu.c **** * Output         : None
+ 290:libstr91x/src/91x_scu.c **** * Return         : None
+ 291:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 292:libstr91x/src/91x_scu.c **** void SCU_BRCLKDivisorConfig(u32 BRCLK_Divisor)
+ 293:libstr91x/src/91x_scu.c **** {
+ 553              		.loc 1 293 0
+ 554              		.cfi_startproc
+ 555              		@ args = 0, pretend = 0, frame = 0
+ 556              		@ frame_needed = 0, uses_anonymous_args = 0
+ 557              		@ link register save eliminated.
+ 558              	.LVL37:
+ 294:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_BRCLK_Div2;              /*Clear BRSEL bit*/
+ 559              		.loc 1 294 0
+ 560 02a4 1C309FE5 		ldr	r3, .L82
+ 295:libstr91x/src/91x_scu.c ****   if (BRCLK_Divisor==SCU_BRCLK_Div1)
+ 561              		.loc 1 295 0
+ 562 02a8 020C50E3 		cmp	r0, #512
+ 294:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_BRCLK_Div2;              /*Clear BRSEL bit*/
+ 563              		.loc 1 294 0
+ 564 02ac 000093E5 		ldr	r0, [r3, #0]
+ 565              	.LVL38:
+ 566 02b0 022CC0E3 		bic	r2, r0, #512
+ 567 02b4 002083E5 		str	r2, [r3, #0]
+ 296:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= SCU_BRCLK_Div1;             /*set bit BRSEL*/
+ 568              		.loc 1 296 0
+ 569 02b8 00209305 		ldreq	r2, [r3, #0]
+ 570 02bc 022C8203 		orreq	r2, r2, #512
+ 571 02c0 00208305 		streq	r2, [r3, #0]
+ 572 02c4 1EFF2FE1 		bx	lr
+ 573              	.L83:
+ 574              		.align	2
+ 575              	.L82:
+ 576 02c8 0020005C 		.word	1543512064
+ 577              		.cfi_endproc
+ 578              	.LFE14:
+ 580              		.align	2
+ 581              		.global	SCU_TIMExtCLKCmd
+ 583              	SCU_TIMExtCLKCmd:
+ 584              	.LFB15:
+ 297:libstr91x/src/91x_scu.c **** }
+ 298:libstr91x/src/91x_scu.c **** 
+ 299:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 300:libstr91x/src/91x_scu.c **** * Function Name  : SCU_TIMExtCLKCmd
+ 301:libstr91x/src/91x_scu.c **** * Description    : Enable or disable the TIMx external clock source
+ 302:libstr91x/src/91x_scu.c **** * Input          : - TIMx : SCU_TIM01 or SCU_TIM23
+ 303:libstr91x/src/91x_scu.c **** *                  -  NewState : ENABLE or DISABLE
+ 304:libstr91x/src/91x_scu.c **** * Output         : Non
+ 305:libstr91x/src/91x_scu.c **** * Return         : None
+ 306:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 307:libstr91x/src/91x_scu.c **** void SCU_TIMExtCLKCmd (u8 TIMx, FunctionalState NewState)
+ 308:libstr91x/src/91x_scu.c **** {
+ 585              		.loc 1 308 0
+ 586              		.cfi_startproc
+ 587              		@ args = 0, pretend = 0, frame = 0
+ 588              		@ frame_needed = 0, uses_anonymous_args = 0
+ 589              		@ link register save eliminated.
+ 590              	.LVL39:
+ 309:libstr91x/src/91x_scu.c ****   if (TIMx== SCU_TIM01)                     /*TIM01 clock source configuration*/
+ 591              		.loc 1 309 0
+ 592 02cc 000050E3 		cmp	r0, #0
+ 593 02d0 0800001A 		bne	.L85
+ 310:libstr91x/src/91x_scu.c ****   {
+ 311:libstr91x/src/91x_scu.c ****     SCU->CLKCNTR &=0xFFFFDFFF;
+ 594              		.loc 1 311 0
+ 595 02d4 40309FE5 		ldr	r3, .L87
+ 312:libstr91x/src/91x_scu.c ****     if (NewState==ENABLE)
+ 596              		.loc 1 312 0
+ 597 02d8 010051E3 		cmp	r1, #1
+ 311:libstr91x/src/91x_scu.c ****     SCU->CLKCNTR &=0xFFFFDFFF;
+ 598              		.loc 1 311 0
+ 599 02dc 000093E5 		ldr	r0, [r3, #0]
+ 600              	.LVL40:
+ 601 02e0 022AC0E3 		bic	r2, r0, #8192
+ 602 02e4 002083E5 		str	r2, [r3, #0]
+ 313:libstr91x/src/91x_scu.c ****     SCU->CLKCNTR |=0x2000;
+ 603              		.loc 1 313 0
+ 604 02e8 00209305 		ldreq	r2, [r3, #0]
+ 605 02ec 022A8203 		orreq	r2, r2, #8192
+ 606 02f0 00208305 		streq	r2, [r3, #0]
+ 607 02f4 1EFF2FE1 		bx	lr
+ 608              	.LVL41:
+ 609              	.L85:
+ 314:libstr91x/src/91x_scu.c ****   }
+ 315:libstr91x/src/91x_scu.c ****   else
+ 316:libstr91x/src/91x_scu.c ****   {
+ 317:libstr91x/src/91x_scu.c ****     SCU->CLKCNTR &=0xFFFFBFFF;            /*TIM23 clock source configuration*/
+ 610              		.loc 1 317 0
+ 611 02f8 1CC09FE5 		ldr	ip, .L87
+ 318:libstr91x/src/91x_scu.c ****      if (NewState==ENABLE)
+ 612              		.loc 1 318 0
+ 613 02fc 010051E3 		cmp	r1, #1
+ 317:libstr91x/src/91x_scu.c ****     SCU->CLKCNTR &=0xFFFFBFFF;            /*TIM23 clock source configuration*/
+ 614              		.loc 1 317 0
+ 615 0300 00209CE5 		ldr	r2, [ip, #0]
+ 616 0304 0119C2E3 		bic	r1, r2, #16384
+ 617              	.LVL42:
+ 618 0308 00108CE5 		str	r1, [ip, #0]
+ 319:libstr91x/src/91x_scu.c ****     SCU->CLKCNTR |=0x4000;
+ 619              		.loc 1 319 0
+ 620 030c 00109C05 		ldreq	r1, [ip, #0]
+ 621 0310 01198103 		orreq	r1, r1, #16384
+ 622 0314 00108C05 		streq	r1, [ip, #0]
+ 623 0318 1EFF2FE1 		bx	lr
+ 624              	.L88:
+ 625              		.align	2
+ 626              	.L87:
+ 627 031c 0020005C 		.word	1543512064
+ 628              		.cfi_endproc
+ 629              	.LFE15:
+ 631              		.align	2
+ 632              		.global	SCU_USBCLKConfig
+ 634              	SCU_USBCLKConfig:
+ 635              	.LFB16:
+ 320:libstr91x/src/91x_scu.c ****   }
+ 321:libstr91x/src/91x_scu.c **** }
+ 322:libstr91x/src/91x_scu.c **** 
+ 323:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 324:libstr91x/src/91x_scu.c **** * Function Name  : SCU_USBCLKConfig
+ 325:libstr91x/src/91x_scu.c **** * Description    : Configures the clock source for the 48MHz USBCLK
+ 326:libstr91x/src/91x_scu.c **** * Input          : USBCLK_Source: SCU_USBCLK_MCLK,SCU_USBCLK_MCLK2 or SCU_USBCLK_EXT
+ 327:libstr91x/src/91x_scu.c **** * Output         : None
+ 328:libstr91x/src/91x_scu.c **** * Return         : None
+ 329:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 330:libstr91x/src/91x_scu.c **** void SCU_USBCLKConfig(u32 USBCLK_Source)
+ 331:libstr91x/src/91x_scu.c **** {
+ 636              		.loc 1 331 0
+ 637              		.cfi_startproc
+ 638              		@ args = 0, pretend = 0, frame = 0
+ 639              		@ frame_needed = 0, uses_anonymous_args = 0
+ 640              		@ link register save eliminated.
+ 641              	.LVL43:
+ 332:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_USBCLK_MCLK;            /*clear USBSEL[1:0] field*/
+ 642              		.loc 1 332 0
+ 643 0320 20309FE5 		ldr	r3, .L91
+ 333:libstr91x/src/91x_scu.c ****   if (USBCLK_Source!=SCU_USBCLK_MCLK)
+ 644              		.loc 1 333 0
+ 645 0324 031BE0E3 		mvn	r1, #3072
+ 332:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_USBCLK_MCLK;            /*clear USBSEL[1:0] field*/
+ 646              		.loc 1 332 0
+ 647 0328 00C093E5 		ldr	ip, [r3, #0]
+ 648              		.loc 1 333 0
+ 649 032c 010050E1 		cmp	r0, r1
+ 332:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_USBCLK_MCLK;            /*clear USBSEL[1:0] field*/
+ 650              		.loc 1 332 0
+ 651 0330 032BCCE3 		bic	r2, ip, #3072
+ 652 0334 002083E5 		str	r2, [r3, #0]
+ 334:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= USBCLK_Source;             /*update field with USBCLK_Source*/
+ 653              		.loc 1 334 0
+ 654 0338 00209315 		ldrne	r2, [r3, #0]
+ 655 033c 02008011 		orrne	r0, r0, r2
+ 656              	.LVL44:
+ 657 0340 00008315 		strne	r0, [r3, #0]
+ 658 0344 1EFF2FE1 		bx	lr
+ 659              	.L92:
+ 660              		.align	2
+ 661              	.L91:
+ 662 0348 0020005C 		.word	1543512064
+ 663              		.cfi_endproc
+ 664              	.LFE16:
+ 666              		.align	2
+ 667              		.global	SCU_PHYCLKConfig
+ 669              	SCU_PHYCLKConfig:
+ 670              	.LFB17:
+ 335:libstr91x/src/91x_scu.c **** }
+ 336:libstr91x/src/91x_scu.c **** 
+ 337:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 338:libstr91x/src/91x_scu.c **** * Function Name  : SCU_PHYCLKConfig
+ 339:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable PHY clock output
+ 340:libstr91x/src/91x_scu.c **** * Input          : NewState : ENABLE or DISABLE
+ 341:libstr91x/src/91x_scu.c **** * Output         : None
+ 342:libstr91x/src/91x_scu.c **** * Return         : None
+ 343:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 344:libstr91x/src/91x_scu.c **** void SCU_PHYCLKConfig(FunctionalState NewState)
+ 345:libstr91x/src/91x_scu.c **** {
+ 671              		.loc 1 345 0
+ 672              		.cfi_startproc
+ 673              		@ args = 0, pretend = 0, frame = 0
+ 674              		@ frame_needed = 0, uses_anonymous_args = 0
+ 675              		@ link register save eliminated.
+ 676              	.LVL45:
+ 346:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 347:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= 0x1000;                    /*enable MIIPHY clock*/
+ 677              		.loc 1 347 0
+ 678 034c 14309FE5 		ldr	r3, .L96
+ 346:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 679              		.loc 1 346 0
+ 680 0350 010050E3 		cmp	r0, #1
+ 681              		.loc 1 347 0
+ 682 0354 002093E5 		ldr	r2, [r3, #0]
+ 683 0358 012A8203 		orreq	r2, r2, #4096
+ 348:libstr91x/src/91x_scu.c ****   else
+ 349:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=~0x1000;                    /*disable MIIPHY clock*/
+ 684              		.loc 1 349 0
+ 685 035c 012AC213 		bicne	r2, r2, #4096
+ 686 0360 002083E5 		str	r2, [r3, #0]
+ 687 0364 1EFF2FE1 		bx	lr
+ 688              	.L97:
+ 689              		.align	2
+ 690              	.L96:
+ 691 0368 0020005C 		.word	1543512064
+ 692              		.cfi_endproc
+ 693              	.LFE17:
+ 695              		.align	2
+ 696              		.global	SCU_FMICLKDivisorConfig
+ 698              	SCU_FMICLKDivisorConfig:
+ 699              	.LFB18:
+ 350:libstr91x/src/91x_scu.c **** }
+ 351:libstr91x/src/91x_scu.c **** 
+ 352:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 353:libstr91x/src/91x_scu.c **** * Function Name  : SCU_FMICLKDivisorConfig
+ 354:libstr91x/src/91x_scu.c **** * Description    : Set the FMI clock divisor
+ 355:libstr91x/src/91x_scu.c **** * Input          : FMICLK_Divisor: SCU_FMICLK_Div1 or SCU_FMICLK_DIV2
+ 356:libstr91x/src/91x_scu.c **** * Output         : None
+ 357:libstr91x/src/91x_scu.c **** * Return         : None
+ 358:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 359:libstr91x/src/91x_scu.c **** void SCU_FMICLKDivisorConfig(u32 FMICLK_Divisor)
+ 360:libstr91x/src/91x_scu.c **** {
+ 700              		.loc 1 360 0
+ 701              		.cfi_startproc
+ 702              		@ args = 0, pretend = 0, frame = 0
+ 703              		@ frame_needed = 0, uses_anonymous_args = 0
+ 704              		@ link register save eliminated.
+ 705              	.LVL46:
+ 361:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_FMICLK_Div1;            /*FMICLK = RCLK*/
+ 706              		.loc 1 361 0
+ 707 036c 20309FE5 		ldr	r3, .L100
+ 362:libstr91x/src/91x_scu.c ****   if (FMICLK_Divisor!=SCU_FMICLK_Div1)
+ 708              		.loc 1 362 0
+ 709 0370 0118E0E3 		mvn	r1, #65536
+ 361:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_FMICLK_Div1;            /*FMICLK = RCLK*/
+ 710              		.loc 1 361 0
+ 711 0374 00C093E5 		ldr	ip, [r3, #0]
+ 712              		.loc 1 362 0
+ 713 0378 010050E1 		cmp	r0, r1
+ 361:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_FMICLK_Div1;            /*FMICLK = RCLK*/
+ 714              		.loc 1 361 0
+ 715 037c 01200CE0 		and	r2, ip, r1
+ 716 0380 002083E5 		str	r2, [r3, #0]
+ 363:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |=SCU_FMICLK_Div2;            /*FMICLK = RCLK/2 */
+ 717              		.loc 1 363 0
+ 718 0384 00209315 		ldrne	r2, [r3, #0]
+ 719 0388 01288213 		orrne	r2, r2, #65536
+ 720 038c 00208315 		strne	r2, [r3, #0]
+ 721 0390 1EFF2FE1 		bx	lr
+ 722              	.L101:
+ 723              		.align	2
+ 724              	.L100:
+ 725 0394 0020005C 		.word	1543512064
+ 726              		.cfi_endproc
+ 727              	.LFE18:
+ 729              		.align	2
+ 730              		.global	SCU_EMIBCLKDivisorConfig
+ 732              	SCU_EMIBCLKDivisorConfig:
+ 733              	.LFB19:
+ 364:libstr91x/src/91x_scu.c **** }
+ 365:libstr91x/src/91x_scu.c **** 
+ 366:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 367:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EMIBCLKDivisorConfig
+ 368:libstr91x/src/91x_scu.c **** * Description    : Set the EMI Bus clock divisor: EMIBCLK = HCLK or HCLK/2
+ 369:libstr91x/src/91x_scu.c **** * Input          : SCU_EMICLK: SCU_EMIBCLK_Div1 , SCU_EMIBCLK_Div2
+ 370:libstr91x/src/91x_scu.c **** * Output         : None
+ 371:libstr91x/src/91x_scu.c **** * Return         : None
+ 372:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 373:libstr91x/src/91x_scu.c **** void SCU_EMIBCLKDivisorConfig(u32 SCU_EMIBCLK)
+ 374:libstr91x/src/91x_scu.c **** {
+ 734              		.loc 1 374 0
+ 735              		.cfi_startproc
+ 736              		@ args = 0, pretend = 0, frame = 0
+ 737              		@ frame_needed = 0, uses_anonymous_args = 0
+ 738              		@ link register save eliminated.
+ 739              	.LVL47:
+ 375:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_EMIBCLK_Div1;          /*EMIBCLK = HCLK */
+ 740              		.loc 1 375 0
+ 741 0398 20309FE5 		ldr	r3, .L104
+ 376:libstr91x/src/91x_scu.c ****   if (SCU_EMIBCLK!=SCU_EMIBCLK_Div1)
+ 742              		.loc 1 376 0
+ 743 039c 0618E0E3 		mvn	r1, #393216
+ 375:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_EMIBCLK_Div1;          /*EMIBCLK = HCLK */
+ 744              		.loc 1 375 0
+ 745 03a0 00C093E5 		ldr	ip, [r3, #0]
+ 746              		.loc 1 376 0
+ 747 03a4 010050E1 		cmp	r0, r1
+ 375:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR &=SCU_EMIBCLK_Div1;          /*EMIBCLK = HCLK */
+ 748              		.loc 1 375 0
+ 749 03a8 01200CE0 		and	r2, ip, r1
+ 750 03ac 002083E5 		str	r2, [r3, #0]
+ 377:libstr91x/src/91x_scu.c ****   SCU->CLKCNTR |= SCU_EMIBCLK_Div2;         /*EMIBCLK = HCLK/2 */
+ 751              		.loc 1 377 0
+ 752 03b0 00209315 		ldrne	r2, [r3, #0]
+ 753 03b4 02288213 		orrne	r2, r2, #131072
+ 754 03b8 00208315 		strne	r2, [r3, #0]
+ 755 03bc 1EFF2FE1 		bx	lr
+ 756              	.L105:
+ 757              		.align	2
+ 758              	.L104:
+ 759 03c0 0020005C 		.word	1543512064
+ 760              		.cfi_endproc
+ 761              	.LFE19:
+ 763              		.align	2
+ 764              		.global	SCU_EMIModeConfig
+ 766              	SCU_EMIModeConfig:
+ 767              	.LFB20:
+ 378:libstr91x/src/91x_scu.c **** }
+ 379:libstr91x/src/91x_scu.c **** 
+ 380:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 381:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EMIModeConfig
+ 382:libstr91x/src/91x_scu.c **** * Description    : Configure the EMI as Multiplexed or Demultiplexed
+ 383:libstr91x/src/91x_scu.c **** * Input          : SCU_EMIMODE : SCU_EMI_MUX or SCU_EMI_DEMUX
+ 384:libstr91x/src/91x_scu.c **** * Output         : None
+ 385:libstr91x/src/91x_scu.c **** * Return         : None
+ 386:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 387:libstr91x/src/91x_scu.c **** void SCU_EMIModeConfig(u32 SCU_EMIMODE)
+ 388:libstr91x/src/91x_scu.c **** {
+ 768              		.loc 1 388 0
+ 769              		.cfi_startproc
+ 770              		@ args = 0, pretend = 0, frame = 0
+ 771              		@ frame_needed = 0, uses_anonymous_args = 0
+ 772              		@ link register save eliminated.
+ 773              	.LVL48:
+ 389:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMI_MUX;                 /*EMI mode = Multiplexed*/
+ 774              		.loc 1 389 0
+ 775 03c4 1C309FE5 		ldr	r3, .L108
+ 390:libstr91x/src/91x_scu.c ****   if (SCU_EMIMODE!=SCU_EMI_MUX)
+ 776              		.loc 1 390 0
+ 777 03c8 410070E3 		cmn	r0, #65
+ 389:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMI_MUX;                 /*EMI mode = Multiplexed*/
+ 778              		.loc 1 389 0
+ 779 03cc 340093E5 		ldr	r0, [r3, #52]
+ 780              	.LVL49:
+ 781 03d0 4020C0E3 		bic	r2, r0, #64
+ 782 03d4 342083E5 		str	r2, [r3, #52]
+ 391:libstr91x/src/91x_scu.c ****   SCU->SCR0 |= SCU_EMI_DEMUX;                /*EMI mode = Demultiplexed*/
+ 783              		.loc 1 391 0
+ 784 03d8 34209315 		ldrne	r2, [r3, #52]
+ 785 03dc 40208213 		orrne	r2, r2, #64
+ 786 03e0 34208315 		strne	r2, [r3, #52]
+ 787 03e4 1EFF2FE1 		bx	lr
+ 788              	.L109:
+ 789              		.align	2
+ 790              	.L108:
+ 791 03e8 0020005C 		.word	1543512064
+ 792              		.cfi_endproc
+ 793              	.LFE20:
+ 795              		.align	2
+ 796              		.global	SCU_EMIALEConfig
+ 798              	SCU_EMIALEConfig:
+ 799              	.LFB21:
+ 392:libstr91x/src/91x_scu.c **** }
+ 393:libstr91x/src/91x_scu.c **** 
+ 394:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 395:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EMIALEConfig
+ 396:libstr91x/src/91x_scu.c **** * Description    : Configure the ALE signal (length & polarity)
+ 397:libstr91x/src/91x_scu.c **** * Input          : -SCU_EMIALE_LEN : SCU_EMIALE_LEN1 or SCU_EMIALE_LEN2
+ 398:libstr91x/src/91x_scu.c **** *                  -SCU_EMIALE_POL : SCU_EMIALE_POLLow or SCU_EMI_POLHigh
+ 399:libstr91x/src/91x_scu.c **** * Output         : None
+ 400:libstr91x/src/91x_scu.c **** * Return         : None
+ 401:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 402:libstr91x/src/91x_scu.c **** void SCU_EMIALEConfig(u32 SCU_EMIALE_LEN, u32 SCU_EMIALE_POL)
+ 403:libstr91x/src/91x_scu.c **** {
+ 800              		.loc 1 403 0
+ 801              		.cfi_startproc
+ 802              		@ args = 0, pretend = 0, frame = 0
+ 803              		@ frame_needed = 0, uses_anonymous_args = 0
+ 804              		@ link register save eliminated.
+ 805              	.LVL50:
+ 404:libstr91x/src/91x_scu.c ****   /*Configure EMI ALE Length*/
+ 405:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMIALE_LEN1;
+ 806              		.loc 1 405 0
+ 807 03ec 40309FE5 		ldr	r3, .L113
+ 406:libstr91x/src/91x_scu.c ****   if (SCU_EMIALE_LEN!=SCU_EMIALE_LEN1)
+ 808              		.loc 1 406 0
+ 809 03f0 01CCE0E3 		mvn	ip, #256
+ 405:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMIALE_LEN1;
+ 810              		.loc 1 405 0
+ 811 03f4 342093E5 		ldr	r2, [r3, #52]
+ 812              		.loc 1 406 0
+ 813 03f8 0C0050E1 		cmp	r0, ip
+ 405:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMIALE_LEN1;
+ 814              		.loc 1 405 0
+ 815 03fc 0CC002E0 		and	ip, r2, ip
+ 816 0400 34C083E5 		str	ip, [r3, #52]
+ 407:libstr91x/src/91x_scu.c ****   SCU->SCR0 |= SCU_EMIALE_LEN2;
+ 817              		.loc 1 407 0
+ 818 0404 34C09315 		ldrne	ip, [r3, #52]
+ 819 0408 01CC8C13 		orrne	ip, ip, #256
+ 820 040c 34C08315 		strne	ip, [r3, #52]
+ 408:libstr91x/src/91x_scu.c **** 
+ 409:libstr91x/src/91x_scu.c ****   /*Configure EMI ALE POL*/
+ 410:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMIALE_POLLow;
+ 821              		.loc 1 410 0
+ 822 0410 1C309FE5 		ldr	r3, .L113
+ 411:libstr91x/src/91x_scu.c ****   if (SCU_EMIALE_POL!=SCU_EMIALE_POLLow)
+ 823              		.loc 1 411 0
+ 824 0414 810071E3 		cmn	r1, #129
+ 410:libstr91x/src/91x_scu.c ****   SCU->SCR0 &=SCU_EMIALE_POLLow;
+ 825              		.loc 1 410 0
+ 826 0418 340093E5 		ldr	r0, [r3, #52]
+ 827              	.LVL51:
+ 828 041c 8020C0E3 		bic	r2, r0, #128
+ 829 0420 342083E5 		str	r2, [r3, #52]
+ 412:libstr91x/src/91x_scu.c ****   SCU->SCR0 |= SCU_EMIALE_POLHigh;
+ 830              		.loc 1 412 0
+ 831 0424 34209315 		ldrne	r2, [r3, #52]
+ 832 0428 80208213 		orrne	r2, r2, #128
+ 833 042c 34208315 		strne	r2, [r3, #52]
+ 834 0430 1EFF2FE1 		bx	lr
+ 835              	.L114:
+ 836              		.align	2
+ 837              	.L113:
+ 838 0434 0020005C 		.word	1543512064
+ 839              		.cfi_endproc
+ 840              	.LFE21:
+ 842              		.align	2
+ 843              		.global	SCU_ITConfig
+ 845              	SCU_ITConfig:
+ 846              	.LFB22:
+ 413:libstr91x/src/91x_scu.c **** }
+ 414:libstr91x/src/91x_scu.c **** 
+ 415:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 416:libstr91x/src/91x_scu.c **** * Function Name  : SCU_ITConfig
+ 417:libstr91x/src/91x_scu.c **** * Description    : ENBALE or DISABLE an SCU interrupt
+ 418:libstr91x/src/91x_scu.c **** * Input          : -SCU_IT:   interrupt mask
+ 419:libstr91x/src/91x_scu.c **** *                  -NewState: ENABLE or DISABLE
+ 420:libstr91x/src/91x_scu.c **** * Output         : None
+ 421:libstr91x/src/91x_scu.c **** * Return         : None
+ 422:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 423:libstr91x/src/91x_scu.c **** void SCU_ITConfig(u32 SCU_IT, FunctionalState NewState)
+ 424:libstr91x/src/91x_scu.c **** {
+ 847              		.loc 1 424 0
+ 848              		.cfi_startproc
+ 849              		@ args = 0, pretend = 0, frame = 0
+ 850              		@ frame_needed = 0, uses_anonymous_args = 0
+ 851              		@ link register save eliminated.
+ 852              	.LVL52:
+ 425:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 426:libstr91x/src/91x_scu.c ****   SCU->ITCMSK&=~SCU_IT;                    /*IT enable */
+ 853              		.loc 1 426 0
+ 854 0438 14309FE5 		ldr	r3, .L118
+ 425:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 855              		.loc 1 425 0
+ 856 043c 010051E3 		cmp	r1, #1
+ 857              		.loc 1 426 0
+ 858 0440 102093E5 		ldr	r2, [r3, #16]
+ 859 0444 0000C201 		biceq	r0, r2, r0
+ 860              	.LVL53:
+ 427:libstr91x/src/91x_scu.c ****   else
+ 428:libstr91x/src/91x_scu.c ****   SCU->ITCMSK|=SCU_IT;                     /*IT disable( mask)*/
+ 861              		.loc 1 428 0
+ 862 0448 02008011 		orrne	r0, r0, r2
+ 863 044c 100083E5 		str	r0, [r3, #16]
+ 864 0450 1EFF2FE1 		bx	lr
+ 865              	.L119:
+ 866              		.align	2
+ 867              	.L118:
+ 868 0454 0020005C 		.word	1543512064
+ 869              		.cfi_endproc
+ 870              	.LFE22:
+ 872              		.align	2
+ 873              		.global	SCU_GetFlagStatus
+ 875              	SCU_GetFlagStatus:
+ 876              	.LFB23:
+ 429:libstr91x/src/91x_scu.c **** }
+ 430:libstr91x/src/91x_scu.c **** 
+ 431:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 432:libstr91x/src/91x_scu.c **** * Function Name  : SCU_GetFlagStatus
+ 433:libstr91x/src/91x_scu.c **** * Description    : Returns flag status
+ 434:libstr91x/src/91x_scu.c **** * Input          : SCU_Flag
+ 435:libstr91x/src/91x_scu.c **** * Output         : NONE
+ 436:libstr91x/src/91x_scu.c **** * Return         : SET or RESET
+ 437:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 438:libstr91x/src/91x_scu.c **** FlagStatus SCU_GetFlagStatus(u32 SCU_Flag)
+ 439:libstr91x/src/91x_scu.c **** {
+ 877              		.loc 1 439 0
+ 878              		.cfi_startproc
+ 879              		@ args = 0, pretend = 0, frame = 0
+ 880              		@ frame_needed = 0, uses_anonymous_args = 0
+ 881              		@ link register save eliminated.
+ 882              	.LVL54:
+ 440:libstr91x/src/91x_scu.c ****   if (SCU->SYSSTATUS&SCU_Flag)
+ 883              		.loc 1 440 0
+ 884 0458 10109FE5 		ldr	r1, .L121
+ 885 045c 083091E5 		ldr	r3, [r1, #8]
+ 441:libstr91x/src/91x_scu.c ****   return SET;
+ 886              		.loc 1 441 0
+ 887 0460 030010E1 		tst	r0, r3
+ 442:libstr91x/src/91x_scu.c ****   else return RESET;
+ 443:libstr91x/src/91x_scu.c **** }
+ 888              		.loc 1 443 0
+ 889 0464 0000A003 		moveq	r0, #0
+ 890 0468 0100A013 		movne	r0, #1
+ 891              	.LVL55:
+ 892 046c 1EFF2FE1 		bx	lr
+ 893              	.L122:
+ 894              		.align	2
+ 895              	.L121:
+ 896 0470 0020005C 		.word	1543512064
+ 897              		.cfi_endproc
+ 898              	.LFE23:
+ 900              		.align	2
+ 901              		.global	SCU_ClearFlag
+ 903              	SCU_ClearFlag:
+ 904              	.LFB24:
+ 444:libstr91x/src/91x_scu.c **** 
+ 445:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 446:libstr91x/src/91x_scu.c **** * Function Name  : SCU_ClearFlag
+ 447:libstr91x/src/91x_scu.c **** * Description    : Clears a SYSTATUS Flag
+ 448:libstr91x/src/91x_scu.c **** * Input          : SCU_Flag
+ 449:libstr91x/src/91x_scu.c **** * Output         : None
+ 450:libstr91x/src/91x_scu.c **** * Return         : None
+ 451:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 452:libstr91x/src/91x_scu.c **** void SCU_ClearFlag(u32 SCU_Flag)
+ 453:libstr91x/src/91x_scu.c **** {
+ 905              		.loc 1 453 0
+ 906              		.cfi_startproc
+ 907              		@ args = 0, pretend = 0, frame = 0
+ 908              		@ frame_needed = 0, uses_anonymous_args = 0
+ 909              		@ link register save eliminated.
+ 910              	.LVL56:
+ 454:libstr91x/src/91x_scu.c ****   SCU->SYSSTATUS = SCU_Flag;
+ 911              		.loc 1 454 0
+ 912 0474 04309FE5 		ldr	r3, .L124
+ 913 0478 080083E5 		str	r0, [r3, #8]
+ 455:libstr91x/src/91x_scu.c **** }
+ 914              		.loc 1 455 0
+ 915 047c 1EFF2FE1 		bx	lr
+ 916              	.L125:
+ 917              		.align	2
+ 918              	.L124:
+ 919 0480 0020005C 		.word	1543512064
+ 920              		.cfi_endproc
+ 921              	.LFE24:
+ 923              		.global	__aeabi_idiv
+ 924              		.align	2
+ 925              		.global	SCU_GetPLLFreqValue
+ 927              	SCU_GetPLLFreqValue:
+ 928              	.LFB25:
+ 456:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 457:libstr91x/src/91x_scu.c **** * Function Name  : SCU_GetPLLfreqValue
+ 458:libstr91x/src/91x_scu.c **** * Description    : Gets the current PLL frequency
+ 459:libstr91x/src/91x_scu.c **** * Input          : None
+ 460:libstr91x/src/91x_scu.c **** * Output         : None
+ 461:libstr91x/src/91x_scu.c **** * Return         : PLL frequency (KHz)
+ 462:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 463:libstr91x/src/91x_scu.c **** u32 SCU_GetPLLFreqValue(void)
+ 464:libstr91x/src/91x_scu.c **** {
+ 929              		.loc 1 464 0
+ 930              		.cfi_startproc
+ 931              		@ args = 0, pretend = 0, frame = 0
+ 932              		@ frame_needed = 0, uses_anonymous_args = 0
+ 933 0484 08402DE9 		stmfd	sp!, {r3, lr}
+ 934              	.LCFI1:
+ 935              		.cfi_def_cfa_offset 8
+ 465:libstr91x/src/91x_scu.c ****   u8 PLL_M;
+ 466:libstr91x/src/91x_scu.c ****   u8 PLL_N;
+ 467:libstr91x/src/91x_scu.c ****   u8 PLL_P;
+ 468:libstr91x/src/91x_scu.c **** 
+ 469:libstr91x/src/91x_scu.c ****   PLL_M = SCU->PLLCONF&0xFF;
+ 936              		.loc 1 469 0
+ 937 0488 4C209FE5 		ldr	r2, .L129
+ 938 048c 043092E5 		ldr	r3, [r2, #4]
+ 939              		.cfi_offset 14, -4
+ 940              		.cfi_offset 3, -8
+ 941              	.LVL57:
+ 470:libstr91x/src/91x_scu.c ****   PLL_N = (SCU->PLLCONF&0xFF00)>>8;
+ 942              		.loc 1 470 0
+ 943 0490 040092E5 		ldr	r0, [r2, #4]
+ 471:libstr91x/src/91x_scu.c ****   PLL_P = (SCU->PLLCONF&0x70000)>>16;
+ 472:libstr91x/src/91x_scu.c **** 
+ 473:libstr91x/src/91x_scu.c ****   if ((PLL_M>0)&&(PLL_N>0))
+ 944              		.loc 1 473 0
+ 945 0494 FF3013E2 		ands	r3, r3, #255
+ 946              	.LVL58:
+ 470:libstr91x/src/91x_scu.c ****   PLL_N = (SCU->PLLCONF&0xFF00)>>8;
+ 947              		.loc 1 470 0
+ 948 0498 FF1C00E2 		and	r1, r0, #65280
+ 949              	.LVL59:
+ 950              		.loc 1 473 0
+ 951 049c 0000A003 		moveq	r0, #0
+ 952 04a0 0100A013 		movne	r0, #1
+ 953 04a4 000051E3 		cmp	r1, #0
+ 954 04a8 0000A003 		moveq	r0, #0
+ 955 04ac 01000012 		andne	r0, r0, #1
+ 956 04b0 000050E3 		cmp	r0, #0
+ 471:libstr91x/src/91x_scu.c ****   PLL_P = (SCU->PLLCONF&0x70000)>>16;
+ 957              		.loc 1 471 0
+ 958 04b4 042092E5 		ldr	r2, [r2, #4]
+ 959              	.LVL60:
+ 960              		.loc 1 473 0
+ 961 04b8 2114A0E1 		mov	r1, r1, lsr #8
+ 962              	.LVL61:
+ 963 04bc 0880BD08 		ldmeqfd	sp!, {r3, pc}
+ 471:libstr91x/src/91x_scu.c ****   PLL_P = (SCU->PLLCONF&0x70000)>>16;
+ 964              		.loc 1 471 0
+ 965 04c0 07E802E2 		and	lr, r2, #458752
+ 474:libstr91x/src/91x_scu.c ****   return (u32)(((_Main_Crystal*2)*PLL_N)/(PLL_M<<PLL_P));
+ 966              		.loc 1 474 0
+ 967 04c4 14009FE5 		ldr	r0, .L129+4
+ 968 04c8 2EC8A0E1 		mov	ip, lr, lsr #16
+ 969 04cc 910000E0 		mul	r0, r1, r0
+ 970 04d0 131CA0E1 		mov	r1, r3, asl ip
+ 971 04d4 FEFFFFEB 		bl	__aeabi_idiv
+ 972              	.LVL62:
+ 475:libstr91x/src/91x_scu.c **** 
+ 476:libstr91x/src/91x_scu.c ****   else return 0;
+ 477:libstr91x/src/91x_scu.c **** }
+ 973              		.loc 1 477 0
+ 974 04d8 0880BDE8 		ldmfd	sp!, {r3, pc}
+ 975              	.L130:
+ 976              		.align	2
+ 977              	.L129:
+ 978 04dc 0020005C 		.word	1543512064
+ 979 04e0 50C30000 		.word	50000
+ 980              		.cfi_endproc
+ 981              	.LFE25:
+ 983              		.align	2
+ 984              		.global	SCU_GetMCLKFreqValue
+ 986              	SCU_GetMCLKFreqValue:
+ 987              	.LFB26:
+ 478:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 479:libstr91x/src/91x_scu.c **** * Function Name  : SCU_GetMCLKFreqValue
+ 480:libstr91x/src/91x_scu.c **** * Description    : Gets the current MCLK frequency
+ 481:libstr91x/src/91x_scu.c **** * Input          : None
+ 482:libstr91x/src/91x_scu.c **** * Output         : None
+ 483:libstr91x/src/91x_scu.c **** * Return         : MCLK frequency (KHz)
+ 484:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 485:libstr91x/src/91x_scu.c **** u32 SCU_GetMCLKFreqValue(void)
+ 486:libstr91x/src/91x_scu.c **** {
+ 988              		.loc 1 486 0
+ 989              		.cfi_startproc
+ 990              		@ args = 0, pretend = 0, frame = 0
+ 991              		@ frame_needed = 0, uses_anonymous_args = 0
+ 992              		@ link register save eliminated.
+ 487:libstr91x/src/91x_scu.c ****   if ((SCU->CLKCNTR&0x3) == 0x2) return (u32)(_Main_Crystal);
+ 993              		.loc 1 487 0
+ 994 04e4 2C309FE5 		ldr	r3, .L135
+ 995 04e8 001093E5 		ldr	r1, [r3, #0]
+ 996 04ec 032001E2 		and	r2, r1, #3
+ 997 04f0 020052E3 		cmp	r2, #2
+ 998 04f4 20009F05 		ldreq	r0, .L135+4
+ 999 04f8 1EFF2F01 		bxeq	lr
+ 488:libstr91x/src/91x_scu.c ****   if ((SCU->CLKCNTR&0x3) == 0x1) return (u32)(32);
+ 1000              		.loc 1 488 0
+ 1001 04fc 000093E5 		ldr	r0, [r3, #0]
+ 1002 0500 033000E2 		and	r3, r0, #3
+ 1003 0504 010053E3 		cmp	r3, #1
+ 1004 0508 0000000A 		beq	.L134
+ 489:libstr91x/src/91x_scu.c ****   else return (SCU_GetPLLFreqValue());
+ 490:libstr91x/src/91x_scu.c **** }
+ 1005              		.loc 1 490 0
+ 489:libstr91x/src/91x_scu.c ****   else return (SCU_GetPLLFreqValue());
+ 1006              		.loc 1 489 0
+ 1007 050c FEFFFFEA 		b	SCU_GetPLLFreqValue
+ 1008              	.L134:
+ 488:libstr91x/src/91x_scu.c ****   if ((SCU->CLKCNTR&0x3) == 0x1) return (u32)(32);
+ 1009              		.loc 1 488 0
+ 1010 0510 2000A0E3 		mov	r0, #32
+ 1011              		.loc 1 490 0
+ 1012 0514 1EFF2FE1 		bx	lr
+ 1013              	.L136:
+ 1014              		.align	2
+ 1015              	.L135:
+ 1016 0518 0020005C 		.word	1543512064
+ 1017 051c A8610000 		.word	25000
+ 1018              		.cfi_endproc
+ 1019              	.LFE26:
+ 1021              		.align	2
+ 1022              		.global	SCU_GetRCLKFreqValue
+ 1024              	SCU_GetRCLKFreqValue:
+ 1025              	.LFB27:
+ 491:libstr91x/src/91x_scu.c **** 
+ 492:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 493:libstr91x/src/91x_scu.c **** * Function Name  : SCU_GetRCLKFreqValue
+ 494:libstr91x/src/91x_scu.c **** * Description    : Gets the current RCLK frequency
+ 495:libstr91x/src/91x_scu.c **** * Input          : None
+ 496:libstr91x/src/91x_scu.c **** * Output         : None
+ 497:libstr91x/src/91x_scu.c **** * Return         : RCLK frequency (KHz)
+ 498:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 499:libstr91x/src/91x_scu.c **** u32 SCU_GetRCLKFreqValue(void)
+ 500:libstr91x/src/91x_scu.c **** {
+ 1026              		.loc 1 500 0
+ 1027              		.cfi_startproc
+ 1028              		@ args = 0, pretend = 0, frame = 0
+ 1029              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1030 0520 10402DE9 		stmfd	sp!, {r4, lr}
+ 1031              	.LCFI2:
+ 1032              		.cfi_def_cfa_offset 8
+ 501:libstr91x/src/91x_scu.c ****   u8 RCLK_Div;
+ 502:libstr91x/src/91x_scu.c ****   RCLK_Div = (SCU->CLKCNTR&0x1C)>>2;
+ 1033              		.loc 1 502 0
+ 1034 0524 1C309FE5 		ldr	r3, .L140
+ 1035 0528 004093E5 		ldr	r4, [r3, #0]
+ 1036              		.cfi_offset 14, -4
+ 1037              		.cfi_offset 4, -8
+ 1038 052c 1C4004E2 		and	r4, r4, #28
+ 1039              	.LVL63:
+ 503:libstr91x/src/91x_scu.c ****   if (RCLK_Div==0x5) RCLK_Div=10;
+ 1040              		.loc 1 503 0
+ 1041 0530 140054E3 		cmp	r4, #20
+ 1042 0534 2441A011 		movne	r4, r4, lsr #2
+ 1043              	.LVL64:
+ 1044 0538 0A40A003 		moveq	r4, #10
+ 504:libstr91x/src/91x_scu.c ****   return (u32)(SCU_GetMCLKFreqValue() >>RCLK_Div);
+ 1045              		.loc 1 504 0
+ 1046 053c FEFFFFEB 		bl	SCU_GetMCLKFreqValue
+ 505:libstr91x/src/91x_scu.c **** }
+ 1047              		.loc 1 505 0
+ 1048 0540 3004A0E1 		mov	r0, r0, lsr r4
+ 1049 0544 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 1050              	.L141:
+ 1051              		.align	2
+ 1052              	.L140:
+ 1053 0548 0020005C 		.word	1543512064
+ 1054              		.cfi_endproc
+ 1055              	.LFE27:
+ 1057              		.align	2
+ 1058              		.global	SCU_GetHCLKFreqValue
+ 1060              	SCU_GetHCLKFreqValue:
+ 1061              	.LFB28:
+ 506:libstr91x/src/91x_scu.c **** 
+ 507:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 508:libstr91x/src/91x_scu.c **** * Function Name  : SCU_GetHCLKFreqValue
+ 509:libstr91x/src/91x_scu.c **** * Description    : Gets the current PCLK frequency
+ 510:libstr91x/src/91x_scu.c **** * Input          : None
+ 511:libstr91x/src/91x_scu.c **** * Output         : None
+ 512:libstr91x/src/91x_scu.c **** * Return         : HCLK frequency (KHz)
+ 513:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 514:libstr91x/src/91x_scu.c **** u32 SCU_GetHCLKFreqValue(void)
+ 515:libstr91x/src/91x_scu.c **** {
+ 1062              		.loc 1 515 0
+ 1063              		.cfi_startproc
+ 1064              		@ args = 0, pretend = 0, frame = 0
+ 1065              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1066 054c 10402DE9 		stmfd	sp!, {r4, lr}
+ 1067              	.LCFI3:
+ 1068              		.cfi_def_cfa_offset 8
+ 516:libstr91x/src/91x_scu.c ****   u8 HCLK_Div;
+ 517:libstr91x/src/91x_scu.c ****   HCLK_Div = (SCU->CLKCNTR&0x60)>>5;
+ 1069              		.loc 1 517 0
+ 1070 0550 14009FE5 		ldr	r0, .L143
+ 1071 0554 004090E5 		ldr	r4, [r0, #0]
+ 1072              		.cfi_offset 14, -4
+ 1073              		.cfi_offset 4, -8
+ 1074              	.LVL65:
+ 518:libstr91x/src/91x_scu.c ****   return (u32)(SCU_GetRCLKFreqValue() >>HCLK_Div);
+ 1075              		.loc 1 518 0
+ 1076 0558 FEFFFFEB 		bl	SCU_GetRCLKFreqValue
+ 517:libstr91x/src/91x_scu.c ****   HCLK_Div = (SCU->CLKCNTR&0x60)>>5;
+ 1077              		.loc 1 517 0
+ 1078 055c 601004E2 		and	r1, r4, #96
+ 1079              		.loc 1 518 0
+ 1080 0560 A132A0E1 		mov	r3, r1, lsr #5
+ 519:libstr91x/src/91x_scu.c **** }
+ 1081              		.loc 1 519 0
+ 1082 0564 3003A0E1 		mov	r0, r0, lsr r3
+ 1083 0568 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 1084              	.L144:
+ 1085              		.align	2
+ 1086              	.L143:
+ 1087 056c 0020005C 		.word	1543512064
+ 1088              		.cfi_endproc
+ 1089              	.LFE28:
+ 1091              		.align	2
+ 1092              		.global	SCU_GetPCLKFreqValue
+ 1094              	SCU_GetPCLKFreqValue:
+ 1095              	.LFB29:
+ 520:libstr91x/src/91x_scu.c **** 
+ 521:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 522:libstr91x/src/91x_scu.c **** * Function Name  : SCU_GetPCLKFreqValue
+ 523:libstr91x/src/91x_scu.c **** * Description    : Gets the current HCLK frequency
+ 524:libstr91x/src/91x_scu.c **** * Input          : None
+ 525:libstr91x/src/91x_scu.c **** * Output         : None
+ 526:libstr91x/src/91x_scu.c **** * Return         : PCLK frequency (KHz)
+ 527:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 528:libstr91x/src/91x_scu.c **** u32 SCU_GetPCLKFreqValue(void)
+ 529:libstr91x/src/91x_scu.c **** {
+ 1096              		.loc 1 529 0
+ 1097              		.cfi_startproc
+ 1098              		@ args = 0, pretend = 0, frame = 0
+ 1099              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1100 0570 10402DE9 		stmfd	sp!, {r4, lr}
+ 1101              	.LCFI4:
+ 1102              		.cfi_def_cfa_offset 8
+ 530:libstr91x/src/91x_scu.c ****   u8 PCLK_Div;
+ 531:libstr91x/src/91x_scu.c ****   PCLK_Div = (SCU->CLKCNTR&0x180)>>7;
+ 1103              		.loc 1 531 0
+ 1104 0574 14009FE5 		ldr	r0, .L146
+ 1105 0578 004090E5 		ldr	r4, [r0, #0]
+ 1106              		.cfi_offset 14, -4
+ 1107              		.cfi_offset 4, -8
+ 1108              	.LVL66:
+ 532:libstr91x/src/91x_scu.c ****   return (u32)(SCU_GetRCLKFreqValue() >>PCLK_Div);
+ 1109              		.loc 1 532 0
+ 1110 057c FEFFFFEB 		bl	SCU_GetRCLKFreqValue
+ 531:libstr91x/src/91x_scu.c ****   PCLK_Div = (SCU->CLKCNTR&0x180)>>7;
+ 1111              		.loc 1 531 0
+ 1112 0580 061D04E2 		and	r1, r4, #384
+ 1113              		.loc 1 532 0
+ 1114 0584 A133A0E1 		mov	r3, r1, lsr #7
+ 533:libstr91x/src/91x_scu.c **** }
+ 1115              		.loc 1 533 0
+ 1116 0588 3003A0E1 		mov	r0, r0, lsr r3
+ 1117 058c 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 1118              	.L147:
+ 1119              		.align	2
+ 1120              	.L146:
+ 1121 0590 0020005C 		.word	1543512064
+ 1122              		.cfi_endproc
+ 1123              	.LFE29:
+ 1125              		.align	2
+ 1126              		.global	SCU_WakeUpLineConfig
+ 1128              	SCU_WakeUpLineConfig:
+ 1129              	.LFB30:
+ 534:libstr91x/src/91x_scu.c **** 
+ 535:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 536:libstr91x/src/91x_scu.c **** * Function Name  : SCU_WakeUpLineConfig
+ 537:libstr91x/src/91x_scu.c **** * Description    : Configures an External interrupt as WakeUp line
+ 538:libstr91x/src/91x_scu.c **** * Input          : EXTint : 0 -> 31
+ 539:libstr91x/src/91x_scu.c **** * Output         : None
+ 540:libstr91x/src/91x_scu.c **** * Return         : None
+ 541:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 542:libstr91x/src/91x_scu.c **** void SCU_WakeUpLineConfig(u8 EXTint)
+ 543:libstr91x/src/91x_scu.c **** {
+ 1130              		.loc 1 543 0
+ 1131              		.cfi_startproc
+ 1132              		@ args = 0, pretend = 0, frame = 0
+ 1133              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1134              		@ link register save eliminated.
+ 1135              	.LVL67:
+ 544:libstr91x/src/91x_scu.c ****   if (EXTint < 8)
+ 1136              		.loc 1 544 0
+ 1137 0594 070050E3 		cmp	r0, #7
+ 1138 0598 1500009A 		bls	.L153
+ 545:libstr91x/src/91x_scu.c ****   {
+ 546:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x7;
+ 547:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=EXTint;
+ 548:libstr91x/src/91x_scu.c ****   }
+ 549:libstr91x/src/91x_scu.c ****   else if (EXTint<16)
+ 1139              		.loc 1 549 0
+ 1140 059c 0F0050E3 		cmp	r0, #15
+ 1141 05a0 0A00009A 		bls	.L154
+ 550:libstr91x/src/91x_scu.c ****   {
+ 551:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x38;
+ 552:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-8)<<3;
+ 553:libstr91x/src/91x_scu.c ****   }
+ 554:libstr91x/src/91x_scu.c ****   else if (EXTint<24)
+ 1142              		.loc 1 554 0
+ 1143 05a4 170050E3 		cmp	r0, #23
+ 1144 05a8 1900009A 		bls	.L155
+ 555:libstr91x/src/91x_scu.c ****   {
+ 556:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x1C0;
+ 557:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-16)<<6;
+ 558:libstr91x/src/91x_scu.c ****   }
+ 559:libstr91x/src/91x_scu.c ****   else
+ 560:libstr91x/src/91x_scu.c ****   {
+ 561:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0xE00;
+ 1145              		.loc 1 561 0
+ 1146 05ac 84309FE5 		ldr	r3, .L156
+ 562:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-24)<<9;
+ 1147              		.loc 1 562 0
+ 1148 05b0 180040E2 		sub	r0, r0, #24
+ 1149              	.LVL68:
+ 561:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0xE00;
+ 1150              		.loc 1 561 0
+ 1151 05b4 B0C093E5 		ldr	ip, [r3, #176]
+ 1152 05b8 0E1CCCE3 		bic	r1, ip, #3584
+ 1153 05bc B01083E5 		str	r1, [r3, #176]
+ 1154              		.loc 1 562 0
+ 1155 05c0 B02093E5 		ldr	r2, [r3, #176]
+ 1156 05c4 80C482E1 		orr	ip, r2, r0, asl #9
+ 1157 05c8 B0C083E5 		str	ip, [r3, #176]
+ 1158 05cc 1EFF2FE1 		bx	lr
+ 1159              	.LVL69:
+ 1160              	.L154:
+ 551:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x38;
+ 1161              		.loc 1 551 0
+ 1162 05d0 60309FE5 		ldr	r3, .L156
+ 552:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-8)<<3;
+ 1163              		.loc 1 552 0
+ 1164 05d4 081040E2 		sub	r1, r0, #8
+ 551:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x38;
+ 1165              		.loc 1 551 0
+ 1166 05d8 B00093E5 		ldr	r0, [r3, #176]
+ 1167              	.LVL70:
+ 1168 05dc 38C0C0E3 		bic	ip, r0, #56
+ 1169 05e0 B0C083E5 		str	ip, [r3, #176]
+ 552:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-8)<<3;
+ 1170              		.loc 1 552 0
+ 1171 05e4 B02093E5 		ldr	r2, [r3, #176]
+ 1172 05e8 810182E1 		orr	r0, r2, r1, asl #3
+ 1173 05ec B00083E5 		str	r0, [r3, #176]
+ 1174 05f0 1EFF2FE1 		bx	lr
+ 1175              	.LVL71:
+ 1176              	.L153:
+ 546:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x7;
+ 1177              		.loc 1 546 0
+ 1178 05f4 3C309FE5 		ldr	r3, .L156
+ 1179 05f8 B0C093E5 		ldr	ip, [r3, #176]
+ 1180 05fc 0710CCE3 		bic	r1, ip, #7
+ 1181 0600 B01083E5 		str	r1, [r3, #176]
+ 547:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=EXTint;
+ 1182              		.loc 1 547 0
+ 1183 0604 B02093E5 		ldr	r2, [r3, #176]
+ 1184 0608 020080E1 		orr	r0, r0, r2
+ 1185              	.LVL72:
+ 1186 060c B00083E5 		str	r0, [r3, #176]
+ 1187 0610 1EFF2FE1 		bx	lr
+ 1188              	.LVL73:
+ 1189              	.L155:
+ 556:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x1C0;
+ 1190              		.loc 1 556 0
+ 1191 0614 1C309FE5 		ldr	r3, .L156
+ 557:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-16)<<6;
+ 1192              		.loc 1 557 0
+ 1193 0618 10C040E2 		sub	ip, r0, #16
+ 556:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL&=~0x1C0;
+ 1194              		.loc 1 556 0
+ 1195 061c B01093E5 		ldr	r1, [r3, #176]
+ 1196 0620 070DC1E3 		bic	r0, r1, #448
+ 1197              	.LVL74:
+ 1198 0624 B00083E5 		str	r0, [r3, #176]
+ 557:libstr91x/src/91x_scu.c ****     SCU->WKUPSEL|=(EXTint-16)<<6;
+ 1199              		.loc 1 557 0
+ 1200 0628 B02093E5 		ldr	r2, [r3, #176]
+ 1201 062c 0C1382E1 		orr	r1, r2, ip, asl #6
+ 1202 0630 B01083E5 		str	r1, [r3, #176]
+ 1203 0634 1EFF2FE1 		bx	lr
+ 1204              	.L157:
+ 1205              		.align	2
+ 1206              	.L156:
+ 1207 0638 0020005C 		.word	1543512064
+ 1208              		.cfi_endproc
+ 1209              	.LFE30:
+ 1211              		.align	2
+ 1212              		.global	SCU_SpecIntRunModeConfig
+ 1214              	SCU_SpecIntRunModeConfig:
+ 1215              	.LFB31:
+ 563:libstr91x/src/91x_scu.c ****   }
+ 564:libstr91x/src/91x_scu.c **** }
+ 565:libstr91x/src/91x_scu.c **** 
+ 566:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 567:libstr91x/src/91x_scu.c **** * Function Name  : SCU_SpecIntRunModeConfig
+ 568:libstr91x/src/91x_scu.c **** * Description    : Enables or Disables the Special Run mode
+ 569:libstr91x/src/91x_scu.c **** * Input          : newstate = ENABLE or DISABLE
+ 570:libstr91x/src/91x_scu.c **** * Output         : None
+ 571:libstr91x/src/91x_scu.c **** * Return         : None
+ 572:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 573:libstr91x/src/91x_scu.c **** void SCU_SpecIntRunModeConfig(FunctionalState NewState)
+ 574:libstr91x/src/91x_scu.c **** {
+ 1216              		.loc 1 574 0
+ 1217              		.cfi_startproc
+ 1218              		@ args = 0, pretend = 0, frame = 0
+ 1219              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1220              		@ link register save eliminated.
+ 1221              	.LVL75:
+ 575:libstr91x/src/91x_scu.c ****   if (NewState == ENABLE)
+ 576:libstr91x/src/91x_scu.c ****   SCU->PWRMNG |=0x8;
+ 1222              		.loc 1 576 0
+ 1223 063c 14309FE5 		ldr	r3, .L161
+ 575:libstr91x/src/91x_scu.c ****   if (NewState == ENABLE)
+ 1224              		.loc 1 575 0
+ 1225 0640 010050E3 		cmp	r0, #1
+ 1226              		.loc 1 576 0
+ 1227 0644 0C2093E5 		ldr	r2, [r3, #12]
+ 1228 0648 08208203 		orreq	r2, r2, #8
+ 577:libstr91x/src/91x_scu.c ****   else
+ 578:libstr91x/src/91x_scu.c ****   SCU->PWRMNG &=~0x8;
+ 1229              		.loc 1 578 0
+ 1230 064c 0820C213 		bicne	r2, r2, #8
+ 1231 0650 0C2083E5 		str	r2, [r3, #12]
+ 1232 0654 1EFF2FE1 		bx	lr
+ 1233              	.L162:
+ 1234              		.align	2
+ 1235              	.L161:
+ 1236 0658 0020005C 		.word	1543512064
+ 1237              		.cfi_endproc
+ 1238              	.LFE31:
+ 1240              		.align	2
+ 1241              		.global	SCU_EnterIdleMode
+ 1243              	SCU_EnterIdleMode:
+ 1244              	.LFB32:
+ 579:libstr91x/src/91x_scu.c **** }
+ 580:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 581:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EnterIdleMode
+ 582:libstr91x/src/91x_scu.c **** * Description    : Enters in Idle mode
+ 583:libstr91x/src/91x_scu.c **** * Input          : None
+ 584:libstr91x/src/91x_scu.c **** * Output         : None
+ 585:libstr91x/src/91x_scu.c **** * Return         : None
+ 586:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 587:libstr91x/src/91x_scu.c **** void SCU_EnterIdleMode(void)
+ 588:libstr91x/src/91x_scu.c **** {
+ 1245              		.loc 1 588 0
+ 1246              		.cfi_startproc
+ 1247              		@ args = 0, pretend = 0, frame = 0
+ 1248              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1249              		@ link register save eliminated.
+ 589:libstr91x/src/91x_scu.c ****   SCU->PWRMNG |=0x1;
+ 1250              		.loc 1 589 0
+ 1251 065c 0C309FE5 		ldr	r3, .L164
+ 1252 0660 0C0093E5 		ldr	r0, [r3, #12]
+ 1253 0664 012080E3 		orr	r2, r0, #1
+ 1254 0668 0C2083E5 		str	r2, [r3, #12]
+ 590:libstr91x/src/91x_scu.c **** }
+ 1255              		.loc 1 590 0
+ 1256 066c 1EFF2FE1 		bx	lr
+ 1257              	.L165:
+ 1258              		.align	2
+ 1259              	.L164:
+ 1260 0670 0020005C 		.word	1543512064
+ 1261              		.cfi_endproc
+ 1262              	.LFE32:
+ 1264              		.align	2
+ 1265              		.global	SCU_EnterSleepMode
+ 1267              	SCU_EnterSleepMode:
+ 1268              	.LFB33:
+ 591:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 592:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EnterSleepMode
+ 593:libstr91x/src/91x_scu.c **** * Description    : Enters in Sleep mode
+ 594:libstr91x/src/91x_scu.c **** * Input          : None
+ 595:libstr91x/src/91x_scu.c **** * Output         : None
+ 596:libstr91x/src/91x_scu.c **** * Return         : None
+ 597:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 598:libstr91x/src/91x_scu.c **** void SCU_EnterSleepMode(void)
+ 599:libstr91x/src/91x_scu.c **** {
+ 1269              		.loc 1 599 0
+ 1270              		.cfi_startproc
+ 1271              		@ args = 0, pretend = 0, frame = 0
+ 1272              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1273              		@ link register save eliminated.
+ 600:libstr91x/src/91x_scu.c ****   SCU->PWRMNG |=0x2;
+ 1274              		.loc 1 600 0
+ 1275 0674 0C309FE5 		ldr	r3, .L167
+ 1276 0678 0C0093E5 		ldr	r0, [r3, #12]
+ 1277 067c 022080E3 		orr	r2, r0, #2
+ 1278 0680 0C2083E5 		str	r2, [r3, #12]
+ 601:libstr91x/src/91x_scu.c **** }
+ 1279              		.loc 1 601 0
+ 1280 0684 1EFF2FE1 		bx	lr
+ 1281              	.L168:
+ 1282              		.align	2
+ 1283              	.L167:
+ 1284 0688 0020005C 		.word	1543512064
+ 1285              		.cfi_endproc
+ 1286              	.LFE33:
+ 1288              		.align	2
+ 1289              		.global	SCU_UARTIrDASelect
+ 1291              	SCU_UARTIrDASelect:
+ 1292              	.LFB34:
+ 602:libstr91x/src/91x_scu.c **** 
+ 603:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 604:libstr91x/src/91x_scu.c **** * Function Name  : SCU_UARTIrDAConfig
+ 605:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable the Irda mode for UARTx
+ 606:libstr91x/src/91x_scu.c **** * Input          : - SCU_UARTx :x=0,1 or 2
+ 607:libstr91x/src/91x_scu.c **** *                  - UART_IrDA_Mode : SCU_UARTMode_IrDA or SCU_UARTMode_UART
+ 608:libstr91x/src/91x_scu.c **** * Output         :  None
+ 609:libstr91x/src/91x_scu.c **** * Return         :  None
+ 610:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 611:libstr91x/src/91x_scu.c **** void SCU_UARTIrDASelect(u8 SCU_UARTx, u8 UART_IrDA_Mode)
+ 612:libstr91x/src/91x_scu.c **** {
+ 1293              		.loc 1 612 0
+ 1294              		.cfi_startproc
+ 1295              		@ args = 0, pretend = 0, frame = 0
+ 1296              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1297              		@ link register save eliminated.
+ 1298              	.LVL76:
+ 613:libstr91x/src/91x_scu.c ****   if (UART_IrDA_Mode == SCU_UARTMode_IrDA)
+ 1299              		.loc 1 613 0
+ 1300 068c 010051E3 		cmp	r1, #1
+ 1301 0690 0D00000A 		beq	.L176
+ 614:libstr91x/src/91x_scu.c ****   {
+ 615:libstr91x/src/91x_scu.c ****     if (SCU_UARTx== SCU_UART0) SCU->SCR0 |=0x400;
+ 616:libstr91x/src/91x_scu.c ****     else if (SCU_UARTx== SCU_UART1) SCU->SCR0 |=0x800;
+ 617:libstr91x/src/91x_scu.c ****     else SCU->SCR0 |=0x1000;
+ 618:libstr91x/src/91x_scu.c ****   }
+ 619:libstr91x/src/91x_scu.c ****   else
+ 620:libstr91x/src/91x_scu.c ****   {
+ 621:libstr91x/src/91x_scu.c ****     if (SCU_UARTx== SCU_UART0) SCU->SCR0 &=~0x400;
+ 1302              		.loc 1 621 0
+ 1303 0694 000050E3 		cmp	r0, #0
+ 1304 0698 0600000A 		beq	.L177
+ 622:libstr91x/src/91x_scu.c ****     else if (SCU_UARTx== SCU_UART1) SCU->SCR0 &=~0x800;
+ 1305              		.loc 1 622 0
+ 1306 069c 60C09FE5 		ldr	ip, .L179
+ 1307 06a0 010050E3 		cmp	r0, #1
+ 1308 06a4 34109CE5 		ldr	r1, [ip, #52]
+ 1309              	.LVL77:
+ 1310 06a8 021BC103 		biceq	r1, r1, #2048
+ 623:libstr91x/src/91x_scu.c ****     else SCU->SCR0 &=~0x1000;
+ 1311              		.loc 1 623 0
+ 1312 06ac 011AC113 		bicne	r1, r1, #4096
+ 1313 06b0 34108CE5 		str	r1, [ip, #52]
+ 1314 06b4 1EFF2FE1 		bx	lr
+ 1315              	.LVL78:
+ 1316              	.L177:
+ 621:libstr91x/src/91x_scu.c ****     if (SCU_UARTx== SCU_UART0) SCU->SCR0 &=~0x400;
+ 1317              		.loc 1 621 0 discriminator 1
+ 1318 06b8 44309FE5 		ldr	r3, .L179
+ 1319 06bc 340093E5 		ldr	r0, [r3, #52]
+ 1320              	.LVL79:
+ 1321 06c0 012BC0E3 		bic	r2, r0, #1024
+ 1322 06c4 342083E5 		str	r2, [r3, #52]
+ 1323 06c8 1EFF2FE1 		bx	lr
+ 1324              	.LVL80:
+ 1325              	.L176:
+ 615:libstr91x/src/91x_scu.c ****     if (SCU_UARTx== SCU_UART0) SCU->SCR0 |=0x400;
+ 1326              		.loc 1 615 0
+ 1327 06cc 000050E3 		cmp	r0, #0
+ 1328 06d0 0600000A 		beq	.L178
+ 616:libstr91x/src/91x_scu.c ****     else if (SCU_UARTx== SCU_UART1) SCU->SCR0 |=0x800;
+ 1329              		.loc 1 616 0
+ 1330 06d4 28C09FE5 		ldr	ip, .L179
+ 1331 06d8 010050E3 		cmp	r0, #1
+ 1332 06dc 34109CE5 		ldr	r1, [ip, #52]
+ 1333              	.LVL81:
+ 1334 06e0 021B8103 		orreq	r1, r1, #2048
+ 617:libstr91x/src/91x_scu.c ****     else SCU->SCR0 |=0x1000;
+ 1335              		.loc 1 617 0
+ 1336 06e4 011A8113 		orrne	r1, r1, #4096
+ 1337 06e8 34108CE5 		str	r1, [ip, #52]
+ 1338 06ec 1EFF2FE1 		bx	lr
+ 1339              	.LVL82:
+ 1340              	.L178:
+ 615:libstr91x/src/91x_scu.c ****     if (SCU_UARTx== SCU_UART0) SCU->SCR0 |=0x400;
+ 1341              		.loc 1 615 0 discriminator 1
+ 1342 06f0 0C309FE5 		ldr	r3, .L179
+ 1343 06f4 340093E5 		ldr	r0, [r3, #52]
+ 1344              	.LVL83:
+ 1345 06f8 012B80E3 		orr	r2, r0, #1024
+ 1346 06fc 342083E5 		str	r2, [r3, #52]
+ 1347 0700 1EFF2FE1 		bx	lr
+ 1348              	.L180:
+ 1349              		.align	2
+ 1350              	.L179:
+ 1351 0704 0020005C 		.word	1543512064
+ 1352              		.cfi_endproc
+ 1353              	.LFE34:
+ 1355              		.align	2
+ 1356              		.global	SCU_PFQBCCmd
+ 1358              	SCU_PFQBCCmd:
+ 1359              	.LFB35:
+ 624:libstr91x/src/91x_scu.c ****   }
+ 625:libstr91x/src/91x_scu.c **** }
+ 626:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 627:libstr91x/src/91x_scu.c **** * Function Name  : SCU_PFQBCCmd
+ 628:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable PFQBC
+ 629:libstr91x/src/91x_scu.c **** * Input          : NewState : ENABLE or DISABLE
+ 630:libstr91x/src/91x_scu.c **** * Output         : None
+ 631:libstr91x/src/91x_scu.c **** * Return         : None
+ 632:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 633:libstr91x/src/91x_scu.c **** void SCU_PFQBCCmd(FunctionalState NewState)
+ 634:libstr91x/src/91x_scu.c **** {
+ 1360              		.loc 1 634 0
+ 1361              		.cfi_startproc
+ 1362              		@ args = 0, pretend = 0, frame = 0
+ 1363              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1364              		@ link register save eliminated.
+ 1365              	.LVL84:
+ 635:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 636:libstr91x/src/91x_scu.c ****   SCU->SCR0 |=0x1;
+ 1366              		.loc 1 636 0
+ 1367 0708 14309FE5 		ldr	r3, .L184
+ 635:libstr91x/src/91x_scu.c ****   if (NewState==ENABLE)
+ 1368              		.loc 1 635 0
+ 1369 070c 010050E3 		cmp	r0, #1
+ 1370              		.loc 1 636 0
+ 1371 0710 342093E5 		ldr	r2, [r3, #52]
+ 1372 0714 01208203 		orreq	r2, r2, #1
+ 637:libstr91x/src/91x_scu.c ****   else SCU->SCR0 &=~0x1;
+ 1373              		.loc 1 637 0
+ 1374 0718 0120C213 		bicne	r2, r2, #1
+ 1375 071c 342083E5 		str	r2, [r3, #52]
+ 1376 0720 1EFF2FE1 		bx	lr
+ 1377              	.L185:
+ 1378              		.align	2
+ 1379              	.L184:
+ 1380 0724 0020005C 		.word	1543512064
+ 1381              		.cfi_endproc
+ 1382              	.LFE35:
+ 1384              		.align	2
+ 1385              		.global	SCU_EMIByte_Select_Pinconfig
+ 1387              	SCU_EMIByte_Select_Pinconfig:
+ 1388              	.LFB36:
+ 638:libstr91x/src/91x_scu.c **** }
+ 639:libstr91x/src/91x_scu.c **** 
+ 640:libstr91x/src/91x_scu.c **** 
+ 641:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 642:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EMIByte_Select_Pinconfig
+ 643:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable the Byte selection pins behaviour(LFBGA only)
+ 644:libstr91x/src/91x_scu.c **** * Input          : NewState : ENABLE or DISABLE
+ 645:libstr91x/src/91x_scu.c **** * Output         : None
+ 646:libstr91x/src/91x_scu.c **** * Return         : None
+ 647:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 648:libstr91x/src/91x_scu.c **** void SCU_EMIByte_Select_Pinconfig(FunctionalState NewState)
+ 649:libstr91x/src/91x_scu.c **** {
+ 1389              		.loc 1 649 0
+ 1390              		.cfi_startproc
+ 1391              		@ args = 0, pretend = 0, frame = 0
+ 1392              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1393              		@ link register save eliminated.
+ 1394              	.LVL85:
+ 650:libstr91x/src/91x_scu.c ****  if (NewState==ENABLE)
+ 651:libstr91x/src/91x_scu.c ****   SCU->GPIOEMI |= 0x04;                    
+ 1395              		.loc 1 651 0
+ 1396 0728 14309FE5 		ldr	r3, .L189
+ 650:libstr91x/src/91x_scu.c ****  if (NewState==ENABLE)
+ 1397              		.loc 1 650 0
+ 1398 072c 010050E3 		cmp	r0, #1
+ 1399              		.loc 1 651 0
+ 1400 0730 AC2093E5 		ldr	r2, [r3, #172]
+ 1401 0734 04208203 		orreq	r2, r2, #4
+ 652:libstr91x/src/91x_scu.c ****   else
+ 653:libstr91x/src/91x_scu.c ****   SCU->GPIOEMI &=~0x04;  
+ 1402              		.loc 1 653 0
+ 1403 0738 0420C213 		bicne	r2, r2, #4
+ 1404 073c AC2083E5 		str	r2, [r3, #172]
+ 1405 0740 1EFF2FE1 		bx	lr
+ 1406              	.L190:
+ 1407              		.align	2
+ 1408              	.L189:
+ 1409 0744 0020005C 		.word	1543512064
+ 1410              		.cfi_endproc
+ 1411              	.LFE36:
+ 1413              		.align	2
+ 1414              		.global	SCU_EMIclock_Pinconfig
+ 1416              	SCU_EMIclock_Pinconfig:
+ 1417              	.LFB37:
+ 654:libstr91x/src/91x_scu.c ****  
+ 655:libstr91x/src/91x_scu.c ****  }
+ 656:libstr91x/src/91x_scu.c ****  
+ 657:libstr91x/src/91x_scu.c **** /*******************************************************************************
+ 658:libstr91x/src/91x_scu.c **** * Function Name  : SCU_EMIclock_Pinconfig
+ 659:libstr91x/src/91x_scu.c **** * Description    : Enable or Disable the BCLK pin clock driving (LFBGA only)
+ 660:libstr91x/src/91x_scu.c **** * Input          : NewState : ENABLE or DISABLE
+ 661:libstr91x/src/91x_scu.c **** * Output         : None
+ 662:libstr91x/src/91x_scu.c **** * Return         : None
+ 663:libstr91x/src/91x_scu.c **** *******************************************************************************/
+ 664:libstr91x/src/91x_scu.c **** 
+ 665:libstr91x/src/91x_scu.c **** void SCU_EMIclock_Pinconfig(FunctionalState NewState)
+ 666:libstr91x/src/91x_scu.c **** {
+ 1418              		.loc 1 666 0
+ 1419              		.cfi_startproc
+ 1420              		@ args = 0, pretend = 0, frame = 0
+ 1421              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1422              		@ link register save eliminated.
+ 1423              	.LVL86:
+ 667:libstr91x/src/91x_scu.c ****  if (NewState==DISABLE)
+ 668:libstr91x/src/91x_scu.c ****   SCU->GPIOEMI |= 0x02;                    
+ 1424              		.loc 1 668 0
+ 1425 0748 14309FE5 		ldr	r3, .L194
+ 667:libstr91x/src/91x_scu.c ****  if (NewState==DISABLE)
+ 1426              		.loc 1 667 0
+ 1427 074c 000050E3 		cmp	r0, #0
+ 1428              		.loc 1 668 0
+ 1429 0750 AC2093E5 		ldr	r2, [r3, #172]
+ 1430 0754 02208203 		orreq	r2, r2, #2
+ 669:libstr91x/src/91x_scu.c ****   else
+ 670:libstr91x/src/91x_scu.c ****   SCU->GPIOEMI &=~0x02;  
+ 1431              		.loc 1 670 0
+ 1432 0758 0220C213 		bicne	r2, r2, #2
+ 1433 075c AC2083E5 		str	r2, [r3, #172]
+ 1434 0760 1EFF2FE1 		bx	lr
+ 1435              	.L195:
+ 1436              		.align	2
+ 1437              	.L194:
+ 1438 0764 0020005C 		.word	1543512064
+ 1439              		.cfi_endproc
+ 1440              	.LFE37:
+ 1442              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_scu.c
+     /tmp/ccXs9CR7.s:21     .text:00000000 $a
+     /tmp/ccXs9CR7.s:24     .text:00000000 SCU_MCLKSourceConfig
+     /tmp/ccXs9CR7.s:70     .text:00000040 $d
+     /tmp/ccXs9CR7.s:74     .text:00000044 $a
+     /tmp/ccXs9CR7.s:77     .text:00000044 SCU_PLLCmd
+     /tmp/ccXs9CR7.s:145    .text:000000c4 $d
+     /tmp/ccXs9CR7.s:149    .text:000000c8 $a
+     /tmp/ccXs9CR7.s:152    .text:000000c8 SCU_PLLFactorsConfig
+     /tmp/ccXs9CR7.s:205    .text:00000124 $d
+     /tmp/ccXs9CR7.s:209    .text:00000128 $a
+     /tmp/ccXs9CR7.s:212    .text:00000128 SCU_RCLKDivisorConfig
+     /tmp/ccXs9CR7.s:237    .text:0000014c $d
+     /tmp/ccXs9CR7.s:241    .text:00000150 $a
+     /tmp/ccXs9CR7.s:244    .text:00000150 SCU_HCLKDivisorConfig
+     /tmp/ccXs9CR7.s:269    .text:00000174 $d
+     /tmp/ccXs9CR7.s:273    .text:00000178 $a
+     /tmp/ccXs9CR7.s:276    .text:00000178 SCU_PCLKDivisorConfig
+     /tmp/ccXs9CR7.s:304    .text:000001a0 $d
+     /tmp/ccXs9CR7.s:308    .text:000001a4 $a
+     /tmp/ccXs9CR7.s:311    .text:000001a4 SCU_APBPeriphClockConfig
+     /tmp/ccXs9CR7.s:334    .text:000001c0 $d
+     /tmp/ccXs9CR7.s:338    .text:000001c4 $a
+     /tmp/ccXs9CR7.s:341    .text:000001c4 SCU_AHBPeriphClockConfig
+     /tmp/ccXs9CR7.s:364    .text:000001e0 $d
+     /tmp/ccXs9CR7.s:368    .text:000001e4 $a
+     /tmp/ccXs9CR7.s:371    .text:000001e4 SCU_APBPeriphReset
+     /tmp/ccXs9CR7.s:394    .text:00000200 $d
+     /tmp/ccXs9CR7.s:398    .text:00000204 $a
+     /tmp/ccXs9CR7.s:401    .text:00000204 SCU_AHBPeriphReset
+     /tmp/ccXs9CR7.s:424    .text:00000220 $d
+     /tmp/ccXs9CR7.s:428    .text:00000224 $a
+     /tmp/ccXs9CR7.s:431    .text:00000224 SCU_APBPeriphIdleConfig
+     /tmp/ccXs9CR7.s:454    .text:00000240 $d
+     /tmp/ccXs9CR7.s:458    .text:00000244 $a
+     /tmp/ccXs9CR7.s:461    .text:00000244 SCU_AHBPeriphIdleConfig
+     /tmp/ccXs9CR7.s:484    .text:00000260 $d
+     /tmp/ccXs9CR7.s:488    .text:00000264 $a
+     /tmp/ccXs9CR7.s:491    .text:00000264 SCU_APBPeriphDebugConfig
+     /tmp/ccXs9CR7.s:514    .text:00000280 $d
+     /tmp/ccXs9CR7.s:518    .text:00000284 $a
+     /tmp/ccXs9CR7.s:521    .text:00000284 SCU_AHBPeriphDebugConfig
+     /tmp/ccXs9CR7.s:544    .text:000002a0 $d
+     /tmp/ccXs9CR7.s:548    .text:000002a4 $a
+     /tmp/ccXs9CR7.s:551    .text:000002a4 SCU_BRCLKDivisorConfig
+     /tmp/ccXs9CR7.s:576    .text:000002c8 $d
+     /tmp/ccXs9CR7.s:580    .text:000002cc $a
+     /tmp/ccXs9CR7.s:583    .text:000002cc SCU_TIMExtCLKCmd
+     /tmp/ccXs9CR7.s:627    .text:0000031c $d
+     /tmp/ccXs9CR7.s:631    .text:00000320 $a
+     /tmp/ccXs9CR7.s:634    .text:00000320 SCU_USBCLKConfig
+     /tmp/ccXs9CR7.s:662    .text:00000348 $d
+     /tmp/ccXs9CR7.s:666    .text:0000034c $a
+     /tmp/ccXs9CR7.s:669    .text:0000034c SCU_PHYCLKConfig
+     /tmp/ccXs9CR7.s:691    .text:00000368 $d
+     /tmp/ccXs9CR7.s:695    .text:0000036c $a
+     /tmp/ccXs9CR7.s:698    .text:0000036c SCU_FMICLKDivisorConfig
+     /tmp/ccXs9CR7.s:725    .text:00000394 $d
+     /tmp/ccXs9CR7.s:729    .text:00000398 $a
+     /tmp/ccXs9CR7.s:732    .text:00000398 SCU_EMIBCLKDivisorConfig
+     /tmp/ccXs9CR7.s:759    .text:000003c0 $d
+     /tmp/ccXs9CR7.s:763    .text:000003c4 $a
+     /tmp/ccXs9CR7.s:766    .text:000003c4 SCU_EMIModeConfig
+     /tmp/ccXs9CR7.s:791    .text:000003e8 $d
+     /tmp/ccXs9CR7.s:795    .text:000003ec $a
+     /tmp/ccXs9CR7.s:798    .text:000003ec SCU_EMIALEConfig
+     /tmp/ccXs9CR7.s:838    .text:00000434 $d
+     /tmp/ccXs9CR7.s:842    .text:00000438 $a
+     /tmp/ccXs9CR7.s:845    .text:00000438 SCU_ITConfig
+     /tmp/ccXs9CR7.s:868    .text:00000454 $d
+     /tmp/ccXs9CR7.s:872    .text:00000458 $a
+     /tmp/ccXs9CR7.s:875    .text:00000458 SCU_GetFlagStatus
+     /tmp/ccXs9CR7.s:896    .text:00000470 $d
+     /tmp/ccXs9CR7.s:900    .text:00000474 $a
+     /tmp/ccXs9CR7.s:903    .text:00000474 SCU_ClearFlag
+     /tmp/ccXs9CR7.s:919    .text:00000480 $d
+     /tmp/ccXs9CR7.s:924    .text:00000484 $a
+     /tmp/ccXs9CR7.s:927    .text:00000484 SCU_GetPLLFreqValue
+     /tmp/ccXs9CR7.s:978    .text:000004dc $d
+     /tmp/ccXs9CR7.s:983    .text:000004e4 $a
+     /tmp/ccXs9CR7.s:986    .text:000004e4 SCU_GetMCLKFreqValue
+     /tmp/ccXs9CR7.s:1016   .text:00000518 $d
+     /tmp/ccXs9CR7.s:1021   .text:00000520 $a
+     /tmp/ccXs9CR7.s:1024   .text:00000520 SCU_GetRCLKFreqValue
+     /tmp/ccXs9CR7.s:1053   .text:00000548 $d
+     /tmp/ccXs9CR7.s:1057   .text:0000054c $a
+     /tmp/ccXs9CR7.s:1060   .text:0000054c SCU_GetHCLKFreqValue
+     /tmp/ccXs9CR7.s:1087   .text:0000056c $d
+     /tmp/ccXs9CR7.s:1091   .text:00000570 $a
+     /tmp/ccXs9CR7.s:1094   .text:00000570 SCU_GetPCLKFreqValue
+     /tmp/ccXs9CR7.s:1121   .text:00000590 $d
+     /tmp/ccXs9CR7.s:1125   .text:00000594 $a
+     /tmp/ccXs9CR7.s:1128   .text:00000594 SCU_WakeUpLineConfig
+     /tmp/ccXs9CR7.s:1207   .text:00000638 $d
+     /tmp/ccXs9CR7.s:1211   .text:0000063c $a
+     /tmp/ccXs9CR7.s:1214   .text:0000063c SCU_SpecIntRunModeConfig
+     /tmp/ccXs9CR7.s:1236   .text:00000658 $d
+     /tmp/ccXs9CR7.s:1240   .text:0000065c $a
+     /tmp/ccXs9CR7.s:1243   .text:0000065c SCU_EnterIdleMode
+     /tmp/ccXs9CR7.s:1260   .text:00000670 $d
+     /tmp/ccXs9CR7.s:1264   .text:00000674 $a
+     /tmp/ccXs9CR7.s:1267   .text:00000674 SCU_EnterSleepMode
+     /tmp/ccXs9CR7.s:1284   .text:00000688 $d
+     /tmp/ccXs9CR7.s:1288   .text:0000068c $a
+     /tmp/ccXs9CR7.s:1291   .text:0000068c SCU_UARTIrDASelect
+     /tmp/ccXs9CR7.s:1351   .text:00000704 $d
+     /tmp/ccXs9CR7.s:1355   .text:00000708 $a
+     /tmp/ccXs9CR7.s:1358   .text:00000708 SCU_PFQBCCmd
+     /tmp/ccXs9CR7.s:1380   .text:00000724 $d
+     /tmp/ccXs9CR7.s:1384   .text:00000728 $a
+     /tmp/ccXs9CR7.s:1387   .text:00000728 SCU_EMIByte_Select_Pinconfig
+     /tmp/ccXs9CR7.s:1409   .text:00000744 $d
+     /tmp/ccXs9CR7.s:1413   .text:00000748 $a
+     /tmp/ccXs9CR7.s:1416   .text:00000748 SCU_EMIclock_Pinconfig
+     /tmp/ccXs9CR7.s:1438   .text:00000764 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+__aeabi_idiv

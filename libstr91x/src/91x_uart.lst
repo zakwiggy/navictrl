@@ -1,0 +1,1653 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_uart.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	UART_DeInit
+  24              	UART_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_uart.c"
+   1:libstr91x/src/91x_uart.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_uart.c **** * File Name          : 91x_uart.c
+   3:libstr91x/src/91x_uart.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_uart.c **** * Version            : V2.1
+   5:libstr91x/src/91x_uart.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_uart.c **** * Description        : This file provides all the UART firmware functions.
+   7:libstr91x/src/91x_uart.c **** ********************************************************************************
+   8:libstr91x/src/91x_uart.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_uart.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_uart.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_uart.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_uart.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_uart.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_uart.c **** *******************************************************************************/
+  15:libstr91x/src/91x_uart.c **** 
+  16:libstr91x/src/91x_uart.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_uart.c **** #include "91x_uart.h"
+  18:libstr91x/src/91x_uart.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_uart.c **** 
+  20:libstr91x/src/91x_uart.c **** /* Private typedef -----------------------------------------------------------*/
+  21:libstr91x/src/91x_uart.c **** /* Private define ------------------------------------------------------------*/
+  22:libstr91x/src/91x_uart.c **** /* UART IrDA Mask */
+  23:libstr91x/src/91x_uart.c **** #define UART_IrDA_Disable_Mask	        0xFFFD	/* IrDA Disable Mask */
+  24:libstr91x/src/91x_uart.c **** #define UART_IrDA_Enable_Mask           0x0002	/* IrDA Enable Mask */
+  25:libstr91x/src/91x_uart.c **** #define IrDA_LowPower_Enable_Mask       0x0004 /*IrDA lower power mode enable*/
+  26:libstr91x/src/91x_uart.c **** #define IrDA_LowPower_Disable_Mask      0xFFFB /*IrDA lower power mode enable*/
+  27:libstr91x/src/91x_uart.c **** 
+  28:libstr91x/src/91x_uart.c **** /* UART Mask */
+  29:libstr91x/src/91x_uart.c **** #define UART_Enable_Mask	        0x0001	/* UART Enable Mask */
+  30:libstr91x/src/91x_uart.c **** #define UART_Disable_Mask	        0xFFFE	/* UART Disable Mask */
+  31:libstr91x/src/91x_uart.c **** 
+  32:libstr91x/src/91x_uart.c **** /* UART LoopBack */
+  33:libstr91x/src/91x_uart.c **** #define UART_LoopBack_Disable_Mask      0xFF7F	/* LoopBack Disable Mask */
+  34:libstr91x/src/91x_uart.c **** #define UART_LoopBack_Enable_Mask       0x0080	/* LoopBack Enable Mask */
+  35:libstr91x/src/91x_uart.c **** 
+  36:libstr91x/src/91x_uart.c **** #define UART_WordLength_Mask            0xFF9F  /* UART Word Length Mask */
+  37:libstr91x/src/91x_uart.c **** #define UART_Parity_Mask                0xFF79  /* UART Parity Mask */
+  38:libstr91x/src/91x_uart.c **** #define UART_HardwareFlowControl_Mask   0x3FFF  /* UART Hardware Flow Control Mask */
+  39:libstr91x/src/91x_uart.c **** #define UART_TxRxFIFOLevel_Mask         0xFFC0  /* UART Tx Rx FIFO Level Mask */
+  40:libstr91x/src/91x_uart.c **** #define UART_BreakChar_Mask             0x0001  /* UART Break Character send Mask*/
+  41:libstr91x/src/91x_uart.c **** #define UART_FLAG_Mask                  0x1F    /* UART Flag Mask */
+  42:libstr91x/src/91x_uart.c **** #define UART_Mode_Mask                  0xFCFF  /* UART Mode Mask */
+  43:libstr91x/src/91x_uart.c **** #define UART_RTS_LowLevel_Mask          0x0800  /* RTS signal is low */
+  44:libstr91x/src/91x_uart.c **** #define UART_RTS_HighLevel_Mask         0xF7FF  /* RTS signal is High */
+  45:libstr91x/src/91x_uart.c **** #define UART_DTR_LowLevel_Mask          0x0400  /* DTR signal is low */
+  46:libstr91x/src/91x_uart.c **** #define UART_DTR_HighLevel_Mask         0xFBFF  /* DTR signal is High */
+  47:libstr91x/src/91x_uart.c **** #define UART_ClearFlag_Mask             0xAA    /* Clear Flag Mask */
+  48:libstr91x/src/91x_uart.c **** 
+  49:libstr91x/src/91x_uart.c **** /* Private macro -------------------------------------------------------------*/
+  50:libstr91x/src/91x_uart.c **** /* Private variables ---------------------------------------------------------*/
+  51:libstr91x/src/91x_uart.c **** /* Private function prototypes -----------------------------------------------*/
+  52:libstr91x/src/91x_uart.c **** /* Private functions ---------------------------------------------------------*/
+  53:libstr91x/src/91x_uart.c **** 
+  54:libstr91x/src/91x_uart.c ****   /*******************************************************************************
+  55:libstr91x/src/91x_uart.c **** * Function Name  : UART_DeInit
+  56:libstr91x/src/91x_uart.c **** * Description    : Deinitializes the UARTx peripheral registers
+  57:libstr91x/src/91x_uart.c **** *                  to their default reset values.
+  58:libstr91x/src/91x_uart.c **** * Input          : UARTx: where x can be 0,1 or 2 to select the UART peripheral.
+  59:libstr91x/src/91x_uart.c **** * Output         : None
+  60:libstr91x/src/91x_uart.c **** * Return         : None
+  61:libstr91x/src/91x_uart.c **** *******************************************************************************/
+  62:libstr91x/src/91x_uart.c **** void UART_DeInit(UART_TypeDef* UARTx)
+  63:libstr91x/src/91x_uart.c **** {
+  27              		.loc 1 63 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  64:libstr91x/src/91x_uart.c ****   /* Reset the UARTx registers values */
+  65:libstr91x/src/91x_uart.c ****   if(UARTx == UART0)
+  32              		.loc 1 65 0
+  33 0000 74309FE5 		ldr	r3, .L8
+  63:libstr91x/src/91x_uart.c **** {
+  34              		.loc 1 63 0
+  35 0004 10402DE9 		stmfd	sp!, {r4, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.loc 1 65 0
+  39 0008 030050E1 		cmp	r0, r3
+  40 000c 0C00000A 		beq	.L6
+  41              		.cfi_offset 14, -4
+  42              		.cfi_offset 4, -8
+  66:libstr91x/src/91x_uart.c ****   {
+  67:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART0,ENABLE);
+  68:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART0,DISABLE);
+  69:libstr91x/src/91x_uart.c ****   }
+  70:libstr91x/src/91x_uart.c ****   else if(UARTx == UART1)
+  43              		.loc 1 70 0
+  44 0010 68109FE5 		ldr	r1, .L8+4
+  45 0014 010050E1 		cmp	r0, r1
+  46 0018 1000000A 		beq	.L7
+  71:libstr91x/src/91x_uart.c ****   {
+  72:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART1,ENABLE);
+  73:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART1,DISABLE);
+  74:libstr91x/src/91x_uart.c ****   }
+  75:libstr91x/src/91x_uart.c ****   else if(UARTx == UART2)
+  47              		.loc 1 75 0
+  48 001c 60209FE5 		ldr	r2, .L8+8
+  49 0020 020050E1 		cmp	r0, r2
+  50 0024 1080BD18 		ldmnefd	sp!, {r4, pc}
+  76:libstr91x/src/91x_uart.c ****   {
+  77:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART2,ENABLE);
+  51              		.loc 1 77 0
+  52 0028 2000A0E3 		mov	r0, #32
+  53              	.LVL1:
+  54 002c 0110A0E3 		mov	r1, #1
+  55 0030 FEFFFFEB 		bl	SCU_APBPeriphReset
+  78:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART2,DISABLE);
+  56              		.loc 1 78 0
+  57 0034 2000A0E3 		mov	r0, #32
+  58 0038 0010A0E3 		mov	r1, #0
+  79:libstr91x/src/91x_uart.c ****   }
+  80:libstr91x/src/91x_uart.c **** }
+  59              		.loc 1 80 0
+  60 003c 1040BDE8 		ldmfd	sp!, {r4, lr}
+  78:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART2,DISABLE);
+  61              		.loc 1 78 0
+  62 0040 FEFFFFEA 		b	SCU_APBPeriphReset
+  63              	.LVL2:
+  64              	.L6:
+  67:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART0,ENABLE);
+  65              		.loc 1 67 0
+  66 0044 0800A0E3 		mov	r0, #8
+  67              	.LVL3:
+  68 0048 0110A0E3 		mov	r1, #1
+  69 004c FEFFFFEB 		bl	SCU_APBPeriphReset
+  68:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART0,DISABLE);
+  70              		.loc 1 68 0
+  71 0050 0800A0E3 		mov	r0, #8
+  72 0054 0010A0E3 		mov	r1, #0
+  73              		.loc 1 80 0
+  74 0058 1040BDE8 		ldmfd	sp!, {r4, lr}
+  68:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART0,DISABLE);
+  75              		.loc 1 68 0
+  76 005c FEFFFFEA 		b	SCU_APBPeriphReset
+  77              	.LVL4:
+  78              	.L7:
+  72:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART1,ENABLE);
+  79              		.loc 1 72 0
+  80 0060 1000A0E3 		mov	r0, #16
+  81              	.LVL5:
+  82 0064 0110A0E3 		mov	r1, #1
+  83 0068 FEFFFFEB 		bl	SCU_APBPeriphReset
+  73:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART1,DISABLE);
+  84              		.loc 1 73 0
+  85 006c 1000A0E3 		mov	r0, #16
+  86 0070 0010A0E3 		mov	r1, #0
+  87              		.loc 1 80 0
+  88 0074 1040BDE8 		ldmfd	sp!, {r4, lr}
+  73:libstr91x/src/91x_uart.c ****     SCU_APBPeriphReset(__UART1,DISABLE);
+  89              		.loc 1 73 0
+  90 0078 FEFFFFEA 		b	SCU_APBPeriphReset
+  91              	.L9:
+  92              		.align	2
+  93              	.L8:
+  94 007c 0040005C 		.word	1543520256
+  95 0080 0050005C 		.word	1543524352
+  96 0084 0060005C 		.word	1543528448
+  97              		.cfi_endproc
+  98              	.LFE0:
+ 100              		.global	__aeabi_ldivmod
+ 101              		.align	2
+ 102              		.global	UART_Init
+ 104              	UART_Init:
+ 105              	.LFB1:
+  81:libstr91x/src/91x_uart.c **** 
+  82:libstr91x/src/91x_uart.c **** /*******************************************************************************
+  83:libstr91x/src/91x_uart.c **** * Function Name  : UART_Init
+  84:libstr91x/src/91x_uart.c **** * Description    : Initializes the UARTx peripheral according to the specified
+  85:libstr91x/src/91x_uart.c **** *                  parameters in the UART_InitStruct .
+  86:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1or 2 to select the UART peripheral.
+  87:libstr91x/src/91x_uart.c **** *                  - UART_InitStruct: pointer to a UART_InitTypeDef structure
+  88:libstr91x/src/91x_uart.c **** *                    that contains the configuration information for the
+  89:libstr91x/src/91x_uart.c **** *                    specified UART peripheral.
+  90:libstr91x/src/91x_uart.c **** * Output         : None
+  91:libstr91x/src/91x_uart.c **** * Return         : None
+  92:libstr91x/src/91x_uart.c **** *******************************************************************************/
+  93:libstr91x/src/91x_uart.c **** void UART_Init(UART_TypeDef* UARTx, UART_InitTypeDef* UART_InitStruct)
+  94:libstr91x/src/91x_uart.c **** {
+ 106              		.loc 1 94 0
+ 107              		.cfi_startproc
+ 108              		@ args = 0, pretend = 0, frame = 0
+ 109              		@ frame_needed = 0, uses_anonymous_args = 0
+ 110              	.LVL6:
+ 111 0088 F8402DE9 		stmfd	sp!, {r3, r4, r5, r6, r7, lr}
+ 112              	.LCFI1:
+ 113              		.cfi_def_cfa_offset 24
+  95:libstr91x/src/91x_uart.c **** 
+  96:libstr91x/src/91x_uart.c ****   u64 UART_MainClock = 0;
+  97:libstr91x/src/91x_uart.c ****   u32 IntegerDivider = 0;
+  98:libstr91x/src/91x_uart.c ****   u32 FractionalDivider = 0;
+  99:libstr91x/src/91x_uart.c **** 
+ 100:libstr91x/src/91x_uart.c ****   /* Clear the LCR[6:5] bits */
+ 101:libstr91x/src/91x_uart.c ****   UARTx->LCR &= UART_WordLength_Mask;
+ 114              		.loc 1 101 0
+ 115 008c 84C19FE5 		ldr	ip, .L17
+ 116 0090 BCE2D0E1 		ldrh	lr, [r0, #44]
+ 117              		.cfi_offset 14, -4
+ 118              		.cfi_offset 7, -8
+ 119              		.cfi_offset 6, -12
+ 120              		.cfi_offset 5, -16
+ 121              		.cfi_offset 4, -20
+ 122              		.cfi_offset 3, -24
+  94:libstr91x/src/91x_uart.c **** {
+ 123              		.loc 1 94 0
+ 124 0094 0170A0E1 		mov	r7, r1
+ 125              		.loc 1 101 0
+ 126 0098 0C500EE0 		and	r5, lr, ip
+ 127 009c BC52C0E1 		strh	r5, [r0, #44]	@ movhi
+ 102:libstr91x/src/91x_uart.c ****   /* Set the LCR[6:5] bits according to UART_WordLength value */
+ 103:libstr91x/src/91x_uart.c ****   UARTx->LCR |= UART_InitStruct->UART_WordLength;
+ 128              		.loc 1 103 0
+ 129 00a0 BC12D0E1 		ldrh	r1, [r0, #44]
+ 130              	.LVL7:
+ 131 00a4 B040D7E1 		ldrh	r4, [r7, #0]
+  94:libstr91x/src/91x_uart.c **** {
+ 132              		.loc 1 94 0
+ 133 00a8 0060A0E1 		mov	r6, r0
+ 104:libstr91x/src/91x_uart.c **** 
+ 105:libstr91x/src/91x_uart.c ****   /* Choose Stop Bits */
+ 106:libstr91x/src/91x_uart.c ****   if(UART_InitStruct->UART_StopBits == UART_StopBits_2)
+ 134              		.loc 1 106 0
+ 135 00ac B200D7E1 		ldrh	r0, [r7, #2]
+ 136              	.LVL8:
+ 103:libstr91x/src/91x_uart.c ****   UARTx->LCR |= UART_InitStruct->UART_WordLength;
+ 137              		.loc 1 103 0
+ 138 00b0 043081E1 		orr	r3, r1, r4
+ 139 00b4 BC32C6E1 		strh	r3, [r6, #44]	@ movhi
+ 140              		.loc 1 106 0
+ 141 00b8 080050E3 		cmp	r0, #8
+ 107:libstr91x/src/91x_uart.c ****   {
+ 108:libstr91x/src/91x_uart.c ****     /* 2 Stop Bit */
+ 109:libstr91x/src/91x_uart.c ****     UARTx->LCR |= UART_StopBits_2;
+ 142              		.loc 1 109 0
+ 143 00bc BC32D601 		ldreqh	r3, [r6, #44]
+ 110:libstr91x/src/91x_uart.c ****   }
+ 111:libstr91x/src/91x_uart.c ****   else
+ 112:libstr91x/src/91x_uart.c ****   {
+ 113:libstr91x/src/91x_uart.c ****     /* One Stop Bits */
+ 114:libstr91x/src/91x_uart.c ****     UARTx->LCR &= UART_StopBits_1;
+ 144              		.loc 1 114 0
+ 145 00c0 BC02D611 		ldrneh	r0, [r6, #44]
+ 146 00c4 50319F15 		ldrne	r3, .L17+4
+ 109:libstr91x/src/91x_uart.c ****     UARTx->LCR |= UART_StopBits_2;
+ 147              		.loc 1 109 0
+ 148 00c8 08308303 		orreq	r3, r3, #8
+ 149              		.loc 1 114 0
+ 150 00cc 03300010 		andne	r3, r0, r3
+ 151 00d0 BC32C6E1 		strh	r3, [r6, #44]	@ movhi
+ 115:libstr91x/src/91x_uart.c ****   }
+ 116:libstr91x/src/91x_uart.c **** 
+ 117:libstr91x/src/91x_uart.c ****   /* Configure the Parity */
+ 118:libstr91x/src/91x_uart.c ****   /* Clear the LCR[7]and LCR[2:1] bits */
+ 119:libstr91x/src/91x_uart.c ****   UARTx->LCR &= UART_Parity_Mask;
+ 152              		.loc 1 119 0
+ 153 00d4 BC22D6E1 		ldrh	r2, [r6, #44]
+ 154 00d8 40E19FE5 		ldr	lr, .L17+8
+ 120:libstr91x/src/91x_uart.c ****   /* Set the LCR[7]and LCR[2:1] bits according to UART_Parity value */
+ 121:libstr91x/src/91x_uart.c ****   UARTx->LCR |= UART_InitStruct->UART_Parity;
+ 155              		.loc 1 121 0
+ 156 00dc B450D7E1 		ldrh	r5, [r7, #4]
+ 119:libstr91x/src/91x_uart.c ****   UARTx->LCR &= UART_Parity_Mask;
+ 157              		.loc 1 119 0
+ 158 00e0 0EC002E0 		and	ip, r2, lr
+ 159 00e4 BCC2C6E1 		strh	ip, [r6, #44]	@ movhi
+ 160              		.loc 1 121 0
+ 161 00e8 BC42D6E1 		ldrh	r4, [r6, #44]
+ 162 00ec 050084E1 		orr	r0, r4, r5
+ 163 00f0 BC02C6E1 		strh	r0, [r6, #44]	@ movhi
+ 122:libstr91x/src/91x_uart.c **** 
+ 123:libstr91x/src/91x_uart.c ****   /* Configure the BaudRate */
+ 124:libstr91x/src/91x_uart.c ****   UART_MainClock = (SCU_GetMCLKFreqValue())*1000;
+ 164              		.loc 1 124 0
+ 165 00f4 FEFFFFEB 		bl	SCU_GetMCLKFreqValue
+ 166 00f8 FA1FA0E3 		mov	r1, #1000
+ 125:libstr91x/src/91x_uart.c ****   if((SCU->CLKCNTR & 0x200) != 0x200)
+ 167              		.loc 1 125 0
+ 168 00fc 20319FE5 		ldr	r3, .L17+12
+ 124:libstr91x/src/91x_uart.c ****   UART_MainClock = (SCU_GetMCLKFreqValue())*1000;
+ 169              		.loc 1 124 0
+ 170 0100 910000E0 		mul	r0, r1, r0
+ 171              		.loc 1 125 0
+ 172 0104 002093E5 		ldr	r2, [r3, #0]
+ 124:libstr91x/src/91x_uart.c ****   UART_MainClock = (SCU_GetMCLKFreqValue())*1000;
+ 173              		.loc 1 124 0
+ 174 0108 0010A0E3 		mov	r1, #0
+ 175              	.LVL9:
+ 176              		.loc 1 125 0
+ 177 010c 020C12E3 		tst	r2, #512
+ 178 0110 0100001A 		bne	.L13
+ 126:libstr91x/src/91x_uart.c ****   {
+ 127:libstr91x/src/91x_uart.c ****     UART_MainClock = UART_MainClock/2;
+ 179              		.loc 1 127 0
+ 180 0114 C110B0E1 		movs	r1, r1, asr #1
+ 181 0118 6000A0E1 		mov	r0, r0, rrx
+ 182              	.LVL10:
+ 183              	.L13:
+ 128:libstr91x/src/91x_uart.c ****   }
+ 129:libstr91x/src/91x_uart.c ****   /* Determine the integer part */
+ 130:libstr91x/src/91x_uart.c ****   IntegerDivider = ((100) * (UART_MainClock) / (16 * (UART_InitStruct->UART_BaudRate)));
+ 184              		.loc 1 130 0
+ 185 011c 6430A0E3 		mov	r3, #100
+ 186 0120 904385E0 		umull	r4, r5, r0, r3
+ 187 0124 935125E0 		mla	r5, r3, r1, r5
+ 188 0128 08E097E5 		ldr	lr, [r7, #8]
+ 189 012c 0030A0E3 		mov	r3, #0
+ 190 0130 0E22A0E1 		mov	r2, lr, asl #4
+ 191 0134 0400A0E1 		mov	r0, r4
+ 192              	.LVL11:
+ 193 0138 0510A0E1 		mov	r1, r5
+ 194 013c FEFFFFEB 		bl	__aeabi_ldivmod
+ 195              	.LVL12:
+ 131:libstr91x/src/91x_uart.c ****   UARTx->IBRD = IntegerDivider / 100;
+ 196              		.loc 1 131 0
+ 197 0140 E0309FE5 		ldr	r3, .L17+16
+ 198 0144 93108CE0 		umull	r1, ip, r3, r0
+ 199 0148 8C25A0E1 		mov	r2, ip, asl #11
+ 200 014c 2218A0E1 		mov	r1, r2, lsr #16
+ 201 0150 B412C6E1 		strh	r1, [r6, #36]	@ movhi
+ 132:libstr91x/src/91x_uart.c **** 
+ 133:libstr91x/src/91x_uart.c ****   /* Determine the fractional part */
+ 134:libstr91x/src/91x_uart.c ****   FractionalDivider = IntegerDivider - (100 * (UARTx->IBRD));
+ 202              		.loc 1 134 0
+ 203 0154 B422D6E1 		ldrh	r2, [r6, #36]
+ 204              	.LVL13:
+ 205 0158 63C0E0E3 		mvn	ip, #99
+ 206 015c 9C0220E0 		mla	r0, ip, r2, r0
+ 207              	.LVL14:
+ 135:libstr91x/src/91x_uart.c ****   UARTx->FBRD = ((((FractionalDivider * 64) + 50) / 100));
+ 208              		.loc 1 135 0
+ 209 0160 0023A0E1 		mov	r2, r0, asl #6
+ 210 0164 320082E2 		add	r0, r2, #50
+ 211 0168 902383E0 		umull	r2, r3, r0, r3
+ 212 016c 83C5A0E1 		mov	ip, r3, asl #11
+ 213 0170 2C38A0E1 		mov	r3, ip, lsr #16
+ 136:libstr91x/src/91x_uart.c **** 
+ 137:libstr91x/src/91x_uart.c ****   /* Choose the Hardware Flow Control */
+ 138:libstr91x/src/91x_uart.c ****   /* Clear the CR[15:14] bits */
+ 139:libstr91x/src/91x_uart.c ****   UARTx->CR &=  UART_HardwareFlowControl_Mask;
+ 140:libstr91x/src/91x_uart.c ****   /* Set the CR[15:14] bits according to UART_HardwareFlowControl value */
+ 141:libstr91x/src/91x_uart.c ****   UARTx->CR |= UART_InitStruct->UART_HardwareFlowControl;
+ 214              		.loc 1 141 0
+ 215 0174 BC10D7E1 		ldrh	r1, [r7, #12]
+ 135:libstr91x/src/91x_uart.c ****   UARTx->FBRD = ((((FractionalDivider * 64) + 50) / 100));
+ 216              		.loc 1 135 0
+ 217 0178 B832C6E1 		strh	r3, [r6, #40]	@ movhi
+ 139:libstr91x/src/91x_uart.c ****   UARTx->CR &=  UART_HardwareFlowControl_Mask;
+ 218              		.loc 1 139 0
+ 219 017c B003D6E1 		ldrh	r0, [r6, #48]
+ 142:libstr91x/src/91x_uart.c **** 
+ 143:libstr91x/src/91x_uart.c ****   /* Configure the UART mode */
+ 144:libstr91x/src/91x_uart.c ****   /* Clear the CR[9:8] bits */
+ 145:libstr91x/src/91x_uart.c ****   UARTx->CR &= UART_Mode_Mask;
+ 220              		.loc 1 145 0
+ 221 0180 A4309FE5 		ldr	r3, .L17+20
+ 139:libstr91x/src/91x_uart.c ****   UARTx->CR &=  UART_HardwareFlowControl_Mask;
+ 222              		.loc 1 139 0
+ 223 0184 0029A0E1 		mov	r2, r0, asl #18
+ 224 0188 22C9A0E1 		mov	ip, r2, lsr #18
+ 225 018c B0C3C6E1 		strh	ip, [r6, #48]	@ movhi
+ 141:libstr91x/src/91x_uart.c ****   UARTx->CR |= UART_InitStruct->UART_HardwareFlowControl;
+ 226              		.loc 1 141 0
+ 227 0190 B003D6E1 		ldrh	r0, [r6, #48]
+ 146:libstr91x/src/91x_uart.c ****   /* Set the CR[9:8] bits according to UART_Mode value */
+ 147:libstr91x/src/91x_uart.c ****   UARTx->CR |= UART_InitStruct->UART_Mode;
+ 228              		.loc 1 147 0
+ 229 0194 BEC0D7E1 		ldrh	ip, [r7, #14]
+ 141:libstr91x/src/91x_uart.c ****   UARTx->CR |= UART_InitStruct->UART_HardwareFlowControl;
+ 230              		.loc 1 141 0
+ 231 0198 011080E1 		orr	r1, r0, r1
+ 232 019c B013C6E1 		strh	r1, [r6, #48]	@ movhi
+ 145:libstr91x/src/91x_uart.c ****   UARTx->CR &= UART_Mode_Mask;
+ 233              		.loc 1 145 0
+ 234 01a0 B023D6E1 		ldrh	r2, [r6, #48]
+ 148:libstr91x/src/91x_uart.c **** 
+ 149:libstr91x/src/91x_uart.c ****   /* Enable or disable the FIFOs */
+ 150:libstr91x/src/91x_uart.c ****   /* Set the FIFOs Levels */
+ 151:libstr91x/src/91x_uart.c ****   if(UART_InitStruct->UART_FIFO == UART_FIFO_Enable)
+ 235              		.loc 1 151 0
+ 236 01a4 B011D7E1 		ldrh	r1, [r7, #16]
+ 145:libstr91x/src/91x_uart.c ****   UARTx->CR &= UART_Mode_Mask;
+ 237              		.loc 1 145 0
+ 238 01a8 030002E0 		and	r0, r2, r3
+ 239 01ac B003C6E1 		strh	r0, [r6, #48]	@ movhi
+ 147:libstr91x/src/91x_uart.c ****   UARTx->CR |= UART_InitStruct->UART_Mode;
+ 240              		.loc 1 147 0
+ 241 01b0 B033D6E1 		ldrh	r3, [r6, #48]
+ 242              		.loc 1 151 0
+ 243 01b4 100051E3 		cmp	r1, #16
+ 147:libstr91x/src/91x_uart.c ****   UARTx->CR |= UART_InitStruct->UART_Mode;
+ 244              		.loc 1 147 0
+ 245 01b8 0C2083E1 		orr	r2, r3, ip
+ 246 01bc B023C6E1 		strh	r2, [r6, #48]	@ movhi
+ 247              		.loc 1 151 0
+ 248 01c0 0400000A 		beq	.L16
+ 152:libstr91x/src/91x_uart.c ****   {
+ 153:libstr91x/src/91x_uart.c ****     /* Enable the FIFOs */
+ 154:libstr91x/src/91x_uart.c ****     UARTx->LCR |= UART_FIFO_Enable;
+ 155:libstr91x/src/91x_uart.c **** 
+ 156:libstr91x/src/91x_uart.c ****     /* Clear TXIFLSEL and RXIFLSEL bits */
+ 157:libstr91x/src/91x_uart.c ****     UARTx->IFLS &=  UART_TxRxFIFOLevel_Mask;
+ 158:libstr91x/src/91x_uart.c **** 
+ 159:libstr91x/src/91x_uart.c ****     /* Set RXIFLSEL bits according to UART_RxFIFOLevel value */
+ 160:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= (UART_InitStruct->UART_RxFIFOLevel << 3);
+ 161:libstr91x/src/91x_uart.c **** 
+ 162:libstr91x/src/91x_uart.c ****     /* Set TXIFLSEL bits according to UART_TxFIFOLevel value */
+ 163:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= UART_InitStruct->UART_TxFIFOLevel;
+ 164:libstr91x/src/91x_uart.c ****   }
+ 165:libstr91x/src/91x_uart.c ****   else
+ 166:libstr91x/src/91x_uart.c ****   {
+ 167:libstr91x/src/91x_uart.c ****     /* Disable the FIFOs */
+ 168:libstr91x/src/91x_uart.c ****     UARTx->LCR &= UART_FIFO_Disable;
+ 249              		.loc 1 168 0
+ 250 01c4 BCC2D6E1 		ldrh	ip, [r6, #44]
+ 251 01c8 60309FE5 		ldr	r3, .L17+24
+ 252 01cc 03000CE0 		and	r0, ip, r3
+ 253 01d0 BC02C6E1 		strh	r0, [r6, #44]	@ movhi
+ 254 01d4 F880BDE8 		ldmfd	sp!, {r3, r4, r5, r6, r7, pc}
+ 255              	.L16:
+ 154:libstr91x/src/91x_uart.c ****     UARTx->LCR |= UART_FIFO_Enable;
+ 256              		.loc 1 154 0
+ 257 01d8 BCE2D6E1 		ldrh	lr, [r6, #44]
+ 157:libstr91x/src/91x_uart.c ****     UARTx->IFLS &=  UART_TxRxFIFOLevel_Mask;
+ 258              		.loc 1 157 0
+ 259 01dc 50C09FE5 		ldr	ip, .L17+28
+ 154:libstr91x/src/91x_uart.c ****     UARTx->LCR |= UART_FIFO_Enable;
+ 260              		.loc 1 154 0
+ 261 01e0 10208EE3 		orr	r2, lr, #16
+ 262 01e4 BC22C6E1 		strh	r2, [r6, #44]	@ movhi
+ 157:libstr91x/src/91x_uart.c ****     UARTx->IFLS &=  UART_TxRxFIFOLevel_Mask;
+ 263              		.loc 1 157 0
+ 264 01e8 B413D6E1 		ldrh	r1, [r6, #52]
+ 160:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= (UART_InitStruct->UART_RxFIFOLevel << 3);
+ 265              		.loc 1 160 0
+ 266 01ec 1300D7E5 		ldrb	r0, [r7, #19]	@ zero_extendqisi2
+ 157:libstr91x/src/91x_uart.c ****     UARTx->IFLS &=  UART_TxRxFIFOLevel_Mask;
+ 267              		.loc 1 157 0
+ 268 01f0 0C3001E0 		and	r3, r1, ip
+ 269 01f4 B433C6E1 		strh	r3, [r6, #52]	@ movhi
+ 160:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= (UART_InitStruct->UART_RxFIFOLevel << 3);
+ 270              		.loc 1 160 0
+ 271 01f8 B4E3D6E1 		ldrh	lr, [r6, #52]
+ 163:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= UART_InitStruct->UART_TxFIFOLevel;
+ 272              		.loc 1 163 0
+ 273 01fc 12C0D7E5 		ldrb	ip, [r7, #18]	@ zero_extendqisi2
+ 160:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= (UART_InitStruct->UART_RxFIFOLevel << 3);
+ 274              		.loc 1 160 0
+ 275 0200 80218EE1 		orr	r2, lr, r0, asl #3
+ 276 0204 B423C6E1 		strh	r2, [r6, #52]	@ movhi
+ 163:libstr91x/src/91x_uart.c ****     UARTx->IFLS |= UART_InitStruct->UART_TxFIFOLevel;
+ 277              		.loc 1 163 0
+ 278 0208 B413D6E1 		ldrh	r1, [r6, #52]
+ 279 020c 0C0081E1 		orr	r0, r1, ip
+ 280 0210 B403C6E1 		strh	r0, [r6, #52]	@ movhi
+ 281 0214 F880BDE8 		ldmfd	sp!, {r3, r4, r5, r6, r7, pc}
+ 282              	.L18:
+ 283              		.align	2
+ 284              	.L17:
+ 285 0218 9FFF0000 		.word	65439
+ 286 021c F7FF0000 		.word	65527
+ 287 0220 79FF0000 		.word	65401
+ 288 0224 0020005C 		.word	1543512064
+ 289 0228 1F85EB51 		.word	1374389535
+ 290 022c FFFC0000 		.word	64767
+ 291 0230 EFFF0000 		.word	65519
+ 292 0234 C0FF0000 		.word	65472
+ 293              		.cfi_endproc
+ 294              	.LFE1:
+ 296              		.align	2
+ 297              		.global	UART_StructInit
+ 299              	UART_StructInit:
+ 300              	.LFB2:
+ 169:libstr91x/src/91x_uart.c ****   }
+ 170:libstr91x/src/91x_uart.c **** }
+ 171:libstr91x/src/91x_uart.c **** 
+ 172:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 173:libstr91x/src/91x_uart.c **** * Function Name  : UART_StructInit
+ 174:libstr91x/src/91x_uart.c **** * Description    : Fills each UART_InitStruct member with its reset value.
+ 175:libstr91x/src/91x_uart.c **** * Input          : UART_InitStruct: pointer to a UART_InitTypeDef structure which
+ 176:libstr91x/src/91x_uart.c **** *                  will be initialized.
+ 177:libstr91x/src/91x_uart.c **** * Output         : None
+ 178:libstr91x/src/91x_uart.c **** * Return         : None
+ 179:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 180:libstr91x/src/91x_uart.c **** void UART_StructInit(UART_InitTypeDef* UART_InitStruct)
+ 181:libstr91x/src/91x_uart.c **** {
+ 301              		.loc 1 181 0
+ 302              		.cfi_startproc
+ 303              		@ args = 0, pretend = 0, frame = 0
+ 304              		@ frame_needed = 0, uses_anonymous_args = 0
+ 305              		@ link register save eliminated.
+ 306              	.LVL15:
+ 182:libstr91x/src/91x_uart.c ****   /* Reset the  UART_InitStruct members */
+ 183:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_WordLength = UART_WordLength_8D;
+ 307              		.loc 1 183 0
+ 308 0238 60C0A0E3 		mov	ip, #96	@ movhi
+ 184:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_StopBits = UART_StopBits_1;
+ 309              		.loc 1 184 0
+ 310 023c 0810E0E3 		mvn	r1, #8	@ movhi
+ 185:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_Parity = UART_Parity_Odd ;
+ 186:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_BaudRate = 9600;
+ 311              		.loc 1 186 0
+ 312 0240 962DA0E3 		mov	r2, #9600
+ 185:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_Parity = UART_Parity_Odd ;
+ 313              		.loc 1 185 0
+ 314 0244 0230A0E3 		mov	r3, #2
+ 183:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_WordLength = UART_WordLength_8D;
+ 315              		.loc 1 183 0
+ 316 0248 B0C0C0E1 		strh	ip, [r0, #0]	@ movhi
+ 184:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_StopBits = UART_StopBits_1;
+ 317              		.loc 1 184 0
+ 318 024c B210C0E1 		strh	r1, [r0, #2]	@ movhi
+ 319              		.loc 1 186 0
+ 320 0250 082080E5 		str	r2, [r0, #8]
+ 187:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_HardwareFlowControl = UART_HardwareFlowControl_None;
+ 321              		.loc 1 187 0
+ 322 0254 00C0A0E3 		mov	ip, #0	@ movhi
+ 188:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_Mode = UART_Mode_Tx_Rx;
+ 323              		.loc 1 188 0
+ 324 0258 031CA0E3 		mov	r1, #768	@ movhi
+ 189:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_FIFO = UART_FIFO_Enable;
+ 325              		.loc 1 189 0
+ 326 025c 1020A0E3 		mov	r2, #16	@ movhi
+ 185:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_Parity = UART_Parity_Odd ;
+ 327              		.loc 1 185 0
+ 328 0260 B430C0E1 		strh	r3, [r0, #4]	@ movhi
+ 187:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_HardwareFlowControl = UART_HardwareFlowControl_None;
+ 329              		.loc 1 187 0
+ 330 0264 BCC0C0E1 		strh	ip, [r0, #12]	@ movhi
+ 188:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_Mode = UART_Mode_Tx_Rx;
+ 331              		.loc 1 188 0
+ 332 0268 BE10C0E1 		strh	r1, [r0, #14]	@ movhi
+ 333              		.loc 1 189 0
+ 334 026c B021C0E1 		strh	r2, [r0, #16]	@ movhi
+ 190:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_TxFIFOLevel = UART_FIFOLevel_1_2;
+ 335              		.loc 1 190 0
+ 336 0270 1230C0E5 		strb	r3, [r0, #18]
+ 191:libstr91x/src/91x_uart.c ****   UART_InitStruct->UART_RxFIFOLevel = UART_FIFOLevel_1_2;
+ 337              		.loc 1 191 0
+ 338 0274 1330C0E5 		strb	r3, [r0, #19]
+ 192:libstr91x/src/91x_uart.c **** }
+ 339              		.loc 1 192 0
+ 340 0278 1EFF2FE1 		bx	lr
+ 341              		.cfi_endproc
+ 342              	.LFE2:
+ 344              		.align	2
+ 345              		.global	UART_Cmd
+ 347              	UART_Cmd:
+ 348              	.LFB3:
+ 193:libstr91x/src/91x_uart.c **** 
+ 194:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 195:libstr91x/src/91x_uart.c **** * Function Name  : UART_Cmd
+ 196:libstr91x/src/91x_uart.c **** * Description    : Enables or disables the specified UART peripheral.
+ 197:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1 or 2 to select the UART peripheral
+ 198:libstr91x/src/91x_uart.c **** *                  - NewState: new state of the UARTx peripheral.
+ 199:libstr91x/src/91x_uart.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 200:libstr91x/src/91x_uart.c **** * Output         : None
+ 201:libstr91x/src/91x_uart.c **** * Return         : None
+ 202:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 203:libstr91x/src/91x_uart.c **** void UART_Cmd(UART_TypeDef* UARTx, FunctionalState NewState)
+ 204:libstr91x/src/91x_uart.c **** {
+ 349              		.loc 1 204 0
+ 350              		.cfi_startproc
+ 351              		@ args = 0, pretend = 0, frame = 0
+ 352              		@ frame_needed = 0, uses_anonymous_args = 0
+ 353              		@ link register save eliminated.
+ 354              	.LVL16:
+ 205:libstr91x/src/91x_uart.c ****   if (NewState == ENABLE)
+ 355              		.loc 1 205 0
+ 356 027c 010051E3 		cmp	r1, #1
+ 206:libstr91x/src/91x_uart.c ****   {
+ 207:libstr91x/src/91x_uart.c ****     /* Enable the selected UART by setting the UARTEN bit in the CR register */
+ 208:libstr91x/src/91x_uart.c ****     UARTx->CR |= UART_Enable_Mask;
+ 357              		.loc 1 208 0
+ 358 0280 B033D001 		ldreqh	r3, [r0, #48]
+ 209:libstr91x/src/91x_uart.c ****   }
+ 210:libstr91x/src/91x_uart.c ****   else
+ 211:libstr91x/src/91x_uart.c ****   {
+ 212:libstr91x/src/91x_uart.c ****     /* Disable the selected UART by clearing the UARTEN bit in the CR register */
+ 213:libstr91x/src/91x_uart.c ****     UARTx->CR &= UART_Disable_Mask;
+ 359              		.loc 1 213 0
+ 360 0284 B023D011 		ldrneh	r2, [r0, #48]
+ 361 0288 0C309F15 		ldrne	r3, .L23
+ 208:libstr91x/src/91x_uart.c ****     UARTx->CR |= UART_Enable_Mask;
+ 362              		.loc 1 208 0
+ 363 028c 01308303 		orreq	r3, r3, #1
+ 364              		.loc 1 213 0
+ 365 0290 03300210 		andne	r3, r2, r3
+ 366 0294 B033C0E1 		strh	r3, [r0, #48]	@ movhi
+ 367 0298 1EFF2FE1 		bx	lr
+ 368              	.L24:
+ 369              		.align	2
+ 370              	.L23:
+ 371 029c FEFF0000 		.word	65534
+ 372              		.cfi_endproc
+ 373              	.LFE3:
+ 375              		.align	2
+ 376              		.global	UART_ITConfig
+ 378              	UART_ITConfig:
+ 379              	.LFB4:
+ 214:libstr91x/src/91x_uart.c ****   }
+ 215:libstr91x/src/91x_uart.c **** }
+ 216:libstr91x/src/91x_uart.c **** 
+ 217:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 218:libstr91x/src/91x_uart.c **** * Function Name  : UART_ITConfig
+ 219:libstr91x/src/91x_uart.c **** * Description    : Enables or disables the specified UART interrupts.
+ 220:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1 or 2 to select the UART peripheral
+ 221:libstr91x/src/91x_uart.c **** *                  - UART_IT: specifies the UART interrupts sources to be
+ 222:libstr91x/src/91x_uart.c **** *                    enabled or disabled. This parameter can be any combination
+ 223:libstr91x/src/91x_uart.c **** *                    of the following values:
+ 224:libstr91x/src/91x_uart.c **** *                       - UART_IT_OverrunError: Overrun Error interrupt
+ 225:libstr91x/src/91x_uart.c **** *                       - UART_IT_BreakError: Break Error interrupt
+ 226:libstr91x/src/91x_uart.c **** *                       - UART_IT_ParityError: Parity Error interrupt
+ 227:libstr91x/src/91x_uart.c **** *                       - UART_IT_FrameError: Frame Error interrupt
+ 228:libstr91x/src/91x_uart.c **** *                       - UART_IT_ReceiveTimeOut: Receive Time Out interrupt
+ 229:libstr91x/src/91x_uart.c **** *                       - UART_IT_Transmit: Transmit interrupt
+ 230:libstr91x/src/91x_uart.c **** *                       - UART_IT_Receive: Receive interrupt
+ 231:libstr91x/src/91x_uart.c **** *                       - UART_IT_DSR: DSR interrupt
+ 232:libstr91x/src/91x_uart.c **** *                       - UART_IT_DCD: DCD interrupt
+ 233:libstr91x/src/91x_uart.c **** *                       - UART_IT_CTS: CTS interrupt
+ 234:libstr91x/src/91x_uart.c **** *                       - UART_IT_RI: RI interrupt
+ 235:libstr91x/src/91x_uart.c **** *                  - NewState: new state of the UARTx peripheral.
+ 236:libstr91x/src/91x_uart.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 237:libstr91x/src/91x_uart.c **** * Output         : None
+ 238:libstr91x/src/91x_uart.c **** * Return         : None
+ 239:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 240:libstr91x/src/91x_uart.c **** void UART_ITConfig(UART_TypeDef* UARTx, u16 UART_IT, FunctionalState NewState)
+ 241:libstr91x/src/91x_uart.c **** {
+ 380              		.loc 1 241 0
+ 381              		.cfi_startproc
+ 382              		@ args = 0, pretend = 0, frame = 0
+ 383              		@ frame_needed = 0, uses_anonymous_args = 0
+ 384              		@ link register save eliminated.
+ 385              	.LVL17:
+ 242:libstr91x/src/91x_uart.c ****  if(NewState == ENABLE)
+ 243:libstr91x/src/91x_uart.c ****   {
+ 244:libstr91x/src/91x_uart.c ****     /* Enables the selected interrupts */
+ 245:libstr91x/src/91x_uart.c ****     UARTx->IMSC |= UART_IT;
+ 386              		.loc 1 245 0
+ 387 02a0 B833D0E1 		ldrh	r3, [r0, #56]
+ 242:libstr91x/src/91x_uart.c ****  if(NewState == ENABLE)
+ 388              		.loc 1 242 0
+ 389 02a4 010052E3 		cmp	r2, #1
+ 390              		.loc 1 245 0
+ 391 02a8 03108101 		orreq	r1, r1, r3
+ 392              	.LVL18:
+ 246:libstr91x/src/91x_uart.c ****   }
+ 247:libstr91x/src/91x_uart.c ****   else
+ 248:libstr91x/src/91x_uart.c ****   {
+ 249:libstr91x/src/91x_uart.c ****     /* Disables the selected interrupts */
+ 250:libstr91x/src/91x_uart.c ****     UARTx->IMSC &= ~UART_IT;
+ 393              		.loc 1 250 0
+ 394 02ac 0110C311 		bicne	r1, r3, r1
+ 395 02b0 B813C0E1 		strh	r1, [r0, #56]	@ movhi
+ 396 02b4 1EFF2FE1 		bx	lr
+ 397              		.cfi_endproc
+ 398              	.LFE4:
+ 400              		.align	2
+ 401              		.global	UART_DMAConfig
+ 403              	UART_DMAConfig:
+ 404              	.LFB5:
+ 251:libstr91x/src/91x_uart.c ****   }
+ 252:libstr91x/src/91x_uart.c **** }
+ 253:libstr91x/src/91x_uart.c **** 
+ 254:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 255:libstr91x/src/91x_uart.c **** * Function Name  : UART_DMAConfig
+ 256:libstr91x/src/91x_uart.c **** * Description    : Configures the UARTx’s DMA interface.
+ 257:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 1 or 2 to select the UART peripheral
+ 258:libstr91x/src/91x_uart.c **** *                  - UART_DMAOnError: specifies the DMA on error request.
+ 259:libstr91x/src/91x_uart.c **** *                    This parameter can be:
+ 260:libstr91x/src/91x_uart.c **** *                         - UART_DMAOnError_Enable: DMA receive request enabled
+ 261:libstr91x/src/91x_uart.c **** *                           when the UART error interrupt is asserted.
+ 262:libstr91x/src/91x_uart.c **** *                         - UART_DMAOnError_Disable: DMA receive request disabled
+ 263:libstr91x/src/91x_uart.c **** *                           when the UART error interrupt is asserted.
+ 264:libstr91x/src/91x_uart.c **** * Output         : None
+ 265:libstr91x/src/91x_uart.c **** * Return         : None
+ 266:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 267:libstr91x/src/91x_uart.c **** void UART_DMAConfig(UART_TypeDef* UARTx, u16 UART_DMAOnError)
+ 268:libstr91x/src/91x_uart.c **** {
+ 405              		.loc 1 268 0
+ 406              		.cfi_startproc
+ 407              		@ args = 0, pretend = 0, frame = 0
+ 408              		@ frame_needed = 0, uses_anonymous_args = 0
+ 409              		@ link register save eliminated.
+ 410              	.LVL19:
+ 269:libstr91x/src/91x_uart.c ****   if(UART_DMAOnError == UART_DMAOnError_Enable)
+ 411              		.loc 1 269 0
+ 412 02b8 18309FE5 		ldr	r3, .L31
+ 413 02bc 030051E1 		cmp	r1, r3
+ 270:libstr91x/src/91x_uart.c ****   {
+ 271:libstr91x/src/91x_uart.c ****     UARTx->DMACR &= UART_DMAOnError_Enable;
+ 414              		.loc 1 271 0
+ 415 02c0 B824D001 		ldreqh	r2, [r0, #72]
+ 272:libstr91x/src/91x_uart.c ****   }
+ 273:libstr91x/src/91x_uart.c ****   else
+ 274:libstr91x/src/91x_uart.c ****   {
+ 275:libstr91x/src/91x_uart.c ****     UARTx->DMACR |= UART_DMAOnError_Disable;
+ 416              		.loc 1 275 0
+ 417 02c4 B834D011 		ldrneh	r3, [r0, #72]
+ 271:libstr91x/src/91x_uart.c ****     UARTx->DMACR &= UART_DMAOnError_Enable;
+ 418              		.loc 1 271 0
+ 419 02c8 03300200 		andeq	r3, r2, r3
+ 420              		.loc 1 275 0
+ 421 02cc 04308313 		orrne	r3, r3, #4
+ 422 02d0 B834C0E1 		strh	r3, [r0, #72]	@ movhi
+ 423 02d4 1EFF2FE1 		bx	lr
+ 424              	.L32:
+ 425              		.align	2
+ 426              	.L31:
+ 427 02d8 FBFF0000 		.word	65531
+ 428              		.cfi_endproc
+ 429              	.LFE5:
+ 431              		.align	2
+ 432              		.global	UART_DMACmd
+ 434              	UART_DMACmd:
+ 435              	.LFB6:
+ 276:libstr91x/src/91x_uart.c ****   }
+ 277:libstr91x/src/91x_uart.c **** }
+ 278:libstr91x/src/91x_uart.c **** 
+ 279:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 280:libstr91x/src/91x_uart.c **** * Function Name  : UART_DMACmd
+ 281:libstr91x/src/91x_uart.c **** * Description    : Enables or disables the UARTx’s DMA interface.
+ 282:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 1 or 2 to select the UART peripheral
+ 283:libstr91x/src/91x_uart.c **** *                  - UART_DMAReq: enables or disables the request of DMA from UART.
+ 284:libstr91x/src/91x_uart.c **** *                    This parameter can be:
+ 285:libstr91x/src/91x_uart.c **** *                     - UART_DMAReq_Tx: Transmit DMA Enable
+ 286:libstr91x/src/91x_uart.c **** *                     - UART_DMAReq_Rx: Receive DMA Enable
+ 287:libstr91x/src/91x_uart.c **** *                  - NewState: new state of the UARTx peripheral.
+ 288:libstr91x/src/91x_uart.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 289:libstr91x/src/91x_uart.c **** * Output         : None
+ 290:libstr91x/src/91x_uart.c **** * Return         : None
+ 291:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 292:libstr91x/src/91x_uart.c **** void UART_DMACmd(UART_TypeDef* UARTx, u8 UART_DMAReq, FunctionalState NewState)
+ 293:libstr91x/src/91x_uart.c **** {
+ 436              		.loc 1 293 0
+ 437              		.cfi_startproc
+ 438              		@ args = 0, pretend = 0, frame = 0
+ 439              		@ frame_needed = 0, uses_anonymous_args = 0
+ 440              		@ link register save eliminated.
+ 441              	.LVL20:
+ 294:libstr91x/src/91x_uart.c ****   if(UART_DMAReq == UART_DMAReq_Tx)
+ 442              		.loc 1 294 0
+ 443 02dc 020051E3 		cmp	r1, #2
+ 444 02e0 0900000A 		beq	.L38
+ 295:libstr91x/src/91x_uart.c ****   {
+ 296:libstr91x/src/91x_uart.c ****     if(NewState == ENABLE)
+ 297:libstr91x/src/91x_uart.c ****     {
+ 298:libstr91x/src/91x_uart.c ****       UARTx->DMACR |=  UART_DMAReq_Tx;
+ 299:libstr91x/src/91x_uart.c ****     }
+ 300:libstr91x/src/91x_uart.c ****     else
+ 301:libstr91x/src/91x_uart.c ****     {
+ 302:libstr91x/src/91x_uart.c ****       UARTx->DMACR &= ~UART_DMAReq_Tx;
+ 303:libstr91x/src/91x_uart.c ****     }
+ 304:libstr91x/src/91x_uart.c ****   }
+ 305:libstr91x/src/91x_uart.c **** 
+ 306:libstr91x/src/91x_uart.c ****    if(UART_DMAReq == UART_DMAReq_Rx)
+ 445              		.loc 1 306 0
+ 446 02e4 010051E3 		cmp	r1, #1
+ 447 02e8 1EFF2F11 		bxne	lr
+ 307:libstr91x/src/91x_uart.c ****   {
+ 308:libstr91x/src/91x_uart.c ****     if(NewState == ENABLE)
+ 448              		.loc 1 308 0
+ 449 02ec 010052E3 		cmp	r2, #1
+ 309:libstr91x/src/91x_uart.c ****     {
+ 310:libstr91x/src/91x_uart.c ****       UARTx->DMACR |=  UART_DMAReq_Rx;
+ 450              		.loc 1 310 0
+ 451 02f0 B834D001 		ldreqh	r3, [r0, #72]
+ 311:libstr91x/src/91x_uart.c ****     }
+ 312:libstr91x/src/91x_uart.c ****     else
+ 313:libstr91x/src/91x_uart.c ****     {
+ 314:libstr91x/src/91x_uart.c ****       UARTx->DMACR &= ~UART_DMAReq_Rx;
+ 452              		.loc 1 314 0
+ 453 02f4 B824D011 		ldrneh	r2, [r0, #72]
+ 454              	.LVL21:
+ 455 02f8 2C309F15 		ldrne	r3, .L39
+ 310:libstr91x/src/91x_uart.c ****       UARTx->DMACR |=  UART_DMAReq_Rx;
+ 456              		.loc 1 310 0
+ 457 02fc 01308303 		orreq	r3, r3, #1
+ 458              		.loc 1 314 0
+ 459 0300 03300210 		andne	r3, r2, r3
+ 460 0304 B834C0E1 		strh	r3, [r0, #72]	@ movhi
+ 461 0308 1EFF2FE1 		bx	lr
+ 462              	.LVL22:
+ 463              	.L38:
+ 296:libstr91x/src/91x_uart.c ****     if(NewState == ENABLE)
+ 464              		.loc 1 296 0
+ 465 030c 010052E3 		cmp	r2, #1
+ 298:libstr91x/src/91x_uart.c ****       UARTx->DMACR |=  UART_DMAReq_Tx;
+ 466              		.loc 1 298 0
+ 467 0310 B834D001 		ldreqh	r3, [r0, #72]
+ 302:libstr91x/src/91x_uart.c ****       UARTx->DMACR &= ~UART_DMAReq_Tx;
+ 468              		.loc 1 302 0
+ 469 0314 B824D011 		ldrneh	r2, [r0, #72]
+ 470              	.LVL23:
+ 471 0318 10309F15 		ldrne	r3, .L39+4
+ 298:libstr91x/src/91x_uart.c ****       UARTx->DMACR |=  UART_DMAReq_Tx;
+ 472              		.loc 1 298 0
+ 473 031c 02308303 		orreq	r3, r3, #2
+ 302:libstr91x/src/91x_uart.c ****       UARTx->DMACR &= ~UART_DMAReq_Tx;
+ 474              		.loc 1 302 0
+ 475 0320 03300210 		andne	r3, r2, r3
+ 476 0324 B834C0E1 		strh	r3, [r0, #72]	@ movhi
+ 477 0328 1EFF2FE1 		bx	lr
+ 478              	.L40:
+ 479              		.align	2
+ 480              	.L39:
+ 481 032c FEFF0000 		.word	65534
+ 482 0330 FDFF0000 		.word	65533
+ 483              		.cfi_endproc
+ 484              	.LFE6:
+ 486              		.align	2
+ 487              		.global	UART_LoopBackConfig
+ 489              	UART_LoopBackConfig:
+ 490              	.LFB7:
+ 315:libstr91x/src/91x_uart.c ****     }
+ 316:libstr91x/src/91x_uart.c ****   }
+ 317:libstr91x/src/91x_uart.c **** }
+ 318:libstr91x/src/91x_uart.c **** 
+ 319:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 320:libstr91x/src/91x_uart.c **** * Function Name  : UART_LoopBackConfig
+ 321:libstr91x/src/91x_uart.c **** * Description    : Enables or disables the LoopBack mode.
+ 322:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1 or 2 to select the UART peripheral
+ 323:libstr91x/src/91x_uart.c **** *                  - NewState: new state of the UARTx peripheral.
+ 324:libstr91x/src/91x_uart.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 325:libstr91x/src/91x_uart.c **** * Output         : None
+ 326:libstr91x/src/91x_uart.c **** * Return         : None
+ 327:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 328:libstr91x/src/91x_uart.c **** void UART_LoopBackConfig(UART_TypeDef* UARTx, FunctionalState NewState)
+ 329:libstr91x/src/91x_uart.c **** {
+ 491              		.loc 1 329 0
+ 492              		.cfi_startproc
+ 493              		@ args = 0, pretend = 0, frame = 0
+ 494              		@ frame_needed = 0, uses_anonymous_args = 0
+ 495              		@ link register save eliminated.
+ 496              	.LVL24:
+ 330:libstr91x/src/91x_uart.c ****   if (NewState == ENABLE)
+ 497              		.loc 1 330 0
+ 498 0334 010051E3 		cmp	r1, #1
+ 331:libstr91x/src/91x_uart.c ****   {
+ 332:libstr91x/src/91x_uart.c ****     /* Enable the LoopBack mode of the specified UART */
+ 333:libstr91x/src/91x_uart.c ****     UARTx->CR |= UART_LoopBack_Enable_Mask;
+ 499              		.loc 1 333 0
+ 500 0338 B033D001 		ldreqh	r3, [r0, #48]
+ 334:libstr91x/src/91x_uart.c ****   }
+ 335:libstr91x/src/91x_uart.c ****   else
+ 336:libstr91x/src/91x_uart.c ****   {
+ 337:libstr91x/src/91x_uart.c ****     /* Disable the LoopBack mode of the specified UART */
+ 338:libstr91x/src/91x_uart.c ****     UARTx->CR &= UART_LoopBack_Disable_Mask;
+ 501              		.loc 1 338 0
+ 502 033c B023D011 		ldrneh	r2, [r0, #48]
+ 503 0340 0C309F15 		ldrne	r3, .L44
+ 333:libstr91x/src/91x_uart.c ****     UARTx->CR |= UART_LoopBack_Enable_Mask;
+ 504              		.loc 1 333 0
+ 505 0344 80308303 		orreq	r3, r3, #128
+ 506              		.loc 1 338 0
+ 507 0348 03300210 		andne	r3, r2, r3
+ 508 034c B033C0E1 		strh	r3, [r0, #48]	@ movhi
+ 509 0350 1EFF2FE1 		bx	lr
+ 510              	.L45:
+ 511              		.align	2
+ 512              	.L44:
+ 513 0354 7FFF0000 		.word	65407
+ 514              		.cfi_endproc
+ 515              	.LFE7:
+ 517              		.align	2
+ 518              		.global	UART_GetFlagStatus
+ 520              	UART_GetFlagStatus:
+ 521              	.LFB8:
+ 339:libstr91x/src/91x_uart.c ****   }
+ 340:libstr91x/src/91x_uart.c **** }
+ 341:libstr91x/src/91x_uart.c **** 
+ 342:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 343:libstr91x/src/91x_uart.c **** * Function Name  : UART_GetFlagStatus
+ 344:libstr91x/src/91x_uart.c **** * Description    : Checks whether the specified UART flag is set or not.
+ 345:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1 or 2 to select the UART peripheral
+ 346:libstr91x/src/91x_uart.c **** *                  - UART_FLAG: specifies the flag to check.
+ 347:libstr91x/src/91x_uart.c **** *                    This parameter can be one of the following values:
+ 348:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_OverrunError: Overrun error flag
+ 349:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_Break: break error flag
+ 350:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_ParityError: parity error flag
+ 351:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_FrameError: frame error flag
+ 352:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_RI: RI flag
+ 353:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_TxFIFOEmpty: Transmit FIFO Empty flag
+ 354:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_RxFIFOFull: Receive FIFO Full flag
+ 355:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_TxFIFOFull: Transmit FIFO Full flag
+ 356:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_RxFIFOEmpty: Receive FIFO Empty flag
+ 357:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_Busy: UART Busy flag
+ 358:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_CTS: CTS flag
+ 359:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_DCD: DCD flag
+ 360:libstr91x/src/91x_uart.c **** *                     - UART_FLAG_DSR: DSR flag
+ 361:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_OverrunError: Overrun Error interrupt flag
+ 362:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_BreakError: Break Error interrupt flag
+ 363:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_ParityError: Parity Error interrupt flag
+ 364:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_FrameError: Frame Error interrupt flag
+ 365:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_ReceiveTimeOut: ReceiveTimeOut interrupt flag
+ 366:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_Transmit: Transmit interrupt flag
+ 367:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_Receive: Receive interrupt flag
+ 368:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_DSR: DSR interrupt flag
+ 369:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_DCD: DCD interrupt flag
+ 370:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_CTS: CTS interrupt flag
+ 371:libstr91x/src/91x_uart.c **** *                     - UART_RawIT_RI: RI interrupt flag
+ 372:libstr91x/src/91x_uart.c **** * Output         : None
+ 373:libstr91x/src/91x_uart.c **** * Return         : The new state of UART_FLAG (SET or RESET).
+ 374:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 375:libstr91x/src/91x_uart.c **** FlagStatus UART_GetFlagStatus(UART_TypeDef* UARTx, u16 UART_FLAG)
+ 376:libstr91x/src/91x_uart.c **** {
+ 522              		.loc 1 376 0
+ 523              		.cfi_startproc
+ 524              		@ args = 0, pretend = 0, frame = 0
+ 525              		@ frame_needed = 0, uses_anonymous_args = 0
+ 526              		@ link register save eliminated.
+ 527              	.LVL25:
+ 377:libstr91x/src/91x_uart.c **** 
+ 378:libstr91x/src/91x_uart.c ****   u32 UARTReg = 0, FlagPos = 0;
+ 379:libstr91x/src/91x_uart.c ****   u32 StatusReg = 0;
+ 380:libstr91x/src/91x_uart.c **** 
+ 381:libstr91x/src/91x_uart.c ****   /* Get the UART register index */
+ 382:libstr91x/src/91x_uart.c ****   UARTReg = UART_FLAG >> 5;
+ 528              		.loc 1 382 0
+ 529 0358 A132A0E1 		mov	r3, r1, lsr #5
+ 530              	.LVL26:
+ 383:libstr91x/src/91x_uart.c **** 
+ 384:libstr91x/src/91x_uart.c ****   /* Get the flag position */
+ 385:libstr91x/src/91x_uart.c ****   FlagPos = UART_FLAG & UART_FLAG_Mask;
+ 386:libstr91x/src/91x_uart.c **** 
+ 387:libstr91x/src/91x_uart.c ****   if(UARTReg == 1) /* The flag to check is in RSR register */
+ 531              		.loc 1 387 0
+ 532 035c 010053E3 		cmp	r3, #1
+ 388:libstr91x/src/91x_uart.c ****   {
+ 389:libstr91x/src/91x_uart.c ****     StatusReg = UARTx->RSECR;
+ 533              		.loc 1 389 0
+ 534 0360 B430D001 		ldreqh	r3, [r0, #4]
+ 535              	.LVL27:
+ 387:libstr91x/src/91x_uart.c ****   if(UARTReg == 1) /* The flag to check is in RSR register */
+ 536              		.loc 1 387 0
+ 537 0364 0700000A 		beq	.L48
+ 390:libstr91x/src/91x_uart.c ****   }
+ 391:libstr91x/src/91x_uart.c ****   else if (UARTReg == 2) /* The flag to check is in FR register */
+ 538              		.loc 1 391 0
+ 539 0368 020053E3 		cmp	r3, #2
+ 392:libstr91x/src/91x_uart.c ****   {
+ 393:libstr91x/src/91x_uart.c ****     StatusReg = UARTx->FR;
+ 540              		.loc 1 393 0
+ 541 036c B831D001 		ldreqh	r3, [r0, #24]
+ 391:libstr91x/src/91x_uart.c ****   else if (UARTReg == 2) /* The flag to check is in FR register */
+ 542              		.loc 1 391 0
+ 543 0370 0400000A 		beq	.L48
+ 394:libstr91x/src/91x_uart.c ****   }
+ 395:libstr91x/src/91x_uart.c ****   else if(UARTReg == 3) /* The flag to check is in RIS register */
+ 544              		.loc 1 395 0
+ 545 0374 030053E3 		cmp	r3, #3
+ 546 0378 0100000A 		beq	.L52
+ 396:libstr91x/src/91x_uart.c ****   {
+ 397:libstr91x/src/91x_uart.c ****     StatusReg = UARTx->RIS;
+ 398:libstr91x/src/91x_uart.c ****   }
+ 399:libstr91x/src/91x_uart.c **** 
+ 400:libstr91x/src/91x_uart.c ****   if((StatusReg & (1 << FlagPos))!= RESET)
+ 401:libstr91x/src/91x_uart.c ****   {
+ 402:libstr91x/src/91x_uart.c ****     return SET;
+ 403:libstr91x/src/91x_uart.c ****   }
+ 404:libstr91x/src/91x_uart.c ****   else
+ 405:libstr91x/src/91x_uart.c ****   {
+ 406:libstr91x/src/91x_uart.c ****     return RESET;
+ 547              		.loc 1 406 0
+ 548 037c 0000A0E3 		mov	r0, #0
+ 549              	.LVL28:
+ 407:libstr91x/src/91x_uart.c ****   }
+ 408:libstr91x/src/91x_uart.c **** }
+ 550              		.loc 1 408 0
+ 551 0380 1EFF2FE1 		bx	lr
+ 552              	.LVL29:
+ 553              	.L52:
+ 397:libstr91x/src/91x_uart.c ****     StatusReg = UARTx->RIS;
+ 554              		.loc 1 397 0
+ 555 0384 BC33D0E1 		ldrh	r3, [r0, #60]
+ 556              	.LVL30:
+ 557              	.L48:
+ 385:libstr91x/src/91x_uart.c ****   FlagPos = UART_FLAG & UART_FLAG_Mask;
+ 558              		.loc 1 385 0
+ 559 0388 1F1001E2 		and	r1, r1, #31
+ 560              	.LVL31:
+ 400:libstr91x/src/91x_uart.c ****   if((StatusReg & (1 << FlagPos))!= RESET)
+ 561              		.loc 1 400 0
+ 562 038c 0120A0E3 		mov	r2, #1
+ 375:libstr91x/src/91x_uart.c **** FlagStatus UART_GetFlagStatus(UART_TypeDef* UARTx, u16 UART_FLAG)
+ 563              		.loc 1 375 0
+ 564 0390 122113E0 		ands	r2, r3, r2, asl r1
+ 402:libstr91x/src/91x_uart.c ****     return SET;
+ 565              		.loc 1 402 0
+ 566 0394 0000A003 		moveq	r0, #0
+ 567 0398 0100A013 		movne	r0, #1
+ 568              	.LVL32:
+ 569 039c 1EFF2FE1 		bx	lr
+ 570              		.cfi_endproc
+ 571              	.LFE8:
+ 573              		.align	2
+ 574              		.global	UART_ClearFlag
+ 576              	UART_ClearFlag:
+ 577              	.LFB9:
+ 409:libstr91x/src/91x_uart.c **** 
+ 410:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 411:libstr91x/src/91x_uart.c **** * Function Name  : UART_ClearFlag
+ 412:libstr91x/src/91x_uart.c **** * Description    : Clears the UARTx’s flags(Frame, Parity, Break, Overrun error).
+ 413:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1or 2 to select the UART peripheral.
+ 414:libstr91x/src/91x_uart.c **** * Output         : None
+ 415:libstr91x/src/91x_uart.c **** * Return         : None
+ 416:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 417:libstr91x/src/91x_uart.c **** void UART_ClearFlag(UART_TypeDef* UARTx)
+ 418:libstr91x/src/91x_uart.c **** {
+ 578              		.loc 1 418 0
+ 579              		.cfi_startproc
+ 580              		@ args = 0, pretend = 0, frame = 0
+ 581              		@ frame_needed = 0, uses_anonymous_args = 0
+ 582              		@ link register save eliminated.
+ 583              	.LVL33:
+ 419:libstr91x/src/91x_uart.c ****   /* Clear the flag */
+ 420:libstr91x/src/91x_uart.c ****   UARTx->RSECR = UART_ClearFlag_Mask;
+ 584              		.loc 1 420 0
+ 585 03a0 AA30A0E3 		mov	r3, #170	@ movhi
+ 586 03a4 B430C0E1 		strh	r3, [r0, #4]	@ movhi
+ 421:libstr91x/src/91x_uart.c **** }
+ 587              		.loc 1 421 0
+ 588 03a8 1EFF2FE1 		bx	lr
+ 589              		.cfi_endproc
+ 590              	.LFE9:
+ 592              		.align	2
+ 593              		.global	UART_GetITStatus
+ 595              	UART_GetITStatus:
+ 596              	.LFB10:
+ 422:libstr91x/src/91x_uart.c **** 
+ 423:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 424:libstr91x/src/91x_uart.c **** * Function Name  : UART_GetITStatus
+ 425:libstr91x/src/91x_uart.c **** * Description    : Checks whether the specified UART interrupt has occured or not.
+ 426:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1or 2 to select the UART peripheral.
+ 427:libstr91x/src/91x_uart.c **** *                  - UART_IT: specifies the interrupt pending bit to be checked.
+ 428:libstr91x/src/91x_uart.c **** *                    This parameter can be one of the following values:
+ 429:libstr91x/src/91x_uart.c **** *                       - UART_IT_OverrunError: Overrun Error interrupt
+ 430:libstr91x/src/91x_uart.c **** *                       - UART_IT_BreakError: Break Error interrupt
+ 431:libstr91x/src/91x_uart.c **** *                       - UART_IT_ParityError: Parity Error interrupt
+ 432:libstr91x/src/91x_uart.c **** *                       - UART_IT_FrameError: Frame Error interrupt
+ 433:libstr91x/src/91x_uart.c **** *                       - UART_IT_ReceiveTimeOut: Receive Time Out interrupt
+ 434:libstr91x/src/91x_uart.c **** *                       - UART_IT_Transmit: Transmit interrupt
+ 435:libstr91x/src/91x_uart.c **** *                       - UART_IT_Receive: Receive interrupt
+ 436:libstr91x/src/91x_uart.c **** *                       - UART_IT_DSR: DSR interrupt
+ 437:libstr91x/src/91x_uart.c **** *                       - UART_IT_DCD: DCD interrupt
+ 438:libstr91x/src/91x_uart.c **** *                       - UART_IT_CTS: CTS interrupt
+ 439:libstr91x/src/91x_uart.c **** *                       - UART_IT_RI: RI interrupt
+ 440:libstr91x/src/91x_uart.c **** * Output         : None
+ 441:libstr91x/src/91x_uart.c **** * Return         : The new state of UART_IT (SET or RESET).
+ 442:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 443:libstr91x/src/91x_uart.c **** ITStatus UART_GetITStatus(UART_TypeDef* UARTx, u16 UART_IT)
+ 444:libstr91x/src/91x_uart.c **** {
+ 597              		.loc 1 444 0
+ 598              		.cfi_startproc
+ 599              		@ args = 0, pretend = 0, frame = 0
+ 600              		@ frame_needed = 0, uses_anonymous_args = 0
+ 601              		@ link register save eliminated.
+ 602              	.LVL34:
+ 445:libstr91x/src/91x_uart.c ****   if((UARTx->MIS & UART_IT) != RESET)
+ 603              		.loc 1 445 0
+ 604 03ac B034D0E1 		ldrh	r3, [r0, #64]
+ 446:libstr91x/src/91x_uart.c ****   {
+ 447:libstr91x/src/91x_uart.c ****     return SET;
+ 605              		.loc 1 447 0
+ 606 03b0 030011E1 		tst	r1, r3
+ 448:libstr91x/src/91x_uart.c ****   }
+ 449:libstr91x/src/91x_uart.c ****   else
+ 450:libstr91x/src/91x_uart.c ****   {
+ 451:libstr91x/src/91x_uart.c ****     return RESET;
+ 452:libstr91x/src/91x_uart.c ****   }
+ 453:libstr91x/src/91x_uart.c **** }
+ 607              		.loc 1 453 0
+ 608 03b4 0000A003 		moveq	r0, #0
+ 609 03b8 0100A013 		movne	r0, #1
+ 610              	.LVL35:
+ 611 03bc 1EFF2FE1 		bx	lr
+ 612              		.cfi_endproc
+ 613              	.LFE10:
+ 615              		.align	2
+ 616              		.global	UART_ClearITPendingBit
+ 618              	UART_ClearITPendingBit:
+ 619              	.LFB11:
+ 454:libstr91x/src/91x_uart.c **** 
+ 455:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 456:libstr91x/src/91x_uart.c **** * Function Name  : UART_ClearITPendingBit
+ 457:libstr91x/src/91x_uart.c **** * Description    : Clears the UARTx’s interrupt pending bits.
+ 458:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1or 2 to select the UART peripheral.
+ 459:libstr91x/src/91x_uart.c **** *                  - UART_IT: specifies the interrupt pending bit to clear.
+ 460:libstr91x/src/91x_uart.c **** *                    More than one interrupt can be cleared using the “|” operator.
+ 461:libstr91x/src/91x_uart.c **** *                    This parameter can be:
+ 462:libstr91x/src/91x_uart.c **** *                       - UART_IT_OverrunError: Overrun Error interrupt
+ 463:libstr91x/src/91x_uart.c **** *                       - UART_IT_BreakError: Break Error interrupt
+ 464:libstr91x/src/91x_uart.c **** *                       - UART_IT_ParityError: Parity Error interrupt
+ 465:libstr91x/src/91x_uart.c **** *                       - UART_IT_FrameError: Frame Error interrupt
+ 466:libstr91x/src/91x_uart.c **** *                       - UART_IT_ReceiveTimeOut: Receive Time Out interrupt
+ 467:libstr91x/src/91x_uart.c **** *                       - UART_IT_Transmit: Transmit interrupt
+ 468:libstr91x/src/91x_uart.c **** *                       - UART_IT_Receive: Receive interrupt
+ 469:libstr91x/src/91x_uart.c **** *                       - UART_IT_DSR: DSR interrupt
+ 470:libstr91x/src/91x_uart.c **** *                       - UART_IT_DCD: DCD interrupt
+ 471:libstr91x/src/91x_uart.c **** *                       - UART_IT_CTS: CTS interrupt
+ 472:libstr91x/src/91x_uart.c **** *                       - UART_IT_RI: RI interrupt
+ 473:libstr91x/src/91x_uart.c **** * Output         : None
+ 474:libstr91x/src/91x_uart.c **** * Return         : None
+ 475:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 476:libstr91x/src/91x_uart.c **** void UART_ClearITPendingBit(UART_TypeDef* UARTx, u16 UART_IT)
+ 477:libstr91x/src/91x_uart.c **** {
+ 620              		.loc 1 477 0
+ 621              		.cfi_startproc
+ 622              		@ args = 0, pretend = 0, frame = 0
+ 623              		@ frame_needed = 0, uses_anonymous_args = 0
+ 624              		@ link register save eliminated.
+ 625              	.LVL36:
+ 478:libstr91x/src/91x_uart.c ****   /* Clear the specified interrupt */
+ 479:libstr91x/src/91x_uart.c ****   UARTx->ICR = UART_IT;
+ 626              		.loc 1 479 0
+ 627 03c0 B414C0E1 		strh	r1, [r0, #68]	@ movhi
+ 480:libstr91x/src/91x_uart.c **** }
+ 628              		.loc 1 480 0
+ 629 03c4 1EFF2FE1 		bx	lr
+ 630              		.cfi_endproc
+ 631              	.LFE11:
+ 633              		.align	2
+ 634              		.global	UART_IrDALowPowerConfig
+ 636              	UART_IrDALowPowerConfig:
+ 637              	.LFB12:
+ 481:libstr91x/src/91x_uart.c **** 
+ 482:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 483:libstr91x/src/91x_uart.c **** * Function Name  : UART_IrDALowPowerConfig
+ 484:libstr91x/src/91x_uart.c **** * Description    : Sets the IrDA low power mode
+ 485:libstr91x/src/91x_uart.c **** * Input          : - IrDAx: where x can be 0,1 or 2 to select the UART/IrDA peripheral.
+ 486:libstr91x/src/91x_uart.c **** *                  - NewState: new state of the UARTIrDA peripheral.
+ 487:libstr91x/src/91x_uart.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 488:libstr91x/src/91x_uart.c **** * Output         : None
+ 489:libstr91x/src/91x_uart.c **** * Return         : None
+ 490:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 491:libstr91x/src/91x_uart.c **** void UART_IrDALowPowerConfig(u8 IrDAx, FunctionalState NewState)
+ 492:libstr91x/src/91x_uart.c **** {
+ 638              		.loc 1 492 0
+ 639              		.cfi_startproc
+ 640              		@ args = 0, pretend = 0, frame = 0
+ 641              		@ frame_needed = 0, uses_anonymous_args = 0
+ 642              		@ link register save eliminated.
+ 643              	.LVL37:
+ 644              		.loc 1 492 0
+ 645 03c8 01C040E2 		sub	ip, r0, #1
+ 646 03cc FF000CE2 		and	r0, ip, #255
+ 647              	.LVL38:
+ 648 03d0 020050E3 		cmp	r0, #2
+ 649 03d4 24309F95 		ldrls	r3, .L61
+ 650 03d8 0020A083 		movhi	r2, #0
+ 651 03dc 00219397 		ldrls	r2, [r3, r0, asl #2]
+ 652              	.LVL39:
+ 493:libstr91x/src/91x_uart.c ****   UART_TypeDef* UARTx =0;
+ 494:libstr91x/src/91x_uart.c **** 
+ 495:libstr91x/src/91x_uart.c ****   switch(IrDAx)
+ 496:libstr91x/src/91x_uart.c ****   {
+ 497:libstr91x/src/91x_uart.c ****     case IrDA0: UARTx = UART0;
+ 498:libstr91x/src/91x_uart.c ****     break;
+ 499:libstr91x/src/91x_uart.c ****     case IrDA1: UARTx = UART1;
+ 500:libstr91x/src/91x_uart.c ****     break;
+ 501:libstr91x/src/91x_uart.c ****     case IrDA2: UARTx = UART2;
+ 502:libstr91x/src/91x_uart.c ****     break;
+ 503:libstr91x/src/91x_uart.c **** 	default : break;
+ 504:libstr91x/src/91x_uart.c ****   }
+ 505:libstr91x/src/91x_uart.c **** 
+ 506:libstr91x/src/91x_uart.c ****   if (NewState == ENABLE)
+ 653              		.loc 1 506 0
+ 654 03e0 010051E3 		cmp	r1, #1
+ 507:libstr91x/src/91x_uart.c ****   {
+ 508:libstr91x/src/91x_uart.c ****     UARTx->CR |= IrDA_LowPower_Enable_Mask;
+ 655              		.loc 1 508 0
+ 656 03e4 B033D201 		ldreqh	r3, [r2, #48]
+ 509:libstr91x/src/91x_uart.c ****   }
+ 510:libstr91x/src/91x_uart.c ****   else
+ 511:libstr91x/src/91x_uart.c ****   {
+ 512:libstr91x/src/91x_uart.c ****     UARTx->CR &= IrDA_LowPower_Disable_Mask;
+ 657              		.loc 1 512 0
+ 658 03e8 B013D211 		ldrneh	r1, [r2, #48]
+ 659              	.LVL40:
+ 660 03ec 10309F15 		ldrne	r3, .L61+4
+ 508:libstr91x/src/91x_uart.c ****     UARTx->CR |= IrDA_LowPower_Enable_Mask;
+ 661              		.loc 1 508 0
+ 662 03f0 04308303 		orreq	r3, r3, #4
+ 663              		.loc 1 512 0
+ 664 03f4 03300110 		andne	r3, r1, r3
+ 665 03f8 B033C2E1 		strh	r3, [r2, #48]	@ movhi
+ 666 03fc 1EFF2FE1 		bx	lr
+ 667              	.L62:
+ 668              		.align	2
+ 669              	.L61:
+ 670 0400 00000000 		.word	.LANCHOR0
+ 671 0404 FBFF0000 		.word	65531
+ 672              		.cfi_endproc
+ 673              	.LFE12:
+ 675              		.global	__aeabi_uidiv
+ 676              		.align	2
+ 677              		.global	UART_IrDASetCounter
+ 679              	UART_IrDASetCounter:
+ 680              	.LFB13:
+ 513:libstr91x/src/91x_uart.c ****   }
+ 514:libstr91x/src/91x_uart.c **** }
+ 515:libstr91x/src/91x_uart.c **** 
+ 516:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 517:libstr91x/src/91x_uart.c **** * Function Name  : UART_IrDASetCounter
+ 518:libstr91x/src/91x_uart.c **** * Description    : Sets the IrDA counter divisor value.
+ 519:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1 or 2 to select the UART/IrDA peripheral.
+ 520:libstr91x/src/91x_uart.c **** *                  - IrDA_Counter: IrDA counter divisor new value n low power mode(Hz).
+ 521:libstr91x/src/91x_uart.c **** * Output         : None
+ 522:libstr91x/src/91x_uart.c **** * Return         : None
+ 523:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 524:libstr91x/src/91x_uart.c **** void UART_IrDASetCounter(u8 IrDAx, u32 IrDA_Counter)
+ 525:libstr91x/src/91x_uart.c **** {
+ 681              		.loc 1 525 0
+ 682              		.cfi_startproc
+ 683              		@ args = 0, pretend = 0, frame = 0
+ 684              		@ frame_needed = 0, uses_anonymous_args = 0
+ 685              	.LVL41:
+ 686 0408 38402DE9 		stmfd	sp!, {r3, r4, r5, lr}
+ 687              	.LCFI2:
+ 688              		.cfi_def_cfa_offset 16
+ 689              		.loc 1 525 0
+ 690 040c 015040E2 		sub	r5, r0, #1
+ 691              		.cfi_offset 14, -4
+ 692              		.cfi_offset 5, -8
+ 693              		.cfi_offset 4, -12
+ 694              		.cfi_offset 3, -16
+ 695 0410 FFE005E2 		and	lr, r5, #255
+ 696 0414 02005EE3 		cmp	lr, #2
+ 697 0418 3C309F95 		ldrls	r3, .L66
+ 698 041c 0040A083 		movhi	r4, #0
+ 699 0420 0EE18390 		addls	lr, r3, lr, asl #2
+ 700 0424 0C409E95 		ldrls	r4, [lr, #12]
+ 701              	.LVL42:
+ 702 0428 0150A0E1 		mov	r5, r1
+ 526:libstr91x/src/91x_uart.c ****   UART_TypeDef* UARTx =0;
+ 527:libstr91x/src/91x_uart.c ****   u32 APBClock;
+ 528:libstr91x/src/91x_uart.c ****   switch(IrDAx)
+ 529:libstr91x/src/91x_uart.c ****   {
+ 530:libstr91x/src/91x_uart.c ****     case IrDA0: UARTx = UART0;
+ 531:libstr91x/src/91x_uart.c ****     break;
+ 532:libstr91x/src/91x_uart.c ****     case IrDA1: UARTx = UART1;
+ 533:libstr91x/src/91x_uart.c ****     break;
+ 534:libstr91x/src/91x_uart.c ****     case IrDA2: UARTx = UART2;
+ 535:libstr91x/src/91x_uart.c ****     break;
+ 536:libstr91x/src/91x_uart.c **** 	default : break;
+ 537:libstr91x/src/91x_uart.c ****   }
+ 538:libstr91x/src/91x_uart.c ****    /* Get the APB frequency */
+ 539:libstr91x/src/91x_uart.c ****   APBClock = (SCU_GetPCLKFreqValue())*1000;
+ 703              		.loc 1 539 0
+ 704 042c FEFFFFEB 		bl	SCU_GetPCLKFreqValue
+ 705              	.LVL43:
+ 540:libstr91x/src/91x_uart.c ****   /* Determine the Counter Divisor part */
+ 541:libstr91x/src/91x_uart.c ****   UARTx->ILPR = (((APBClock*10) / ( IrDA_Counter)) + 5 )/10;
+ 706              		.loc 1 541 0
+ 707 0430 28209FE5 		ldr	r2, .L66+4
+ 708 0434 0510A0E1 		mov	r1, r5
+ 709 0438 920000E0 		mul	r0, r2, r0
+ 710              	.LVL44:
+ 711 043c FEFFFFEB 		bl	__aeabi_uidiv
+ 712 0440 1C109FE5 		ldr	r1, .L66+8
+ 713 0444 05C080E2 		add	ip, r0, #5
+ 714 0448 9C2181E0 		umull	r2, r1, ip, r1
+ 715 044c 8106A0E1 		mov	r0, r1, asl #13
+ 716 0450 2038A0E1 		mov	r3, r0, lsr #16
+ 717 0454 B032C4E1 		strh	r3, [r4, #32]	@ movhi
+ 542:libstr91x/src/91x_uart.c ****  }
+ 718              		.loc 1 542 0
+ 719 0458 3880BDE8 		ldmfd	sp!, {r3, r4, r5, pc}
+ 720              	.L67:
+ 721              		.align	2
+ 722              	.L66:
+ 723 045c 00000000 		.word	.LANCHOR0
+ 724 0460 10270000 		.word	10000
+ 725 0464 CDCCCCCC 		.word	-858993459
+ 726              		.cfi_endproc
+ 727              	.LFE13:
+ 729              		.align	2
+ 730              		.global	UART_IrDACmd
+ 732              	UART_IrDACmd:
+ 733              	.LFB14:
+ 543:libstr91x/src/91x_uart.c **** 
+ 544:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 545:libstr91x/src/91x_uart.c **** * Function Name  : UART_IrDACmd
+ 546:libstr91x/src/91x_uart.c **** * Description    : Enables or disables the UARTx’s IrDA interface.
+ 547:libstr91x/src/91x_uart.c **** * Input          : - IrDAx: where x can be 0,1 or 2 to select the UART/IrDA peripheral
+ 548:libstr91x/src/91x_uart.c **** *                  - NewState: new state of the UARTx peripheral.
+ 549:libstr91x/src/91x_uart.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 550:libstr91x/src/91x_uart.c **** * Output         : None
+ 551:libstr91x/src/91x_uart.c **** * Return         : None
+ 552:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 553:libstr91x/src/91x_uart.c **** void UART_IrDACmd(u8 IrDAx, FunctionalState NewState)
+ 554:libstr91x/src/91x_uart.c **** {
+ 734              		.loc 1 554 0
+ 735              		.cfi_startproc
+ 736              		@ args = 0, pretend = 0, frame = 0
+ 737              		@ frame_needed = 0, uses_anonymous_args = 0
+ 738              		@ link register save eliminated.
+ 739              	.LVL45:
+ 740              		.loc 1 554 0
+ 741 0468 01C040E2 		sub	ip, r0, #1
+ 742 046c FF000CE2 		and	r0, ip, #255
+ 743              	.LVL46:
+ 744 0470 020050E3 		cmp	r0, #2
+ 745 0474 28309F95 		ldrls	r3, .L73
+ 746 0478 0020A083 		movhi	r2, #0
+ 747 047c 00018390 		addls	r0, r3, r0, asl #2
+ 748 0480 18209095 		ldrls	r2, [r0, #24]
+ 749              	.LVL47:
+ 555:libstr91x/src/91x_uart.c ****   UART_TypeDef* UARTx = 0;
+ 556:libstr91x/src/91x_uart.c **** 
+ 557:libstr91x/src/91x_uart.c ****   switch(IrDAx)
+ 558:libstr91x/src/91x_uart.c ****   {
+ 559:libstr91x/src/91x_uart.c ****     case IrDA0: UARTx = UART0;
+ 560:libstr91x/src/91x_uart.c ****     break;
+ 561:libstr91x/src/91x_uart.c ****     case IrDA1: UARTx = UART1;
+ 562:libstr91x/src/91x_uart.c ****     break;
+ 563:libstr91x/src/91x_uart.c ****     case IrDA2: UARTx = UART2;
+ 564:libstr91x/src/91x_uart.c ****     break;
+ 565:libstr91x/src/91x_uart.c **** 	default : break;
+ 566:libstr91x/src/91x_uart.c ****   }
+ 567:libstr91x/src/91x_uart.c ****   if(NewState == ENABLE)
+ 750              		.loc 1 567 0
+ 751 0484 010051E3 		cmp	r1, #1
+ 568:libstr91x/src/91x_uart.c ****   {
+ 569:libstr91x/src/91x_uart.c ****     /* Enable the IrDA mode of the specified UART */
+ 570:libstr91x/src/91x_uart.c ****     UARTx->CR |= UART_IrDA_Enable_Mask;
+ 752              		.loc 1 570 0
+ 753 0488 B033D201 		ldreqh	r3, [r2, #48]
+ 571:libstr91x/src/91x_uart.c ****   }
+ 572:libstr91x/src/91x_uart.c ****   else
+ 573:libstr91x/src/91x_uart.c ****   {
+ 574:libstr91x/src/91x_uart.c ****     /* Disable the IrDA mode of the specified UART */
+ 575:libstr91x/src/91x_uart.c ****     UARTx->CR &= UART_IrDA_Disable_Mask;
+ 754              		.loc 1 575 0
+ 755 048c B013D211 		ldrneh	r1, [r2, #48]
+ 756              	.LVL48:
+ 757 0490 10309F15 		ldrne	r3, .L73+4
+ 570:libstr91x/src/91x_uart.c ****     UARTx->CR |= UART_IrDA_Enable_Mask;
+ 758              		.loc 1 570 0
+ 759 0494 02308303 		orreq	r3, r3, #2
+ 760              		.loc 1 575 0
+ 761 0498 03300110 		andne	r3, r1, r3
+ 762 049c B033C2E1 		strh	r3, [r2, #48]	@ movhi
+ 763 04a0 1EFF2FE1 		bx	lr
+ 764              	.L74:
+ 765              		.align	2
+ 766              	.L73:
+ 767 04a4 00000000 		.word	.LANCHOR0
+ 768 04a8 FDFF0000 		.word	65533
+ 769              		.cfi_endproc
+ 770              	.LFE14:
+ 772              		.align	2
+ 773              		.global	UART_SendData
+ 775              	UART_SendData:
+ 776              	.LFB15:
+ 576:libstr91x/src/91x_uart.c ****   }
+ 577:libstr91x/src/91x_uart.c **** }
+ 578:libstr91x/src/91x_uart.c **** 
+ 579:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 580:libstr91x/src/91x_uart.c **** * Function Name  : UART_SendData
+ 581:libstr91x/src/91x_uart.c **** * Description    : Transmits signle Byte of data through the UARTx peripheral.
+ 582:libstr91x/src/91x_uart.c **** * Input          : - UARTx: where x can be 0,1 or 2 to select the UART peripheral.
+ 583:libstr91x/src/91x_uart.c **** *                  - Data: the byte to transmit
+ 584:libstr91x/src/91x_uart.c **** * Output         : None
+ 585:libstr91x/src/91x_uart.c **** * Return         : None
+ 586:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 587:libstr91x/src/91x_uart.c **** void UART_SendData(UART_TypeDef* UARTx, u8 Data)
+ 588:libstr91x/src/91x_uart.c **** {
+ 777              		.loc 1 588 0
+ 778              		.cfi_startproc
+ 779              		@ args = 0, pretend = 0, frame = 0
+ 780              		@ frame_needed = 0, uses_anonymous_args = 0
+ 781              		@ link register save eliminated.
+ 782              	.LVL49:
+ 589:libstr91x/src/91x_uart.c ****   /* Transmit one byte */
+ 590:libstr91x/src/91x_uart.c ****   UARTx->DR = Data;
+ 783              		.loc 1 590 0
+ 784 04ac B010C0E1 		strh	r1, [r0, #0]	@ movhi
+ 591:libstr91x/src/91x_uart.c **** }
+ 785              		.loc 1 591 0
+ 786 04b0 1EFF2FE1 		bx	lr
+ 787              		.cfi_endproc
+ 788              	.LFE15:
+ 790              		.align	2
+ 791              		.global	UART_ReceiveData
+ 793              	UART_ReceiveData:
+ 794              	.LFB16:
+ 592:libstr91x/src/91x_uart.c **** 
+ 593:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 594:libstr91x/src/91x_uart.c **** * Function Name  : UART_ReceiveData
+ 595:libstr91x/src/91x_uart.c **** * Description    : Returns the most recent received Byte by the UARTx peripheral.
+ 596:libstr91x/src/91x_uart.c **** * Input          : UARTx: where x can be 0,1 or 2 to select the UART peripheral.
+ 597:libstr91x/src/91x_uart.c **** * Output         : None
+ 598:libstr91x/src/91x_uart.c **** * Return         : The received data
+ 599:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 600:libstr91x/src/91x_uart.c **** u8 UART_ReceiveData(UART_TypeDef* UARTx)
+ 601:libstr91x/src/91x_uart.c **** {
+ 795              		.loc 1 601 0
+ 796              		.cfi_startproc
+ 797              		@ args = 0, pretend = 0, frame = 0
+ 798              		@ frame_needed = 0, uses_anonymous_args = 0
+ 799              		@ link register save eliminated.
+ 800              	.LVL50:
+ 602:libstr91x/src/91x_uart.c ****   /* Receive one byte */
+ 603:libstr91x/src/91x_uart.c ****   return ((u8)UARTx->DR);
+ 801              		.loc 1 603 0
+ 802 04b4 B000D0E1 		ldrh	r0, [r0, #0]
+ 803              	.LVL51:
+ 604:libstr91x/src/91x_uart.c **** }
+ 804              		.loc 1 604 0
+ 805 04b8 FF0000E2 		and	r0, r0, #255
+ 806 04bc 1EFF2FE1 		bx	lr
+ 807              		.cfi_endproc
+ 808              	.LFE16:
+ 810              		.align	2
+ 811              		.global	UART_SendBreak
+ 813              	UART_SendBreak:
+ 814              	.LFB17:
+ 605:libstr91x/src/91x_uart.c **** 
+ 606:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 607:libstr91x/src/91x_uart.c **** * Function Name  : UART_SendBreak
+ 608:libstr91x/src/91x_uart.c **** * Description    : Transmits break characters.
+ 609:libstr91x/src/91x_uart.c **** * Input          : UARTx: where x can be 0,1 or 2 to select the UART peripheral.
+ 610:libstr91x/src/91x_uart.c **** * Output         : None
+ 611:libstr91x/src/91x_uart.c **** * Return         : None
+ 612:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 613:libstr91x/src/91x_uart.c **** void UART_SendBreak(UART_TypeDef* UARTx)
+ 614:libstr91x/src/91x_uart.c **** {
+ 815              		.loc 1 614 0
+ 816              		.cfi_startproc
+ 817              		@ args = 0, pretend = 0, frame = 0
+ 818              		@ frame_needed = 0, uses_anonymous_args = 0
+ 819              		@ link register save eliminated.
+ 820              	.LVL52:
+ 615:libstr91x/src/91x_uart.c ****   /* Send break characters */
+ 616:libstr91x/src/91x_uart.c ****   UARTx->LCR |= UART_BreakChar_Mask;
+ 821              		.loc 1 616 0
+ 822 04c0 BC12D0E1 		ldrh	r1, [r0, #44]
+ 823 04c4 013081E3 		orr	r3, r1, #1
+ 824 04c8 BC32C0E1 		strh	r3, [r0, #44]	@ movhi
+ 617:libstr91x/src/91x_uart.c **** }
+ 825              		.loc 1 617 0
+ 826 04cc 1EFF2FE1 		bx	lr
+ 827              		.cfi_endproc
+ 828              	.LFE17:
+ 830              		.align	2
+ 831              		.global	UART_RTSConfig
+ 833              	UART_RTSConfig:
+ 834              	.LFB18:
+ 618:libstr91x/src/91x_uart.c **** 
+ 619:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 620:libstr91x/src/91x_uart.c **** * Function Name  : UART_RTSConfig
+ 621:libstr91x/src/91x_uart.c **** * Description    : Sets or Resets the RTS signal
+ 622:libstr91x/src/91x_uart.c **** * Input          : - LevelState: new state of the RTS signal for UART0 only.
+ 623:libstr91x/src/91x_uart.c **** *                    This parameter can be: LowLevel or HighLevel
+ 624:libstr91x/src/91x_uart.c **** * Output         : None
+ 625:libstr91x/src/91x_uart.c **** * Return         : None
+ 626:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 627:libstr91x/src/91x_uart.c **** void UART_RTSConfig(UART_LevelTypeDef LevelState)
+ 628:libstr91x/src/91x_uart.c **** {
+ 835              		.loc 1 628 0
+ 836              		.cfi_startproc
+ 837              		@ args = 0, pretend = 0, frame = 0
+ 838              		@ frame_needed = 0, uses_anonymous_args = 0
+ 839              		@ link register save eliminated.
+ 840              	.LVL53:
+ 629:libstr91x/src/91x_uart.c ****   if(LevelState == LowLevel)
+ 841              		.loc 1 629 0
+ 842 04d0 000050E3 		cmp	r0, #0
+ 630:libstr91x/src/91x_uart.c ****   {
+ 631:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_RTS_LowLevel_Mask;
+ 843              		.loc 1 631 0
+ 844 04d4 20309F05 		ldreq	r3, .L81
+ 632:libstr91x/src/91x_uart.c ****   }
+ 633:libstr91x/src/91x_uart.c ****   else
+ 634:libstr91x/src/91x_uart.c ****   {
+ 635:libstr91x/src/91x_uart.c ****     UART0->CR &= UART_RTS_HighLevel_Mask;
+ 845              		.loc 1 635 0
+ 846 04d8 1C209F15 		ldrne	r2, .L81
+ 631:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_RTS_LowLevel_Mask;
+ 847              		.loc 1 631 0
+ 848 04dc B023D301 		ldreqh	r2, [r3, #48]
+ 849              		.loc 1 635 0
+ 850 04e0 18309F15 		ldrne	r3, .L81+4
+ 851 04e4 B013D211 		ldrneh	r1, [r2, #48]
+ 631:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_RTS_LowLevel_Mask;
+ 852              		.loc 1 631 0
+ 853 04e8 022B8203 		orreq	r2, r2, #2048
+ 854              		.loc 1 635 0
+ 855 04ec 03300110 		andne	r3, r1, r3
+ 631:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_RTS_LowLevel_Mask;
+ 856              		.loc 1 631 0
+ 857 04f0 B023C301 		streqh	r2, [r3, #48]	@ movhi
+ 858              		.loc 1 635 0
+ 859 04f4 B033C211 		strneh	r3, [r2, #48]	@ movhi
+ 860 04f8 1EFF2FE1 		bx	lr
+ 861              	.L82:
+ 862              		.align	2
+ 863              	.L81:
+ 864 04fc 0040005C 		.word	1543520256
+ 865 0500 FFF70000 		.word	63487
+ 866              		.cfi_endproc
+ 867              	.LFE18:
+ 869              		.align	2
+ 870              		.global	UART_DTRConfig
+ 872              	UART_DTRConfig:
+ 873              	.LFB19:
+ 636:libstr91x/src/91x_uart.c ****   }
+ 637:libstr91x/src/91x_uart.c **** }
+ 638:libstr91x/src/91x_uart.c **** 
+ 639:libstr91x/src/91x_uart.c **** /*******************************************************************************
+ 640:libstr91x/src/91x_uart.c **** * Function Name  : UART_DTRConfig
+ 641:libstr91x/src/91x_uart.c **** * Description    : Sets or Resets the DTR signal for UART0 only
+ 642:libstr91x/src/91x_uart.c **** * Input          : - LevelState: new state of the DTR signal.
+ 643:libstr91x/src/91x_uart.c **** *                    This parameter can be: LowLevel or HighLevel
+ 644:libstr91x/src/91x_uart.c **** * Output         : None
+ 645:libstr91x/src/91x_uart.c **** * Return         : None
+ 646:libstr91x/src/91x_uart.c **** *******************************************************************************/
+ 647:libstr91x/src/91x_uart.c **** void UART_DTRConfig(UART_LevelTypeDef LevelState)
+ 648:libstr91x/src/91x_uart.c **** {
+ 874              		.loc 1 648 0
+ 875              		.cfi_startproc
+ 876              		@ args = 0, pretend = 0, frame = 0
+ 877              		@ frame_needed = 0, uses_anonymous_args = 0
+ 878              		@ link register save eliminated.
+ 879              	.LVL54:
+ 649:libstr91x/src/91x_uart.c ****   if(LevelState == LowLevel)
+ 880              		.loc 1 649 0
+ 881 0504 000050E3 		cmp	r0, #0
+ 650:libstr91x/src/91x_uart.c ****   {
+ 651:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_DTR_LowLevel_Mask;
+ 882              		.loc 1 651 0
+ 883 0508 20309F05 		ldreq	r3, .L86
+ 652:libstr91x/src/91x_uart.c ****   }
+ 653:libstr91x/src/91x_uart.c ****   else
+ 654:libstr91x/src/91x_uart.c ****   {
+ 655:libstr91x/src/91x_uart.c ****     UART0->CR &= UART_DTR_HighLevel_Mask;
+ 884              		.loc 1 655 0
+ 885 050c 1C209F15 		ldrne	r2, .L86
+ 651:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_DTR_LowLevel_Mask;
+ 886              		.loc 1 651 0
+ 887 0510 B023D301 		ldreqh	r2, [r3, #48]
+ 888              		.loc 1 655 0
+ 889 0514 18309F15 		ldrne	r3, .L86+4
+ 890 0518 B013D211 		ldrneh	r1, [r2, #48]
+ 651:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_DTR_LowLevel_Mask;
+ 891              		.loc 1 651 0
+ 892 051c 012B8203 		orreq	r2, r2, #1024
+ 893              		.loc 1 655 0
+ 894 0520 03300110 		andne	r3, r1, r3
+ 651:libstr91x/src/91x_uart.c ****     UART0->CR |= UART_DTR_LowLevel_Mask;
+ 895              		.loc 1 651 0
+ 896 0524 B023C301 		streqh	r2, [r3, #48]	@ movhi
+ 897              		.loc 1 655 0
+ 898 0528 B033C211 		strneh	r3, [r2, #48]	@ movhi
+ 899 052c 1EFF2FE1 		bx	lr
+ 900              	.L87:
+ 901              		.align	2
+ 902              	.L86:
+ 903 0530 0040005C 		.word	1543520256
+ 904 0534 FFFB0000 		.word	64511
+ 905              		.cfi_endproc
+ 906              	.LFE19:
+ 908              		.section	.rodata
+ 909              		.align	2
+ 910              		.set	.LANCHOR0,. + 0
+ 913              	CSWTCH.3:
+ 914 0000 0040005C 		.word	1543520256
+ 915 0004 0050005C 		.word	1543524352
+ 916 0008 0060005C 		.word	1543528448
+ 919              	CSWTCH.6:
+ 920 000c 0040005C 		.word	1543520256
+ 921 0010 0050005C 		.word	1543524352
+ 922 0014 0060005C 		.word	1543528448
+ 925              	CSWTCH.9:
+ 926 0018 0040005C 		.word	1543520256
+ 927 001c 0050005C 		.word	1543524352
+ 928 0020 0060005C 		.word	1543528448
+ 929              		.text
+ 930              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_uart.c
+     /tmp/ccpTNoYt.s:21     .text:00000000 $a
+     /tmp/ccpTNoYt.s:24     .text:00000000 UART_DeInit
+     /tmp/ccpTNoYt.s:94     .text:0000007c $d
+     /tmp/ccpTNoYt.s:101    .text:00000088 $a
+     /tmp/ccpTNoYt.s:104    .text:00000088 UART_Init
+     /tmp/ccpTNoYt.s:285    .text:00000218 $d
+     /tmp/ccpTNoYt.s:296    .text:00000238 $a
+     /tmp/ccpTNoYt.s:299    .text:00000238 UART_StructInit
+     /tmp/ccpTNoYt.s:347    .text:0000027c UART_Cmd
+     /tmp/ccpTNoYt.s:371    .text:0000029c $d
+     /tmp/ccpTNoYt.s:375    .text:000002a0 $a
+     /tmp/ccpTNoYt.s:378    .text:000002a0 UART_ITConfig
+     /tmp/ccpTNoYt.s:403    .text:000002b8 UART_DMAConfig
+     /tmp/ccpTNoYt.s:427    .text:000002d8 $d
+     /tmp/ccpTNoYt.s:431    .text:000002dc $a
+     /tmp/ccpTNoYt.s:434    .text:000002dc UART_DMACmd
+     /tmp/ccpTNoYt.s:481    .text:0000032c $d
+     /tmp/ccpTNoYt.s:486    .text:00000334 $a
+     /tmp/ccpTNoYt.s:489    .text:00000334 UART_LoopBackConfig
+     /tmp/ccpTNoYt.s:513    .text:00000354 $d
+     /tmp/ccpTNoYt.s:517    .text:00000358 $a
+     /tmp/ccpTNoYt.s:520    .text:00000358 UART_GetFlagStatus
+     /tmp/ccpTNoYt.s:576    .text:000003a0 UART_ClearFlag
+     /tmp/ccpTNoYt.s:595    .text:000003ac UART_GetITStatus
+     /tmp/ccpTNoYt.s:618    .text:000003c0 UART_ClearITPendingBit
+     /tmp/ccpTNoYt.s:636    .text:000003c8 UART_IrDALowPowerConfig
+     /tmp/ccpTNoYt.s:670    .text:00000400 $d
+     /tmp/ccpTNoYt.s:676    .text:00000408 $a
+     /tmp/ccpTNoYt.s:679    .text:00000408 UART_IrDASetCounter
+     /tmp/ccpTNoYt.s:723    .text:0000045c $d
+     /tmp/ccpTNoYt.s:729    .text:00000468 $a
+     /tmp/ccpTNoYt.s:732    .text:00000468 UART_IrDACmd
+     /tmp/ccpTNoYt.s:767    .text:000004a4 $d
+     /tmp/ccpTNoYt.s:772    .text:000004ac $a
+     /tmp/ccpTNoYt.s:775    .text:000004ac UART_SendData
+     /tmp/ccpTNoYt.s:793    .text:000004b4 UART_ReceiveData
+     /tmp/ccpTNoYt.s:813    .text:000004c0 UART_SendBreak
+     /tmp/ccpTNoYt.s:833    .text:000004d0 UART_RTSConfig
+     /tmp/ccpTNoYt.s:864    .text:000004fc $d
+     /tmp/ccpTNoYt.s:869    .text:00000504 $a
+     /tmp/ccpTNoYt.s:872    .text:00000504 UART_DTRConfig
+     /tmp/ccpTNoYt.s:903    .text:00000530 $d
+     /tmp/ccpTNoYt.s:909    .rodata:00000000 $d
+     /tmp/ccpTNoYt.s:913    .rodata:00000000 CSWTCH.3
+     /tmp/ccpTNoYt.s:919    .rodata:0000000c CSWTCH.6
+     /tmp/ccpTNoYt.s:925    .rodata:00000018 CSWTCH.9
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset
+__aeabi_ldivmod
+SCU_GetMCLKFreqValue
+__aeabi_uidiv
+SCU_GetPCLKFreqValue

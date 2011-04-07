@@ -1,0 +1,1065 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_ssp.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	SSP_DeInit
+  24              	SSP_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_ssp.c"
+   1:libstr91x/src/91x_ssp.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_ssp.c **** * File Name          : 91x_ssp.c
+   3:libstr91x/src/91x_ssp.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_ssp.c **** * Version            : V2.1
+   5:libstr91x/src/91x_ssp.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_ssp.c **** * Description        : This file provides all the SSP firmware functions.
+   7:libstr91x/src/91x_ssp.c **** ********************************************************************************
+   8:libstr91x/src/91x_ssp.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_ssp.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_ssp.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_ssp.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_ssp.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_ssp.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+  15:libstr91x/src/91x_ssp.c **** 
+  16:libstr91x/src/91x_ssp.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_ssp.c **** #include "91x_ssp.h"
+  18:libstr91x/src/91x_ssp.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_ssp.c **** 
+  20:libstr91x/src/91x_ssp.c **** /* Private typedef -----------------------------------------------------------*/
+  21:libstr91x/src/91x_ssp.c **** /* Private define ------------------------------------------------------------*/
+  22:libstr91x/src/91x_ssp.c **** /* Private macro -------------------------------------------------------------*/
+  23:libstr91x/src/91x_ssp.c **** /* Private variables ---------------------------------------------------------*/
+  24:libstr91x/src/91x_ssp.c **** 
+  25:libstr91x/src/91x_ssp.c **** /* SSP peripheral Enable */
+  26:libstr91x/src/91x_ssp.c **** #define SSP_Enable   0x0002
+  27:libstr91x/src/91x_ssp.c **** #define SSP_Disable  0xFFFD
+  28:libstr91x/src/91x_ssp.c **** 
+  29:libstr91x/src/91x_ssp.c **** /* SSP Loop Back Mode Enable */
+  30:libstr91x/src/91x_ssp.c **** #define SSP_LoopBackMode_Enable   0x0001
+  31:libstr91x/src/91x_ssp.c **** #define SSP_LoopBackMode_Disable  0xFFFE
+  32:libstr91x/src/91x_ssp.c **** 
+  33:libstr91x/src/91x_ssp.c **** /* SSP Flag Mask */
+  34:libstr91x/src/91x_ssp.c **** #define SSP_Flag_Mask  0x001F
+  35:libstr91x/src/91x_ssp.c **** 
+  36:libstr91x/src/91x_ssp.c **** /* SSP DMA transmit/ receive enable/disable Masks */
+  37:libstr91x/src/91x_ssp.c **** #define SSP_DMA_TransmitEnable   0x0002
+  38:libstr91x/src/91x_ssp.c **** #define SSP_DMA_TransmitDisable  0xFFFD
+  39:libstr91x/src/91x_ssp.c **** #define SSP_DMA_ReceiveEnable    0x0001
+  40:libstr91x/src/91x_ssp.c **** #define SSP_DMA_ReceiveDisable   0xFFFE
+  41:libstr91x/src/91x_ssp.c **** 
+  42:libstr91x/src/91x_ssp.c **** /* SSP Masks */
+  43:libstr91x/src/91x_ssp.c **** #define SSP_FrameFormat_Mask     0xFFCF
+  44:libstr91x/src/91x_ssp.c **** #define SSP_DataSize_Mask        0xFFF0
+  45:libstr91x/src/91x_ssp.c **** #define SSP_ClockRate_Mask       0x00FF
+  46:libstr91x/src/91x_ssp.c **** #define SSP_ClockPrescaler_Mask  0xFF00
+  47:libstr91x/src/91x_ssp.c **** 
+  48:libstr91x/src/91x_ssp.c **** /* Private function prototypes -----------------------------------------------*/
+  49:libstr91x/src/91x_ssp.c **** /* Private functions ---------------------------------------------------------*/
+  50:libstr91x/src/91x_ssp.c **** 
+  51:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+  52:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_DeInit
+  53:libstr91x/src/91x_ssp.c **** * Description    : Deinitializes the SSPx peripheral registers to their default
+  54:libstr91x/src/91x_ssp.c **** *                  reset values.
+  55:libstr91x/src/91x_ssp.c **** * Input          : SSPx: where x can be 0 or 1 to select the SSP peripheral.
+  56:libstr91x/src/91x_ssp.c **** * Output         : None
+  57:libstr91x/src/91x_ssp.c **** * Return         : None
+  58:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+  59:libstr91x/src/91x_ssp.c **** void SSP_DeInit(SSP_TypeDef* SSPx)
+  60:libstr91x/src/91x_ssp.c **** {
+  27              		.loc 1 60 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  61:libstr91x/src/91x_ssp.c ****   if(SSPx == SSP0)
+  32              		.loc 1 61 0
+  33 0000 4C309FE5 		ldr	r3, .L6
+  60:libstr91x/src/91x_ssp.c **** {
+  34              		.loc 1 60 0
+  35 0004 10402DE9 		stmfd	sp!, {r4, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.loc 1 61 0
+  39 0008 030050E1 		cmp	r0, r3
+  40 000c 0900000A 		beq	.L5
+  41              		.cfi_offset 14, -4
+  42              		.cfi_offset 4, -8
+  62:libstr91x/src/91x_ssp.c ****   {
+  63:libstr91x/src/91x_ssp.c ****     /* Reset the SSP0 registers values*/
+  64:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP0,ENABLE);
+  65:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP0,DISABLE);
+  66:libstr91x/src/91x_ssp.c ****   }
+  67:libstr91x/src/91x_ssp.c ****   else if (SSPx == SSP1)
+  43              		.loc 1 67 0
+  44 0010 40109FE5 		ldr	r1, .L6+4
+  45 0014 010050E1 		cmp	r0, r1
+  46 0018 1080BD18 		ldmnefd	sp!, {r4, pc}
+  68:libstr91x/src/91x_ssp.c ****   {
+  69:libstr91x/src/91x_ssp.c ****     /* Reset the SSP1 registers values*/
+  70:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP1,ENABLE);
+  47              		.loc 1 70 0
+  48 001c 020CA0E3 		mov	r0, #512
+  49              	.LVL1:
+  50 0020 0110A0E3 		mov	r1, #1
+  51 0024 FEFFFFEB 		bl	SCU_APBPeriphReset
+  71:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP1,DISABLE);
+  52              		.loc 1 71 0
+  53 0028 020CA0E3 		mov	r0, #512
+  54 002c 0010A0E3 		mov	r1, #0
+  72:libstr91x/src/91x_ssp.c ****   }
+  73:libstr91x/src/91x_ssp.c **** }
+  55              		.loc 1 73 0
+  56 0030 1040BDE8 		ldmfd	sp!, {r4, lr}
+  71:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP1,DISABLE);
+  57              		.loc 1 71 0
+  58 0034 FEFFFFEA 		b	SCU_APBPeriphReset
+  59              	.LVL2:
+  60              	.L5:
+  64:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP0,ENABLE);
+  61              		.loc 1 64 0
+  62 0038 010CA0E3 		mov	r0, #256
+  63              	.LVL3:
+  64 003c 0110A0E3 		mov	r1, #1
+  65 0040 FEFFFFEB 		bl	SCU_APBPeriphReset
+  65:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP0,DISABLE);
+  66              		.loc 1 65 0
+  67 0044 010CA0E3 		mov	r0, #256
+  68 0048 0010A0E3 		mov	r1, #0
+  69              		.loc 1 73 0
+  70 004c 1040BDE8 		ldmfd	sp!, {r4, lr}
+  65:libstr91x/src/91x_ssp.c ****     SCU_APBPeriphReset(__SSP0,DISABLE);
+  71              		.loc 1 65 0
+  72 0050 FEFFFFEA 		b	SCU_APBPeriphReset
+  73              	.L7:
+  74              		.align	2
+  75              	.L6:
+  76 0054 0070005C 		.word	1543532544
+  77 0058 0080005C 		.word	1543536640
+  78              		.cfi_endproc
+  79              	.LFE0:
+  81              		.align	2
+  82              		.global	SSP_Init
+  84              	SSP_Init:
+  85              	.LFB1:
+  74:libstr91x/src/91x_ssp.c **** 
+  75:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+  76:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_Init
+  77:libstr91x/src/91x_ssp.c **** * Description    : Initializes the SSPx  peripheral according to the specified
+  78:libstr91x/src/91x_ssp.c **** *                  parameters in the SSP_InitTypeDef structure.
+  79:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+  80:libstr91x/src/91x_ssp.c **** *                  - SSP_InitStruct: pointer to a SSP_InitTypeDef structure that
+  81:libstr91x/src/91x_ssp.c **** *                    contains the configuration information for the specified SSP
+  82:libstr91x/src/91x_ssp.c **** *                    peripheral.
+  83:libstr91x/src/91x_ssp.c **** * Output         : None
+  84:libstr91x/src/91x_ssp.c **** * Return         : None
+  85:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+  86:libstr91x/src/91x_ssp.c **** void SSP_Init(SSP_TypeDef* SSPx, SSP_InitTypeDef* SSP_InitStruct)
+  87:libstr91x/src/91x_ssp.c **** {
+  86              		.loc 1 87 0
+  87              		.cfi_startproc
+  88              		@ args = 0, pretend = 0, frame = 0
+  89              		@ frame_needed = 0, uses_anonymous_args = 0
+  90              		@ link register save eliminated.
+  91              	.LVL4:
+  88:libstr91x/src/91x_ssp.c ****   if(SSP_InitStruct->SSP_FrameFormat == SSP_FrameFormat_Motorola)
+  92              		.loc 1 88 0
+  93 005c B030D1E1 		ldrh	r3, [r1, #0]
+  94 0060 24219FE5 		ldr	r2, .L19
+  95 0064 020053E1 		cmp	r3, r2
+  96 0068 2400000A 		beq	.L17
+  89:libstr91x/src/91x_ssp.c ****   {
+  90:libstr91x/src/91x_ssp.c ****     /* Set the Motorola frame format */
+  91:libstr91x/src/91x_ssp.c ****     SSPx->CR0 &= SSP_FrameFormat_Motorola;
+  92:libstr91x/src/91x_ssp.c ****     /* Configure the Clock polarity */
+  93:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_CPOL == SSP_CPOL_High)
+  94:libstr91x/src/91x_ssp.c ****     {
+  95:libstr91x/src/91x_ssp.c ****       /* SCK is held high when no data is being transfered */
+  96:libstr91x/src/91x_ssp.c ****       SSPx->CR0 |= SSP_CPOL_High;
+  97:libstr91x/src/91x_ssp.c ****     }
+  98:libstr91x/src/91x_ssp.c ****     else
+  99:libstr91x/src/91x_ssp.c ****     {
+ 100:libstr91x/src/91x_ssp.c ****       /* SCK is held low when no data is being transfered */
+ 101:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPOL_Low;
+ 102:libstr91x/src/91x_ssp.c ****     }
+ 103:libstr91x/src/91x_ssp.c ****     /* Configure the Clock Phase */
+ 104:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_CPHA == SSP_CPHA_2Edge)
+ 105:libstr91x/src/91x_ssp.c ****     {
+ 106:libstr91x/src/91x_ssp.c ****       /* Data captured on second clock edge */
+ 107:libstr91x/src/91x_ssp.c ****       SSPx->CR0 |= SSP_CPHA_2Edge;
+ 108:libstr91x/src/91x_ssp.c ****     }
+ 109:libstr91x/src/91x_ssp.c ****     else
+ 110:libstr91x/src/91x_ssp.c ****     {
+ 111:libstr91x/src/91x_ssp.c ****       /* Data captured on first clock edge */
+ 112:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPHA_1Edge;
+ 113:libstr91x/src/91x_ssp.c ****     }
+ 114:libstr91x/src/91x_ssp.c ****   }
+ 115:libstr91x/src/91x_ssp.c ****    /* Configure the Frame format */
+ 116:libstr91x/src/91x_ssp.c ****   else
+ 117:libstr91x/src/91x_ssp.c ****   {
+ 118:libstr91x/src/91x_ssp.c ****     /* Clear the FRF[1:0] bits */
+ 119:libstr91x/src/91x_ssp.c ****     SSPx->CR0 &= SSP_FrameFormat_Mask;
+  97              		.loc 1 119 0
+  98 006c B0C0D0E1 		ldrh	ip, [r0, #0]
+  99 0070 14219FE5 		ldr	r2, .L19
+ 100 0074 02200CE0 		and	r2, ip, r2
+ 101 0078 B020C0E1 		strh	r2, [r0, #0]	@ movhi
+ 120:libstr91x/src/91x_ssp.c ****     /* Set the TI frame format */
+ 121:libstr91x/src/91x_ssp.c ****     SSPx->CR0 |= SSP_InitStruct->SSP_FrameFormat;
+ 102              		.loc 1 121 0
+ 103 007c B0C0D0E1 		ldrh	ip, [r0, #0]
+ 104 0080 03208CE1 		orr	r2, ip, r3
+ 105 0084 B020C0E1 		strh	r2, [r0, #0]	@ movhi
+ 122:libstr91x/src/91x_ssp.c ****   }
+ 123:libstr91x/src/91x_ssp.c ****   /* Configure the Mode */
+ 124:libstr91x/src/91x_ssp.c ****   if(SSP_InitStruct->SSP_Mode == SSP_Mode_Slave)
+ 106              		.loc 1 124 0
+ 107 0088 B230D1E1 		ldrh	r3, [r1, #2]
+ 108 008c 040053E3 		cmp	r3, #4
+ 109 0090 3100000A 		beq	.L18
+ 110              	.L14:
+ 125:libstr91x/src/91x_ssp.c ****   {
+ 126:libstr91x/src/91x_ssp.c ****     /* Set the slave mode */
+ 127:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_Mode_Slave;
+ 128:libstr91x/src/91x_ssp.c ****     /* Configure the Slave output */
+ 129:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_SlaveOutput == SSP_SlaveOutput_Disable)
+ 130:libstr91x/src/91x_ssp.c ****     {
+ 131:libstr91x/src/91x_ssp.c ****       /* Slave output disabled */
+ 132:libstr91x/src/91x_ssp.c ****       SSPx->CR1 |= SSP_SlaveOutput_Disable;
+ 133:libstr91x/src/91x_ssp.c ****     }
+ 134:libstr91x/src/91x_ssp.c ****     else
+ 135:libstr91x/src/91x_ssp.c ****     {
+ 136:libstr91x/src/91x_ssp.c ****       /* Slave output enabled */
+ 137:libstr91x/src/91x_ssp.c ****       SSPx->CR1 &= SSP_SlaveOutput_Enable;
+ 138:libstr91x/src/91x_ssp.c ****     }
+ 139:libstr91x/src/91x_ssp.c ****   }
+ 140:libstr91x/src/91x_ssp.c ****   else
+ 141:libstr91x/src/91x_ssp.c ****   {
+ 142:libstr91x/src/91x_ssp.c ****     /* Set the master mode */
+ 143:libstr91x/src/91x_ssp.c ****     SSPx->CR1 &= SSP_Mode_Master;
+ 111              		.loc 1 143 0
+ 112 0094 B420D0E1 		ldrh	r2, [r0, #4]
+ 113 0098 F0C09FE5 		ldr	ip, .L19+4
+ 114 009c 0C3002E0 		and	r3, r2, ip
+ 115 00a0 B430C0E1 		strh	r3, [r0, #4]	@ movhi
+ 144:libstr91x/src/91x_ssp.c ****     /* Clear clock rate SCR[7:0] bits */
+ 145:libstr91x/src/91x_ssp.c ****     SSPx->CR0 &= SSP_ClockRate_Mask;
+ 116              		.loc 1 145 0
+ 117 00a4 B0C0D0E1 		ldrh	ip, [r0, #0]
+ 118 00a8 FF200CE2 		and	r2, ip, #255
+ 119 00ac B020C0E1 		strh	r2, [r0, #0]	@ movhi
+ 146:libstr91x/src/91x_ssp.c ****     /* Set the serial clock rate */
+ 147:libstr91x/src/91x_ssp.c ****     SSPx->CR0 |= (SSP_InitStruct->SSP_ClockRate<<8);
+ 120              		.loc 1 147 0
+ 121 00b0 B0C0D0E1 		ldrh	ip, [r0, #0]
+ 122 00b4 0C30D1E5 		ldrb	r3, [r1, #12]	@ zero_extendqisi2
+ 123 00b8 03248CE1 		orr	r2, ip, r3, asl #8
+ 124 00bc B020C0E1 		strh	r2, [r0, #0]	@ movhi
+ 148:libstr91x/src/91x_ssp.c ****     /* Clear clock prescaler CPSDVSR[7:0] bits */
+ 149:libstr91x/src/91x_ssp.c ****     SSPx->PR &= SSP_ClockPrescaler_Mask;
+ 125              		.loc 1 149 0
+ 126 00c0 B031D0E1 		ldrh	r3, [r0, #16]
+ 127 00c4 FFCC03E2 		and	ip, r3, #65280
+ 128 00c8 B0C1C0E1 		strh	ip, [r0, #16]	@ movhi
+ 150:libstr91x/src/91x_ssp.c ****     /* Set the serial clock prescaler */
+ 151:libstr91x/src/91x_ssp.c ****     SSPx->PR |= SSP_InitStruct->SSP_ClockPrescaler;
+ 129              		.loc 1 151 0
+ 130 00cc B021D0E1 		ldrh	r2, [r0, #16]
+ 131 00d0 0D30D1E5 		ldrb	r3, [r1, #13]	@ zero_extendqisi2
+ 132 00d4 03C082E1 		orr	ip, r2, r3
+ 133 00d8 B0C1C0E1 		strh	ip, [r0, #16]	@ movhi
+ 134              	.L16:
+ 152:libstr91x/src/91x_ssp.c ****   }
+ 153:libstr91x/src/91x_ssp.c **** 
+ 154:libstr91x/src/91x_ssp.c ****   /* Clear data size DSS[3:0] bits */
+ 155:libstr91x/src/91x_ssp.c ****   SSPx->CR0 &= SSP_DataSize_Mask;
+ 135              		.loc 1 155 0
+ 136 00dc B0C0D0E1 		ldrh	ip, [r0, #0]
+ 137 00e0 AC309FE5 		ldr	r3, .L19+8
+ 156:libstr91x/src/91x_ssp.c ****   /* Set the data size */
+ 157:libstr91x/src/91x_ssp.c ****   SSPx->CR0 |= SSP_InitStruct->SSP_DataSize;
+ 138              		.loc 1 157 0
+ 139 00e4 B820D1E1 		ldrh	r2, [r1, #8]
+ 155:libstr91x/src/91x_ssp.c ****   SSPx->CR0 &= SSP_DataSize_Mask;
+ 140              		.loc 1 155 0
+ 141 00e8 03C00CE0 		and	ip, ip, r3
+ 142 00ec B0C0C0E1 		strh	ip, [r0, #0]	@ movhi
+ 143              		.loc 1 157 0
+ 144 00f0 B030D0E1 		ldrh	r3, [r0, #0]
+ 145 00f4 021083E1 		orr	r1, r3, r2
+ 146              	.LVL5:
+ 147 00f8 B010C0E1 		strh	r1, [r0, #0]	@ movhi
+ 158:libstr91x/src/91x_ssp.c **** }
+ 148              		.loc 1 158 0
+ 149 00fc 1EFF2FE1 		bx	lr
+ 150              	.LVL6:
+ 151              	.L17:
+  91:libstr91x/src/91x_ssp.c ****     SSPx->CR0 &= SSP_FrameFormat_Motorola;
+ 152              		.loc 1 91 0
+ 153 0100 B0C0D0E1 		ldrh	ip, [r0, #0]
+ 154 0104 0230A0E1 		mov	r3, r2
+  93:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_CPOL == SSP_CPOL_High)
+ 155              		.loc 1 93 0
+ 156 0108 B420D1E1 		ldrh	r2, [r1, #4]
+  91:libstr91x/src/91x_ssp.c ****     SSPx->CR0 &= SSP_FrameFormat_Motorola;
+ 157              		.loc 1 91 0
+ 158 010c 03C00CE0 		and	ip, ip, r3
+ 159 0110 B0C0C0E1 		strh	ip, [r0, #0]	@ movhi
+  93:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_CPOL == SSP_CPOL_High)
+ 160              		.loc 1 93 0
+ 161 0114 400052E3 		cmp	r2, #64
+ 101:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPOL_Low;
+ 162              		.loc 1 101 0
+ 163 0118 B020D011 		ldrneh	r2, [r0, #0]
+  96:libstr91x/src/91x_ssp.c ****       SSPx->CR0 |= SSP_CPOL_High;
+ 164              		.loc 1 96 0
+ 165 011c B0C0D001 		ldreqh	ip, [r0, #0]
+ 101:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPOL_Low;
+ 166              		.loc 1 101 0
+ 167 0120 70C09F15 		ldrne	ip, .L19+12
+  96:libstr91x/src/91x_ssp.c ****       SSPx->CR0 |= SSP_CPOL_High;
+ 168              		.loc 1 96 0
+ 169 0124 40C08C03 		orreq	ip, ip, #64
+ 101:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPOL_Low;
+ 170              		.loc 1 101 0
+ 171 0128 0CC00210 		andne	ip, r2, ip
+ 172 012c B0C0C0E1 		strh	ip, [r0, #0]	@ movhi
+ 104:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_CPHA == SSP_CPHA_2Edge)
+ 173              		.loc 1 104 0
+ 174 0130 B630D1E1 		ldrh	r3, [r1, #6]
+ 175 0134 800053E3 		cmp	r3, #128
+ 107:libstr91x/src/91x_ssp.c ****       SSPx->CR0 |= SSP_CPHA_2Edge;
+ 176              		.loc 1 107 0
+ 177 0138 B030D001 		ldreqh	r3, [r0, #0]
+ 112:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPHA_1Edge;
+ 178              		.loc 1 112 0
+ 179 013c 58309F15 		ldrne	r3, .L19+16
+ 180 0140 B020D011 		ldrneh	r2, [r0, #0]
+ 107:libstr91x/src/91x_ssp.c ****       SSPx->CR0 |= SSP_CPHA_2Edge;
+ 181              		.loc 1 107 0
+ 182 0144 80308303 		orreq	r3, r3, #128
+ 112:libstr91x/src/91x_ssp.c ****       SSPx->CR0 &= SSP_CPHA_1Edge;
+ 183              		.loc 1 112 0
+ 184 0148 03300210 		andne	r3, r2, r3
+ 185 014c B030C0E1 		strh	r3, [r0, #0]	@ movhi
+ 124:libstr91x/src/91x_ssp.c ****   if(SSP_InitStruct->SSP_Mode == SSP_Mode_Slave)
+ 186              		.loc 1 124 0
+ 187 0150 B230D1E1 		ldrh	r3, [r1, #2]
+ 188 0154 040053E3 		cmp	r3, #4
+ 189 0158 CDFFFF1A 		bne	.L14
+ 190              	.L18:
+ 127:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_Mode_Slave;
+ 191              		.loc 1 127 0
+ 192 015c B430D0E1 		ldrh	r3, [r0, #4]
+ 129:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_SlaveOutput == SSP_SlaveOutput_Disable)
+ 193              		.loc 1 129 0
+ 194 0160 BA20D1E1 		ldrh	r2, [r1, #10]
+ 127:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_Mode_Slave;
+ 195              		.loc 1 127 0
+ 196 0164 04C083E3 		orr	ip, r3, #4
+ 197 0168 B4C0C0E1 		strh	ip, [r0, #4]	@ movhi
+ 129:libstr91x/src/91x_ssp.c ****     if(SSP_InitStruct->SSP_SlaveOutput == SSP_SlaveOutput_Disable)
+ 198              		.loc 1 129 0
+ 199 016c 080052E3 		cmp	r2, #8
+ 132:libstr91x/src/91x_ssp.c ****       SSPx->CR1 |= SSP_SlaveOutput_Disable;
+ 200              		.loc 1 132 0
+ 201 0170 B4C0D001 		ldreqh	ip, [r0, #4]
+ 137:libstr91x/src/91x_ssp.c ****       SSPx->CR1 &= SSP_SlaveOutput_Enable;
+ 202              		.loc 1 137 0
+ 203 0174 B420D011 		ldrneh	r2, [r0, #4]
+ 204 0178 20C09F15 		ldrne	ip, .L19+20
+ 132:libstr91x/src/91x_ssp.c ****       SSPx->CR1 |= SSP_SlaveOutput_Disable;
+ 205              		.loc 1 132 0
+ 206 017c 08C08C03 		orreq	ip, ip, #8
+ 137:libstr91x/src/91x_ssp.c ****       SSPx->CR1 &= SSP_SlaveOutput_Enable;
+ 207              		.loc 1 137 0
+ 208 0180 0CC00210 		andne	ip, r2, ip
+ 209 0184 B4C0C0E1 		strh	ip, [r0, #4]	@ movhi
+ 210 0188 D3FFFFEA 		b	.L16
+ 211              	.L20:
+ 212              		.align	2
+ 213              	.L19:
+ 214 018c CFFF0000 		.word	65487
+ 215 0190 FBFF0000 		.word	65531
+ 216 0194 F0FF0000 		.word	65520
+ 217 0198 BFFF0000 		.word	65471
+ 218 019c 7FFF0000 		.word	65407
+ 219 01a0 F7FF0000 		.word	65527
+ 220              		.cfi_endproc
+ 221              	.LFE1:
+ 223              		.align	2
+ 224              		.global	SSP_StructInit
+ 226              	SSP_StructInit:
+ 227              	.LFB2:
+ 159:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 160:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_StructInit
+ 161:libstr91x/src/91x_ssp.c **** * Description    : Fills in a SSP_InitTypeDef structure with the reset value of
+ 162:libstr91x/src/91x_ssp.c **** *                  each parameter.
+ 163:libstr91x/src/91x_ssp.c **** * Input          : SSP_InitStruct : pointer to a SSP_InitTypeDef structure
+ 164:libstr91x/src/91x_ssp.c ****                    which will be initialized.
+ 165:libstr91x/src/91x_ssp.c **** * Output         : None
+ 166:libstr91x/src/91x_ssp.c **** * Return         : None
+ 167:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 168:libstr91x/src/91x_ssp.c **** void SSP_StructInit(SSP_InitTypeDef* SSP_InitStruct)
+ 169:libstr91x/src/91x_ssp.c **** {
+ 228              		.loc 1 169 0
+ 229              		.cfi_startproc
+ 230              		@ args = 0, pretend = 0, frame = 0
+ 231              		@ frame_needed = 0, uses_anonymous_args = 0
+ 232              		@ link register save eliminated.
+ 233              	.LVL7:
+ 170:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_FrameFormat member */
+ 171:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_FrameFormat = SSP_FrameFormat_Motorola;
+ 234              		.loc 1 171 0
+ 235 01a4 30C0E0E3 		mvn	ip, #48	@ movhi
+ 172:libstr91x/src/91x_ssp.c **** 
+ 173:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_Mode member */
+ 174:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_Mode = SSP_Mode_Master;
+ 236              		.loc 1 174 0
+ 237 01a8 0410E0E3 		mvn	r1, #4	@ movhi
+ 175:libstr91x/src/91x_ssp.c **** 
+ 176:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_CPOL member */
+ 177:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_CPOL = SSP_CPOL_Low;
+ 238              		.loc 1 177 0
+ 239 01ac 4020E0E3 		mvn	r2, #64	@ movhi
+ 178:libstr91x/src/91x_ssp.c **** 
+ 179:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_CPHA member */
+ 180:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_CPHA = SSP_CPHA_1Edge;
+ 181:libstr91x/src/91x_ssp.c **** 
+ 182:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_DataSize member */
+ 183:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_DataSize = SSP_DataSize_8b;
+ 184:libstr91x/src/91x_ssp.c **** 
+ 185:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_SlaveOutput member */
+ 186:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_SlaveOutput = SSP_SlaveOutput_Enable;
+ 187:libstr91x/src/91x_ssp.c **** 
+ 188:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_ClockRate member */
+ 189:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_ClockRate = 0;
+ 240              		.loc 1 189 0
+ 241 01b0 0030A0E3 		mov	r3, #0
+ 171:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_FrameFormat = SSP_FrameFormat_Motorola;
+ 242              		.loc 1 171 0
+ 243 01b4 B0C0C0E1 		strh	ip, [r0, #0]	@ movhi
+ 174:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_Mode = SSP_Mode_Master;
+ 244              		.loc 1 174 0
+ 245 01b8 B210C0E1 		strh	r1, [r0, #2]	@ movhi
+ 177:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_CPOL = SSP_CPOL_Low;
+ 246              		.loc 1 177 0
+ 247 01bc B420C0E1 		strh	r2, [r0, #4]	@ movhi
+ 180:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_CPHA = SSP_CPHA_1Edge;
+ 248              		.loc 1 180 0
+ 249 01c0 80C0E0E3 		mvn	ip, #128	@ movhi
+ 183:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_DataSize = SSP_DataSize_8b;
+ 250              		.loc 1 183 0
+ 251 01c4 0710A0E3 		mov	r1, #7	@ movhi
+ 186:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_SlaveOutput = SSP_SlaveOutput_Enable;
+ 252              		.loc 1 186 0
+ 253 01c8 0820E0E3 		mvn	r2, #8	@ movhi
+ 180:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_CPHA = SSP_CPHA_1Edge;
+ 254              		.loc 1 180 0
+ 255 01cc B6C0C0E1 		strh	ip, [r0, #6]	@ movhi
+ 183:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_DataSize = SSP_DataSize_8b;
+ 256              		.loc 1 183 0
+ 257 01d0 B810C0E1 		strh	r1, [r0, #8]	@ movhi
+ 186:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_SlaveOutput = SSP_SlaveOutput_Enable;
+ 258              		.loc 1 186 0
+ 259 01d4 BA20C0E1 		strh	r2, [r0, #10]	@ movhi
+ 260              		.loc 1 189 0
+ 261 01d8 0C30C0E5 		strb	r3, [r0, #12]
+ 190:libstr91x/src/91x_ssp.c **** 
+ 191:libstr91x/src/91x_ssp.c ****   /* Initialize the SSP_ClockPrescaler member */
+ 192:libstr91x/src/91x_ssp.c ****   SSP_InitStruct->SSP_ClockPrescaler = 0;
+ 262              		.loc 1 192 0
+ 263 01dc 0D30C0E5 		strb	r3, [r0, #13]
+ 193:libstr91x/src/91x_ssp.c **** }
+ 264              		.loc 1 193 0
+ 265 01e0 1EFF2FE1 		bx	lr
+ 266              		.cfi_endproc
+ 267              	.LFE2:
+ 269              		.align	2
+ 270              		.global	SSP_Cmd
+ 272              	SSP_Cmd:
+ 273              	.LFB3:
+ 194:libstr91x/src/91x_ssp.c **** 
+ 195:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 196:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_Cmd
+ 197:libstr91x/src/91x_ssp.c **** * Description    : Enables or disables the specified SSP peripheral.
+ 198:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 199:libstr91x/src/91x_ssp.c **** *                  - NewState: new state of the  SSPx peripheral. This parameter
+ 200:libstr91x/src/91x_ssp.c **** *                    can be: ENABLE or DISABLE.
+ 201:libstr91x/src/91x_ssp.c **** * Output         : None
+ 202:libstr91x/src/91x_ssp.c **** * Return         : None
+ 203:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 204:libstr91x/src/91x_ssp.c **** void SSP_Cmd(SSP_TypeDef* SSPx, FunctionalState NewState)
+ 205:libstr91x/src/91x_ssp.c **** {
+ 274              		.loc 1 205 0
+ 275              		.cfi_startproc
+ 276              		@ args = 0, pretend = 0, frame = 0
+ 277              		@ frame_needed = 0, uses_anonymous_args = 0
+ 278              		@ link register save eliminated.
+ 279              	.LVL8:
+ 206:libstr91x/src/91x_ssp.c ****   if(NewState == ENABLE)
+ 280              		.loc 1 206 0
+ 281 01e4 010051E3 		cmp	r1, #1
+ 207:libstr91x/src/91x_ssp.c ****   {
+ 208:libstr91x/src/91x_ssp.c ****     /* Enable the SSP peripheral */
+ 209:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_Enable;
+ 282              		.loc 1 209 0
+ 283 01e8 B430D001 		ldreqh	r3, [r0, #4]
+ 210:libstr91x/src/91x_ssp.c ****   }
+ 211:libstr91x/src/91x_ssp.c ****   else
+ 212:libstr91x/src/91x_ssp.c ****   {
+ 213:libstr91x/src/91x_ssp.c ****     /* Disable the SSP peripheral */
+ 214:libstr91x/src/91x_ssp.c ****     SSPx->CR1 &= SSP_Disable;
+ 284              		.loc 1 214 0
+ 285 01ec B420D011 		ldrneh	r2, [r0, #4]
+ 286 01f0 0C309F15 		ldrne	r3, .L25
+ 209:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_Enable;
+ 287              		.loc 1 209 0
+ 288 01f4 02308303 		orreq	r3, r3, #2
+ 289              		.loc 1 214 0
+ 290 01f8 03300210 		andne	r3, r2, r3
+ 291 01fc B430C0E1 		strh	r3, [r0, #4]	@ movhi
+ 292 0200 1EFF2FE1 		bx	lr
+ 293              	.L26:
+ 294              		.align	2
+ 295              	.L25:
+ 296 0204 FDFF0000 		.word	65533
+ 297              		.cfi_endproc
+ 298              	.LFE3:
+ 300              		.align	2
+ 301              		.global	SSP_ITConfig
+ 303              	SSP_ITConfig:
+ 304              	.LFB4:
+ 215:libstr91x/src/91x_ssp.c ****   }
+ 216:libstr91x/src/91x_ssp.c **** }
+ 217:libstr91x/src/91x_ssp.c **** 
+ 218:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 219:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_ITConfig
+ 220:libstr91x/src/91x_ssp.c **** * Description    : Enables or disables the specified SSP interrupts.
+ 221:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 222:libstr91x/src/91x_ssp.c **** *                  - SSP_IT: specifies the SSP interrupts sources to be enabled
+ 223:libstr91x/src/91x_ssp.c **** *                    or disabled. This parameter can be any combination of the
+ 224:libstr91x/src/91x_ssp.c **** *                    following values:
+ 225:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_TxFifo: Transmit FIFO half empty or less interrupt
+ 226:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxFifo: Receive FIFO half full or less interrupt
+ 227:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxTimeOut: Receive timeout interrupt
+ 228:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxOverrun: Receive overrun interrupt
+ 229:libstr91x/src/91x_ssp.c **** *                  - NewState: new state of the specified SSP interrupts.
+ 230:libstr91x/src/91x_ssp.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 231:libstr91x/src/91x_ssp.c **** * Output         : None
+ 232:libstr91x/src/91x_ssp.c **** * Return         : None
+ 233:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 234:libstr91x/src/91x_ssp.c **** void SSP_ITConfig(SSP_TypeDef* SSPx, u16 SSP_IT, FunctionalState NewState)
+ 235:libstr91x/src/91x_ssp.c **** {
+ 305              		.loc 1 235 0
+ 306              		.cfi_startproc
+ 307              		@ args = 0, pretend = 0, frame = 0
+ 308              		@ frame_needed = 0, uses_anonymous_args = 0
+ 309              		@ link register save eliminated.
+ 310              	.LVL9:
+ 236:libstr91x/src/91x_ssp.c ****   if(NewState == ENABLE)
+ 237:libstr91x/src/91x_ssp.c ****   {
+ 238:libstr91x/src/91x_ssp.c ****     /* Enable the selected SSP interrupts */
+ 239:libstr91x/src/91x_ssp.c ****     SSPx->IMSCR |= SSP_IT;
+ 311              		.loc 1 239 0
+ 312 0208 B431D0E1 		ldrh	r3, [r0, #20]
+ 236:libstr91x/src/91x_ssp.c ****   if(NewState == ENABLE)
+ 313              		.loc 1 236 0
+ 314 020c 010052E3 		cmp	r2, #1
+ 315              		.loc 1 239 0
+ 316 0210 03108101 		orreq	r1, r1, r3
+ 317              	.LVL10:
+ 240:libstr91x/src/91x_ssp.c ****   }
+ 241:libstr91x/src/91x_ssp.c ****   else
+ 242:libstr91x/src/91x_ssp.c ****   {
+ 243:libstr91x/src/91x_ssp.c ****     /* Disable the selected SSP interrupts */
+ 244:libstr91x/src/91x_ssp.c ****     SSPx->IMSCR &= ~SSP_IT;
+ 318              		.loc 1 244 0
+ 319 0214 0110C311 		bicne	r1, r3, r1
+ 320 0218 B411C0E1 		strh	r1, [r0, #20]	@ movhi
+ 321 021c 1EFF2FE1 		bx	lr
+ 322              		.cfi_endproc
+ 323              	.LFE4:
+ 325              		.align	2
+ 326              		.global	SSP_DMACmd
+ 328              	SSP_DMACmd:
+ 329              	.LFB5:
+ 245:libstr91x/src/91x_ssp.c ****   }
+ 246:libstr91x/src/91x_ssp.c **** }
+ 247:libstr91x/src/91x_ssp.c **** 
+ 248:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 249:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_DMACmd
+ 250:libstr91x/src/91x_ssp.c **** * Description    : Configures the SSP0 DMA interface.
+ 251:libstr91x/src/91x_ssp.c **** * Input          :  - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 252:libstr91x/src/91x_ssp.c **** *                   - SSP_DMATransfert : specifies the DMA transfert to be
+ 253:libstr91x/src/91x_ssp.c **** *                    enabled or disabled. This parameter can be one of the
+ 254:libstr91x/src/91x_ssp.c **** *                    following values:
+ 255:libstr91x/src/91x_ssp.c **** *                         - SSP_DMA_Transmit: transmit Fifo DMA transfert
+ 256:libstr91x/src/91x_ssp.c **** *                         - SSP_DMA_Receive : receive Fifo DMA transfert
+ 257:libstr91x/src/91x_ssp.c **** *                  - NewState: new state of the DMA transfert.
+ 258:libstr91x/src/91x_ssp.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 259:libstr91x/src/91x_ssp.c **** * Output         : None
+ 260:libstr91x/src/91x_ssp.c **** * Return         : None
+ 261:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 262:libstr91x/src/91x_ssp.c **** void SSP_DMACmd(SSP_TypeDef* SSPx, u16 SSP_DMATransfert, FunctionalState NewState)
+ 263:libstr91x/src/91x_ssp.c **** {
+ 330              		.loc 1 263 0
+ 331              		.cfi_startproc
+ 332              		@ args = 0, pretend = 0, frame = 0
+ 333              		@ frame_needed = 0, uses_anonymous_args = 0
+ 334              		@ link register save eliminated.
+ 335              	.LVL11:
+ 264:libstr91x/src/91x_ssp.c ****   if(NewState == ENABLE)
+ 336              		.loc 1 264 0
+ 337 0220 010052E3 		cmp	r2, #1
+ 338 0224 0600000A 		beq	.L35
+ 265:libstr91x/src/91x_ssp.c ****   {
+ 266:libstr91x/src/91x_ssp.c ****     if(SSP_DMATransfert == SSP_DMA_Transmit)
+ 267:libstr91x/src/91x_ssp.c ****     {
+ 268:libstr91x/src/91x_ssp.c ****       /* Enable DMA for the transmit FIFO */
+ 269:libstr91x/src/91x_ssp.c ****       SSPx->DMACR |= SSP_DMA_TransmitEnable;
+ 270:libstr91x/src/91x_ssp.c ****     }
+ 271:libstr91x/src/91x_ssp.c ****     else
+ 272:libstr91x/src/91x_ssp.c ****     {
+ 273:libstr91x/src/91x_ssp.c ****       /* Enable DMA for the receive FIFO */
+ 274:libstr91x/src/91x_ssp.c ****       SSPx->DMACR |= SSP_DMA_ReceiveEnable;
+ 275:libstr91x/src/91x_ssp.c ****     }
+ 276:libstr91x/src/91x_ssp.c ****   }
+ 277:libstr91x/src/91x_ssp.c ****   else
+ 278:libstr91x/src/91x_ssp.c ****   {
+ 279:libstr91x/src/91x_ssp.c ****     if(SSP_DMATransfert == SSP_DMA_Transmit)
+ 339              		.loc 1 279 0
+ 340 0228 020051E3 		cmp	r1, #2
+ 280:libstr91x/src/91x_ssp.c ****     {
+ 281:libstr91x/src/91x_ssp.c ****       /* Disable DMA for the transmit FIFO */
+ 282:libstr91x/src/91x_ssp.c ****       SSPx->DMACR &= SSP_DMA_TransmitDisable;
+ 341              		.loc 1 282 0
+ 342 022c B422D0E1 		ldrh	r2, [r0, #36]
+ 343              	.LVL12:
+ 344 0230 24309F05 		ldreq	r3, .L36
+ 283:libstr91x/src/91x_ssp.c ****     }
+ 284:libstr91x/src/91x_ssp.c ****     else
+ 285:libstr91x/src/91x_ssp.c ****     {
+ 286:libstr91x/src/91x_ssp.c ****       /* Disable DMA for the receive FIFO */
+ 287:libstr91x/src/91x_ssp.c ****       SSPx->DMACR &= SSP_DMA_ReceiveDisable;
+ 345              		.loc 1 287 0
+ 346 0234 24309F15 		ldrne	r3, .L36+4
+ 347 0238 031002E0 		and	r1, r2, r3
+ 348              	.LVL13:
+ 349 023c B412C0E1 		strh	r1, [r0, #36]	@ movhi
+ 350 0240 1EFF2FE1 		bx	lr
+ 351              	.LVL14:
+ 352              	.L35:
+ 269:libstr91x/src/91x_ssp.c ****       SSPx->DMACR |= SSP_DMA_TransmitEnable;
+ 353              		.loc 1 269 0
+ 354 0244 B432D0E1 		ldrh	r3, [r0, #36]
+ 266:libstr91x/src/91x_ssp.c ****     if(SSP_DMATransfert == SSP_DMA_Transmit)
+ 355              		.loc 1 266 0
+ 356 0248 020051E3 		cmp	r1, #2
+ 269:libstr91x/src/91x_ssp.c ****       SSPx->DMACR |= SSP_DMA_TransmitEnable;
+ 357              		.loc 1 269 0
+ 358 024c 02308303 		orreq	r3, r3, #2
+ 274:libstr91x/src/91x_ssp.c ****       SSPx->DMACR |= SSP_DMA_ReceiveEnable;
+ 359              		.loc 1 274 0
+ 360 0250 01308313 		orrne	r3, r3, #1
+ 361 0254 B432C0E1 		strh	r3, [r0, #36]	@ movhi
+ 362 0258 1EFF2FE1 		bx	lr
+ 363              	.L37:
+ 364              		.align	2
+ 365              	.L36:
+ 366 025c FDFF0000 		.word	65533
+ 367 0260 FEFF0000 		.word	65534
+ 368              		.cfi_endproc
+ 369              	.LFE5:
+ 371              		.align	2
+ 372              		.global	SSP_SendData
+ 374              	SSP_SendData:
+ 375              	.LFB6:
+ 288:libstr91x/src/91x_ssp.c ****     }
+ 289:libstr91x/src/91x_ssp.c ****   }
+ 290:libstr91x/src/91x_ssp.c **** }
+ 291:libstr91x/src/91x_ssp.c **** 
+ 292:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 293:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_SendData.
+ 294:libstr91x/src/91x_ssp.c **** * Description    : Transmits a Data through the SSP peripheral.
+ 295:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 296:libstr91x/src/91x_ssp.c **** *                  - Data : Data to be transmitted.
+ 297:libstr91x/src/91x_ssp.c **** * Output         : None
+ 298:libstr91x/src/91x_ssp.c **** * Return         : None
+ 299:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 300:libstr91x/src/91x_ssp.c **** void SSP_SendData(SSP_TypeDef* SSPx, u16 Data)
+ 301:libstr91x/src/91x_ssp.c **** {
+ 376              		.loc 1 301 0
+ 377              		.cfi_startproc
+ 378              		@ args = 0, pretend = 0, frame = 0
+ 379              		@ frame_needed = 0, uses_anonymous_args = 0
+ 380              		@ link register save eliminated.
+ 381              	.LVL15:
+ 302:libstr91x/src/91x_ssp.c ****   /* Write in the DR register the data to be sent */
+ 303:libstr91x/src/91x_ssp.c ****   SSPx->DR = Data;
+ 382              		.loc 1 303 0
+ 383 0264 B810C0E1 		strh	r1, [r0, #8]	@ movhi
+ 304:libstr91x/src/91x_ssp.c **** }
+ 384              		.loc 1 304 0
+ 385 0268 1EFF2FE1 		bx	lr
+ 386              		.cfi_endproc
+ 387              	.LFE6:
+ 389              		.align	2
+ 390              		.global	SSP_ReceiveData
+ 392              	SSP_ReceiveData:
+ 393              	.LFB7:
+ 305:libstr91x/src/91x_ssp.c **** 
+ 306:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 307:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_ReceiveData.
+ 308:libstr91x/src/91x_ssp.c **** * Description    : Returns the most recent received data by the SSP peripheral.
+ 309:libstr91x/src/91x_ssp.c **** * Input          : SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 310:libstr91x/src/91x_ssp.c **** * Output         : None
+ 311:libstr91x/src/91x_ssp.c **** * Return         : The value of the received data.
+ 312:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 313:libstr91x/src/91x_ssp.c **** u16 SSP_ReceiveData(SSP_TypeDef* SSPx)
+ 314:libstr91x/src/91x_ssp.c **** {
+ 394              		.loc 1 314 0
+ 395              		.cfi_startproc
+ 396              		@ args = 0, pretend = 0, frame = 0
+ 397              		@ frame_needed = 0, uses_anonymous_args = 0
+ 398              		@ link register save eliminated.
+ 399              	.LVL16:
+ 315:libstr91x/src/91x_ssp.c ****   /* Return the data in the DR register */	
+ 316:libstr91x/src/91x_ssp.c ****   return SSPx->DR;
+ 400              		.loc 1 316 0
+ 401 026c B800D0E1 		ldrh	r0, [r0, #8]
+ 402              	.LVL17:
+ 317:libstr91x/src/91x_ssp.c **** }
+ 403              		.loc 1 317 0
+ 404 0270 1EFF2FE1 		bx	lr
+ 405              		.cfi_endproc
+ 406              	.LFE7:
+ 408              		.align	2
+ 409              		.global	SSP_LoopBackConfig
+ 411              	SSP_LoopBackConfig:
+ 412              	.LFB8:
+ 318:libstr91x/src/91x_ssp.c **** 
+ 319:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 320:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_LoopBackConfig
+ 321:libstr91x/src/91x_ssp.c **** * Description    : Enable or disable the Loop back mode for the selected SSPx peripheral.
+ 322:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 323:libstr91x/src/91x_ssp.c **** *                  - NewState: new state of the Loop Back mode.
+ 324:libstr91x/src/91x_ssp.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 325:libstr91x/src/91x_ssp.c **** * Output         : None
+ 326:libstr91x/src/91x_ssp.c **** * Return         : None.
+ 327:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 328:libstr91x/src/91x_ssp.c **** void SSP_LoopBackConfig(SSP_TypeDef* SSPx, FunctionalState NewState)
+ 329:libstr91x/src/91x_ssp.c **** {
+ 413              		.loc 1 329 0
+ 414              		.cfi_startproc
+ 415              		@ args = 0, pretend = 0, frame = 0
+ 416              		@ frame_needed = 0, uses_anonymous_args = 0
+ 417              		@ link register save eliminated.
+ 418              	.LVL18:
+ 330:libstr91x/src/91x_ssp.c ****   if(NewState == ENABLE)
+ 419              		.loc 1 330 0
+ 420 0274 010051E3 		cmp	r1, #1
+ 331:libstr91x/src/91x_ssp.c ****   {
+ 332:libstr91x/src/91x_ssp.c ****     /* Enable loop back mode */
+ 333:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_LoopBackMode_Enable;
+ 421              		.loc 1 333 0
+ 422 0278 B430D001 		ldreqh	r3, [r0, #4]
+ 334:libstr91x/src/91x_ssp.c ****   }
+ 335:libstr91x/src/91x_ssp.c ****   else
+ 336:libstr91x/src/91x_ssp.c ****   {
+ 337:libstr91x/src/91x_ssp.c ****     /* Disable loop back mode */
+ 338:libstr91x/src/91x_ssp.c ****     SSPx->CR1 &= SSP_LoopBackMode_Disable;
+ 423              		.loc 1 338 0
+ 424 027c B420D011 		ldrneh	r2, [r0, #4]
+ 425 0280 0C309F15 		ldrne	r3, .L43
+ 333:libstr91x/src/91x_ssp.c ****     SSPx->CR1 |= SSP_LoopBackMode_Enable;
+ 426              		.loc 1 333 0
+ 427 0284 01308303 		orreq	r3, r3, #1
+ 428              		.loc 1 338 0
+ 429 0288 03300210 		andne	r3, r2, r3
+ 430 028c B430C0E1 		strh	r3, [r0, #4]	@ movhi
+ 431 0290 1EFF2FE1 		bx	lr
+ 432              	.L44:
+ 433              		.align	2
+ 434              	.L43:
+ 435 0294 FEFF0000 		.word	65534
+ 436              		.cfi_endproc
+ 437              	.LFE8:
+ 439              		.align	2
+ 440              		.global	SSP_GetFlagStatus
+ 442              	SSP_GetFlagStatus:
+ 443              	.LFB9:
+ 339:libstr91x/src/91x_ssp.c ****   }
+ 340:libstr91x/src/91x_ssp.c **** }
+ 341:libstr91x/src/91x_ssp.c **** 
+ 342:libstr91x/src/91x_ssp.c **** 
+ 343:libstr91x/src/91x_ssp.c **** 
+ 344:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 345:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_GetFlagStatus
+ 346:libstr91x/src/91x_ssp.c **** * Description    : Checks whether the specified SSP flag is set or not.
+ 347:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 348:libstr91x/src/91x_ssp.c **** *                  - SSP_FLAG: flag to check. This parameter can be one of the
+ 349:libstr91x/src/91x_ssp.c **** *                    following values:
+ 350:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_Busy: busy flag
+ 351:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxFifoFull: Receive FIFO full flag
+ 352:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxFifoNotEmpty: Receive FIFO not empty flag
+ 353:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_TxFifoNotFull: Transmit FIFO not full flag
+ 354:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_TxFifoEmpty: Transmit FIFO empty flag
+ 355:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_TxFifo: Transmit FIFO half empty or less flag
+ 356:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxFifo: Receive FIFO half full or less flag
+ 357:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxTimeOut: Receive timeout flag
+ 358:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxOverrun: Receive overrun flag
+ 359:libstr91x/src/91x_ssp.c **** * Output         : None
+ 360:libstr91x/src/91x_ssp.c **** * Return         : The new state of SSP_Flag (SET or RESET).
+ 361:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 362:libstr91x/src/91x_ssp.c **** FlagStatus SSP_GetFlagStatus(SSP_TypeDef* SSPx, u16 SSP_FLAG)
+ 363:libstr91x/src/91x_ssp.c **** {
+ 444              		.loc 1 363 0
+ 445              		.cfi_startproc
+ 446              		@ args = 0, pretend = 0, frame = 0
+ 447              		@ frame_needed = 0, uses_anonymous_args = 0
+ 448              		@ link register save eliminated.
+ 449              	.LVL19:
+ 364:libstr91x/src/91x_ssp.c ****     u32 SSPReg = 0, FlagPos = 0;
+ 365:libstr91x/src/91x_ssp.c ****     u32 StatusReg = 0;
+ 366:libstr91x/src/91x_ssp.c **** 
+ 367:libstr91x/src/91x_ssp.c ****   /* Get the SSP register index */
+ 368:libstr91x/src/91x_ssp.c ****   SSPReg = SSP_FLAG >> 5;
+ 450              		.loc 1 368 0
+ 451 0298 A132A0E1 		mov	r3, r1, lsr #5
+ 452              	.LVL20:
+ 369:libstr91x/src/91x_ssp.c **** 
+ 370:libstr91x/src/91x_ssp.c ****   /* Get the flag position */
+ 371:libstr91x/src/91x_ssp.c ****   FlagPos = SSP_FLAG & SSP_Flag_Mask;
+ 372:libstr91x/src/91x_ssp.c **** 
+ 373:libstr91x/src/91x_ssp.c ****   /* Find the register of the flag to check */
+ 374:libstr91x/src/91x_ssp.c ****   if(SSPReg == 1)
+ 453              		.loc 1 374 0
+ 454 029c 010053E3 		cmp	r3, #1
+ 375:libstr91x/src/91x_ssp.c ****   {
+ 376:libstr91x/src/91x_ssp.c ****     /* The flag to check is in SR register */
+ 377:libstr91x/src/91x_ssp.c ****     StatusReg = SSPx->SR;  	
+ 455              		.loc 1 377 0
+ 456 02a0 BC30D001 		ldreqh	r3, [r0, #12]
+ 457              	.LVL21:
+ 374:libstr91x/src/91x_ssp.c ****   if(SSPReg == 1)
+ 458              		.loc 1 374 0
+ 459 02a4 0400000A 		beq	.L47
+ 378:libstr91x/src/91x_ssp.c ****   }
+ 379:libstr91x/src/91x_ssp.c ****   else if (SSPReg == 2)
+ 460              		.loc 1 379 0
+ 461 02a8 020053E3 		cmp	r3, #2
+ 462 02ac 0100000A 		beq	.L50
+ 380:libstr91x/src/91x_ssp.c ****   {
+ 381:libstr91x/src/91x_ssp.c ****     /* The flag to check is in RISR register */
+ 382:libstr91x/src/91x_ssp.c ****     StatusReg = SSPx->RISR;
+ 383:libstr91x/src/91x_ssp.c ****   }
+ 384:libstr91x/src/91x_ssp.c **** 
+ 385:libstr91x/src/91x_ssp.c ****   /* Check the status of the specified SSP flag */
+ 386:libstr91x/src/91x_ssp.c ****   if((StatusReg & (1 << FlagPos)) != RESET)
+ 387:libstr91x/src/91x_ssp.c ****   {
+ 388:libstr91x/src/91x_ssp.c ****     /* Return SET if the SSP flag is set */
+ 389:libstr91x/src/91x_ssp.c ****     return SET;
+ 390:libstr91x/src/91x_ssp.c ****   }
+ 391:libstr91x/src/91x_ssp.c ****   else
+ 392:libstr91x/src/91x_ssp.c ****   {
+ 393:libstr91x/src/91x_ssp.c ****     /* Return RESET if the SSP flag is reset */
+ 394:libstr91x/src/91x_ssp.c ****     return RESET;
+ 463              		.loc 1 394 0
+ 464 02b0 0000A0E3 		mov	r0, #0
+ 465              	.LVL22:
+ 395:libstr91x/src/91x_ssp.c ****   }
+ 396:libstr91x/src/91x_ssp.c **** }
+ 466              		.loc 1 396 0
+ 467 02b4 1EFF2FE1 		bx	lr
+ 468              	.LVL23:
+ 469              	.L50:
+ 382:libstr91x/src/91x_ssp.c ****     StatusReg = SSPx->RISR;
+ 470              		.loc 1 382 0
+ 471 02b8 B831D0E1 		ldrh	r3, [r0, #24]
+ 472              	.LVL24:
+ 473              	.L47:
+ 371:libstr91x/src/91x_ssp.c ****   FlagPos = SSP_FLAG & SSP_Flag_Mask;
+ 474              		.loc 1 371 0
+ 475 02bc 1F1001E2 		and	r1, r1, #31
+ 476              	.LVL25:
+ 386:libstr91x/src/91x_ssp.c ****   if((StatusReg & (1 << FlagPos)) != RESET)
+ 477              		.loc 1 386 0
+ 478 02c0 0120A0E3 		mov	r2, #1
+ 362:libstr91x/src/91x_ssp.c **** FlagStatus SSP_GetFlagStatus(SSP_TypeDef* SSPx, u16 SSP_FLAG)
+ 479              		.loc 1 362 0
+ 480 02c4 122113E0 		ands	r2, r3, r2, asl r1
+ 389:libstr91x/src/91x_ssp.c ****     return SET;
+ 481              		.loc 1 389 0
+ 482 02c8 0000A003 		moveq	r0, #0
+ 483 02cc 0100A013 		movne	r0, #1
+ 484              	.LVL26:
+ 485 02d0 1EFF2FE1 		bx	lr
+ 486              		.cfi_endproc
+ 487              	.LFE9:
+ 489              		.align	2
+ 490              		.global	SSP_ClearFlag
+ 492              	SSP_ClearFlag:
+ 493              	.LFB10:
+ 397:libstr91x/src/91x_ssp.c **** 
+ 398:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 399:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_ClearFlag
+ 400:libstr91x/src/91x_ssp.c **** * Description    : Clears the SSPx flags.
+ 401:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 402:libstr91x/src/91x_ssp.c **** *                  - SSP_FLAG: flags to clear. This parameter one of the
+ 403:libstr91x/src/91x_ssp.c **** *                    following values:
+ 404:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxTimeOut: Receive timeout flag
+ 405:libstr91x/src/91x_ssp.c **** *                         - SSP_FLAG_RxOverrun: Receive overrun flag
+ 406:libstr91x/src/91x_ssp.c **** * Output         : None
+ 407:libstr91x/src/91x_ssp.c **** * Return         : None
+ 408:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 409:libstr91x/src/91x_ssp.c **** void SSP_ClearFlag(SSP_TypeDef* SSPx, u16 SSP_FLAG)
+ 410:libstr91x/src/91x_ssp.c **** {
+ 494              		.loc 1 410 0
+ 495              		.cfi_startproc
+ 496              		@ args = 0, pretend = 0, frame = 0
+ 497              		@ frame_needed = 0, uses_anonymous_args = 0
+ 498              		@ link register save eliminated.
+ 499              	.LVL27:
+ 411:libstr91x/src/91x_ssp.c ****     u8 FlagPos = 0;
+ 412:libstr91x/src/91x_ssp.c **** 
+ 413:libstr91x/src/91x_ssp.c ****   /* Get the flag position */
+ 414:libstr91x/src/91x_ssp.c ****   FlagPos = SSP_FLAG & SSP_Flag_Mask;
+ 500              		.loc 1 414 0
+ 501 02d4 1FC001E2 		and	ip, r1, #31
+ 415:libstr91x/src/91x_ssp.c **** 
+ 416:libstr91x/src/91x_ssp.c ****   /* Clear the selected SSP flag */
+ 417:libstr91x/src/91x_ssp.c ****   SSPx->ICR = (1 << FlagPos);
+ 502              		.loc 1 417 0
+ 503 02d8 0138A0E3 		mov	r3, #65536
+ 504 02dc 132CA0E1 		mov	r2, r3, asl ip
+ 505 02e0 2218A0E1 		mov	r1, r2, lsr #16
+ 506              	.LVL28:
+ 507 02e4 B012C0E1 		strh	r1, [r0, #32]	@ movhi
+ 418:libstr91x/src/91x_ssp.c **** }
+ 508              		.loc 1 418 0
+ 509 02e8 1EFF2FE1 		bx	lr
+ 510              		.cfi_endproc
+ 511              	.LFE10:
+ 513              		.align	2
+ 514              		.global	SSP_GetITStatus
+ 516              	SSP_GetITStatus:
+ 517              	.LFB11:
+ 419:libstr91x/src/91x_ssp.c **** 
+ 420:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 421:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_GetITStatus
+ 422:libstr91x/src/91x_ssp.c **** * Description    : Checks whether the specified SSP interrupt flag is set or not.
+ 423:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 424:libstr91x/src/91x_ssp.c **** *                  - SSP_IT: interrupt flag to check. This parameter can be one
+ 425:libstr91x/src/91x_ssp.c **** *                    of the following values:
+ 426:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_TxFifo: Transmit FIFO half empty or less interrupt
+ 427:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxFifo: Receive FIFO half full or less interrupt
+ 428:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxTimeOut: Receive timeout interrupt
+ 429:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxOverrun: Receive overrun interrupt
+ 430:libstr91x/src/91x_ssp.c **** * Output         : None
+ 431:libstr91x/src/91x_ssp.c **** * Return         : The new state of SSP_IT flag (SET or RESET).
+ 432:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 433:libstr91x/src/91x_ssp.c **** ITStatus SSP_GetITStatus(SSP_TypeDef* SSPx, u16 SSP_IT)
+ 434:libstr91x/src/91x_ssp.c **** {
+ 518              		.loc 1 434 0
+ 519              		.cfi_startproc
+ 520              		@ args = 0, pretend = 0, frame = 0
+ 521              		@ frame_needed = 0, uses_anonymous_args = 0
+ 522              		@ link register save eliminated.
+ 523              	.LVL29:
+ 435:libstr91x/src/91x_ssp.c ****   /* Check the status of the specified interrupt flag */
+ 436:libstr91x/src/91x_ssp.c ****   if((SSPx->MISR & SSP_IT) != RESET)
+ 524              		.loc 1 436 0
+ 525 02ec BC31D0E1 		ldrh	r3, [r0, #28]
+ 437:libstr91x/src/91x_ssp.c ****   {
+ 438:libstr91x/src/91x_ssp.c ****     /* Return SET if the SSP interrupt flag is set */
+ 439:libstr91x/src/91x_ssp.c ****     return SET;
+ 526              		.loc 1 439 0
+ 527 02f0 030011E1 		tst	r1, r3
+ 440:libstr91x/src/91x_ssp.c ****   }
+ 441:libstr91x/src/91x_ssp.c ****   else
+ 442:libstr91x/src/91x_ssp.c ****   {
+ 443:libstr91x/src/91x_ssp.c ****     /* Return RESET if SSP interrupt flag is reset */
+ 444:libstr91x/src/91x_ssp.c ****     return RESET;
+ 445:libstr91x/src/91x_ssp.c ****   }
+ 446:libstr91x/src/91x_ssp.c **** }
+ 528              		.loc 1 446 0
+ 529 02f4 0000A003 		moveq	r0, #0
+ 530 02f8 0100A013 		movne	r0, #1
+ 531              	.LVL30:
+ 532 02fc 1EFF2FE1 		bx	lr
+ 533              		.cfi_endproc
+ 534              	.LFE11:
+ 536              		.align	2
+ 537              		.global	SSP_ClearITPendingBit
+ 539              	SSP_ClearITPendingBit:
+ 540              	.LFB12:
+ 447:libstr91x/src/91x_ssp.c **** 
+ 448:libstr91x/src/91x_ssp.c **** /*******************************************************************************
+ 449:libstr91x/src/91x_ssp.c **** * Function Name  : SSP_ClearITPendingBit
+ 450:libstr91x/src/91x_ssp.c **** * Description    : Clears the pending interrupt flags.
+ 451:libstr91x/src/91x_ssp.c **** * Input          : - SSPx: where x can be 0 or 1 to select the SSP peripheral.
+ 452:libstr91x/src/91x_ssp.c **** *                  - SSP_IT: interrupts pending bits to clear. This parameter
+ 453:libstr91x/src/91x_ssp.c **** *                    can be any combination of the following values:
+ 454:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxTimeOut: Receive timeout interrupt
+ 455:libstr91x/src/91x_ssp.c **** *                         - SSP_IT_RxOverrun: Receive overrun interrupt
+ 456:libstr91x/src/91x_ssp.c **** * Output         : None
+ 457:libstr91x/src/91x_ssp.c **** * Return         : None
+ 458:libstr91x/src/91x_ssp.c **** *******************************************************************************/
+ 459:libstr91x/src/91x_ssp.c **** void SSP_ClearITPendingBit(SSP_TypeDef* SSPx, u16 SSP_IT)
+ 460:libstr91x/src/91x_ssp.c **** {
+ 541              		.loc 1 460 0
+ 542              		.cfi_startproc
+ 543              		@ args = 0, pretend = 0, frame = 0
+ 544              		@ frame_needed = 0, uses_anonymous_args = 0
+ 545              		@ link register save eliminated.
+ 546              	.LVL31:
+ 461:libstr91x/src/91x_ssp.c ****   /* Clear the selected SSP interrupts pending bits */
+ 462:libstr91x/src/91x_ssp.c ****   SSPx->ICR = SSP_IT;
+ 547              		.loc 1 462 0
+ 548 0300 B012C0E1 		strh	r1, [r0, #32]	@ movhi
+ 463:libstr91x/src/91x_ssp.c **** }
+ 549              		.loc 1 463 0
+ 550 0304 1EFF2FE1 		bx	lr
+ 551              		.cfi_endproc
+ 552              	.LFE12:
+ 554              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_ssp.c
+     /tmp/cchUHBke.s:21     .text:00000000 $a
+     /tmp/cchUHBke.s:24     .text:00000000 SSP_DeInit
+     /tmp/cchUHBke.s:76     .text:00000054 $d
+     /tmp/cchUHBke.s:81     .text:0000005c $a
+     /tmp/cchUHBke.s:84     .text:0000005c SSP_Init
+     /tmp/cchUHBke.s:214    .text:0000018c $d
+     /tmp/cchUHBke.s:223    .text:000001a4 $a
+     /tmp/cchUHBke.s:226    .text:000001a4 SSP_StructInit
+     /tmp/cchUHBke.s:272    .text:000001e4 SSP_Cmd
+     /tmp/cchUHBke.s:296    .text:00000204 $d
+     /tmp/cchUHBke.s:300    .text:00000208 $a
+     /tmp/cchUHBke.s:303    .text:00000208 SSP_ITConfig
+     /tmp/cchUHBke.s:328    .text:00000220 SSP_DMACmd
+     /tmp/cchUHBke.s:366    .text:0000025c $d
+     /tmp/cchUHBke.s:371    .text:00000264 $a
+     /tmp/cchUHBke.s:374    .text:00000264 SSP_SendData
+     /tmp/cchUHBke.s:392    .text:0000026c SSP_ReceiveData
+     /tmp/cchUHBke.s:411    .text:00000274 SSP_LoopBackConfig
+     /tmp/cchUHBke.s:435    .text:00000294 $d
+     /tmp/cchUHBke.s:439    .text:00000298 $a
+     /tmp/cchUHBke.s:442    .text:00000298 SSP_GetFlagStatus
+     /tmp/cchUHBke.s:492    .text:000002d4 SSP_ClearFlag
+     /tmp/cchUHBke.s:516    .text:000002ec SSP_GetITStatus
+     /tmp/cchUHBke.s:539    .text:00000300 SSP_ClearITPendingBit
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset

@@ -1,0 +1,1871 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_vic.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	VIC_DeInit
+  24              	VIC_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_vic.c"
+   1:libstr91x/src/91x_vic.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_vic.c **** * File Name          : 91x_vic.c
+   3:libstr91x/src/91x_vic.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_vic.c **** * Version            : V2.1
+   5:libstr91x/src/91x_vic.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_vic.c **** * Description        : This file provides all the VIC firmware functions.
+   7:libstr91x/src/91x_vic.c **** ********************************************************************************
+   8:libstr91x/src/91x_vic.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_vic.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME. AS
+  10:libstr91x/src/91x_vic.c **** * A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_vic.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_vic.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_vic.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_vic.c **** *******************************************************************************/
+  15:libstr91x/src/91x_vic.c **** 
+  16:libstr91x/src/91x_vic.c **** 
+  17:libstr91x/src/91x_vic.c **** /* Standard include ----------------------------------------------------------*/
+  18:libstr91x/src/91x_vic.c **** #include "91x_vic.h"
+  19:libstr91x/src/91x_vic.c **** 
+  20:libstr91x/src/91x_vic.c **** /* Include of other module interface headers ---------------------------------*/
+  21:libstr91x/src/91x_vic.c **** /* Local includes ------------------------------------------------------------*/
+  22:libstr91x/src/91x_vic.c **** /* Private typedef -----------------------------------------------------------*/
+  23:libstr91x/src/91x_vic.c **** /* Private define ------------------------------------------------------------*/
+  24:libstr91x/src/91x_vic.c **** 
+  25:libstr91x/src/91x_vic.c **** #define VIC_REGISTER_NUMBER              16
+  26:libstr91x/src/91x_vic.c **** #define VIC_PROTECTION_ENABLE_MASK       0x1
+  27:libstr91x/src/91x_vic.c **** #define VIC_PROTECTION_DISABLE_MASK      0xFFFFFFFE
+  28:libstr91x/src/91x_vic.c **** #define VIC_VECTOR_ENABLE_MASK           0x20
+  29:libstr91x/src/91x_vic.c **** #define VIC_IT_SOURCE_MASK               0xFFFFFFE0
+  30:libstr91x/src/91x_vic.c **** /* Private macro -------------------------------------------------------------*/
+  31:libstr91x/src/91x_vic.c **** /* Private variables ---------------------------------------------------------*/
+  32:libstr91x/src/91x_vic.c **** /* Private function prototypes -----------------------------------------------*/
+  33:libstr91x/src/91x_vic.c **** 
+  34:libstr91x/src/91x_vic.c **** static void VIC_ITModeConfig(u16 VIC_Source, VIC_ITLineMode VIC_LineMode);
+  35:libstr91x/src/91x_vic.c **** static void VIC_ISRVectAddConfig(u16 VIC_Source, u16 VIC_Priority, \
+  36:libstr91x/src/91x_vic.c ****                                  void (*VIC_VectAddress)(void));
+  37:libstr91x/src/91x_vic.c **** static void VIC_VectEnableConfig(u16 VIC_Source, u16 VIC_Priority);
+  38:libstr91x/src/91x_vic.c **** static void VIC_ITSourceConfig(u16 VIC_Source, u16 VIC_Priority);
+  39:libstr91x/src/91x_vic.c **** 
+  40:libstr91x/src/91x_vic.c **** /* Interface functions -------------------------------------------------------*/
+  41:libstr91x/src/91x_vic.c **** /* Private functions ---------------------------------------------------------*/
+  42:libstr91x/src/91x_vic.c **** 
+  43:libstr91x/src/91x_vic.c **** /*******************************************************************************
+  44:libstr91x/src/91x_vic.c **** * Function Name  : VIC_DeInit
+  45:libstr91x/src/91x_vic.c **** * Description    : Deinitialize the VIC module registers to their default reset
+  46:libstr91x/src/91x_vic.c **** *                  values.
+  47:libstr91x/src/91x_vic.c **** * Input          : None
+  48:libstr91x/src/91x_vic.c **** * Output         : None
+  49:libstr91x/src/91x_vic.c **** * Return         : None
+  50:libstr91x/src/91x_vic.c **** *******************************************************************************/
+  51:libstr91x/src/91x_vic.c **** void VIC_DeInit(void)
+  52:libstr91x/src/91x_vic.c **** {
+  27              		.loc 1 52 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 10402DE9 		stmfd	sp!, {r4, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  53:libstr91x/src/91x_vic.c ****   SCU_AHBPeriphReset(__VIC, ENABLE);     /* VIC peripheral is under Reset */
+  34              		.loc 1 53 0
+  35 0004 2000A0E3 		mov	r0, #32
+  36 0008 0110A0E3 		mov	r1, #1
+  37              		.cfi_offset 14, -4
+  38              		.cfi_offset 4, -8
+  39 000c FEFFFFEB 		bl	SCU_AHBPeriphReset
+  54:libstr91x/src/91x_vic.c ****   SCU_AHBPeriphReset(__VIC, DISABLE);    /* VIC peripheral Reset off */
+  40              		.loc 1 54 0
+  41 0010 2000A0E3 		mov	r0, #32
+  42 0014 0010A0E3 		mov	r1, #0
+  55:libstr91x/src/91x_vic.c **** }
+  43              		.loc 1 55 0
+  44 0018 1040BDE8 		ldmfd	sp!, {r4, lr}
+  54:libstr91x/src/91x_vic.c ****   SCU_AHBPeriphReset(__VIC, DISABLE);    /* VIC peripheral Reset off */
+  45              		.loc 1 54 0
+  46 001c FEFFFFEA 		b	SCU_AHBPeriphReset
+  47              		.cfi_endproc
+  48              	.LFE0:
+  50              		.align	2
+  51              		.global	VIC_InitDefaultVectors
+  53              	VIC_InitDefaultVectors:
+  54              	.LFB1:
+  56:libstr91x/src/91x_vic.c **** 
+  57:libstr91x/src/91x_vic.c **** 
+  58:libstr91x/src/91x_vic.c **** /*******************************************************************************
+  59:libstr91x/src/91x_vic.c **** * Function Name  : VIC_InitDefaultVectors
+  60:libstr91x/src/91x_vic.c **** * Description    : Assign the handler "DefaultVector_Handler" to VIC0 and VIC1
+  61:libstr91x/src/91x_vic.c **** *                  default vector address registers VIC0_DVAR and VIC1_DVAR
+  62:libstr91x/src/91x_vic.c **** * Input          : None
+  63:libstr91x/src/91x_vic.c **** * Output         : None
+  64:libstr91x/src/91x_vic.c **** * Return         : None
+  65:libstr91x/src/91x_vic.c **** *******************************************************************************/
+  66:libstr91x/src/91x_vic.c **** void VIC_InitDefaultVectors(void)
+  67:libstr91x/src/91x_vic.c **** {
+  55              		.loc 1 67 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  68:libstr91x/src/91x_vic.c ****   VIC0->DVAR = (u32)DefaultVector_Handler;
+  60              		.loc 1 68 0
+  61 0020 10309FE5 		ldr	r3, .L3
+  62 0024 0F0CE0E3 		mvn	r0, #3840
+  69:libstr91x/src/91x_vic.c ****   VIC1->DVAR = (u32)DefaultVector_Handler;                                   
+  63              		.loc 1 69 0
+  64 0028 3F23A0E3 		mov	r2, #-67108864
+  68:libstr91x/src/91x_vic.c ****   VIC0->DVAR = (u32)DefaultVector_Handler;
+  65              		.loc 1 68 0
+  66 002c CB3000E5 		str	r3, [r0, #-203]
+  67              		.loc 1 69 0
+  68 0030 343082E5 		str	r3, [r2, #52]
+  70:libstr91x/src/91x_vic.c **** }
+  69              		.loc 1 70 0
+  70 0034 1EFF2FE1 		bx	lr
+  71              	.L4:
+  72              		.align	2
+  73              	.L3:
+  74 0038 00000000 		.word	DefaultVector_Handler
+  75              		.cfi_endproc
+  76              	.LFE1:
+  78              		.align	2
+  79              		.global	VIC_GetIRQStatus
+  81              	VIC_GetIRQStatus:
+  82              	.LFB2:
+  71:libstr91x/src/91x_vic.c **** /*******************************************************************************
+  72:libstr91x/src/91x_vic.c **** * Function Name  : VIC_GetIRQStatus
+  73:libstr91x/src/91x_vic.c **** * Description    : Get the status of interrupts after IRQ masking.
+  74:libstr91x/src/91x_vic.c **** * Input          : VIC_Source: specifies the number of the source line.
+  75:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+  76:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+  77:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+  78:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+  79:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+  80:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+  81:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+  82:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+  83:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+  84:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+  85:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+  86:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+  87:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+  88:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+  89:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+  90:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+  91:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+  92:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+  93:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+  94:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+  95:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+  96:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+  97:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+  98:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+  99:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 100:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 101:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 102:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 103:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 104:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 105:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 106:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 107:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 108:libstr91x/src/91x_vic.c **** * Output         : None
+ 109:libstr91x/src/91x_vic.c **** * Return         : The status of the IRQ interrupt after masking (SET or RESET).
+ 110:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 111:libstr91x/src/91x_vic.c **** FlagStatus VIC_GetIRQStatus(u16 VIC_Source)
+ 112:libstr91x/src/91x_vic.c **** {
+  83              		.loc 1 112 0
+  84              		.cfi_startproc
+  85              		@ args = 0, pretend = 0, frame = 0
+  86              		@ frame_needed = 0, uses_anonymous_args = 0
+  87              		@ link register save eliminated.
+  88              	.LVL0:
+ 113:libstr91x/src/91x_vic.c ****   u32 VIC_Mask = 1;
+ 114:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER)
+  89              		.loc 1 114 0
+  90 003c 0F0050E3 		cmp	r0, #15
+  91 0040 0600008A 		bhi	.L6
+ 115:libstr91x/src/91x_vic.c ****   {
+ 116:libstr91x/src/91x_vic.c ****     if ((VIC0->ISR | VIC_Mask << VIC_Source) != RESET)
+  92              		.loc 1 116 0
+  93 0044 0F1CE0E3 		mvn	r1, #3840
+  94 0048 FF3011E5 		ldr	r3, [r1, #-255]
+  95 004c 0120A0E3 		mov	r2, #1
+ 117:libstr91x/src/91x_vic.c ****       return SET;
+  96              		.loc 1 117 0
+  97 0050 122093E1 		orrs	r2, r3, r2, asl r0
+  98 0054 0000A003 		moveq	r0, #0
+  99 0058 0100A013 		movne	r0, #1
+ 100              	.LVL1:
+ 101 005c 1EFF2FE1 		bx	lr
+ 102              	.LVL2:
+ 103              	.L6:
+ 118:libstr91x/src/91x_vic.c ****     else
+ 119:libstr91x/src/91x_vic.c ****       return RESET;
+ 120:libstr91x/src/91x_vic.c ****   }
+ 121:libstr91x/src/91x_vic.c ****   else
+ 122:libstr91x/src/91x_vic.c ****   {
+ 123:libstr91x/src/91x_vic.c ****     if ((VIC1->ISR | VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER)) != RESET)
+ 104              		.loc 1 123 0
+ 105 0060 3F33A0E3 		mov	r3, #-67108864
+ 106 0064 002093E5 		ldr	r2, [r3, #0]
+ 107 0068 100040E2 		sub	r0, r0, #16
+ 108              	.LVL3:
+ 109 006c 01C0A0E3 		mov	ip, #1
+ 117:libstr91x/src/91x_vic.c ****       return SET;
+ 110              		.loc 1 117 0
+ 111 0070 1C2092E1 		orrs	r2, r2, ip, asl r0
+ 112 0074 0000A003 		moveq	r0, #0
+ 113 0078 0100A013 		movne	r0, #1
+ 124:libstr91x/src/91x_vic.c ****       return SET;
+ 125:libstr91x/src/91x_vic.c ****     else
+ 126:libstr91x/src/91x_vic.c ****       return RESET;
+ 127:libstr91x/src/91x_vic.c ****   }
+ 128:libstr91x/src/91x_vic.c **** }
+ 114              		.loc 1 128 0
+ 115 007c 1EFF2FE1 		bx	lr
+ 116              		.cfi_endproc
+ 117              	.LFE2:
+ 119              		.align	2
+ 120              		.global	VIC_GetFIQStatus
+ 122              	VIC_GetFIQStatus:
+ 123              	.LFB3:
+ 129:libstr91x/src/91x_vic.c **** 
+ 130:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 131:libstr91x/src/91x_vic.c **** * Function Name  : VIC_GetFIQStatus
+ 132:libstr91x/src/91x_vic.c **** * Description    : Get the status of interrupts after FIQ masking
+ 133:libstr91x/src/91x_vic.c **** * Input          : VIC_Source: specifies the number of the source line.
+ 134:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 135:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 136:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 137:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 138:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 139:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 140:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 141:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 142:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 143:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 144:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 145:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 146:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 147:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 148:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 149:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 150:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 151:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 152:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 153:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 154:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 155:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 156:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 157:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 158:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 159:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 160:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 161:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 162:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 163:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 164:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 165:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 166:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 167:libstr91x/src/91x_vic.c **** * Output         : None
+ 168:libstr91x/src/91x_vic.c **** * Return         : The status of the FIQ interrupt after masking (SET or RESET)
+ 169:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 170:libstr91x/src/91x_vic.c **** FlagStatus VIC_GetFIQStatus(u16 VIC_Source)
+ 171:libstr91x/src/91x_vic.c **** {
+ 124              		.loc 1 171 0
+ 125              		.cfi_startproc
+ 126              		@ args = 0, pretend = 0, frame = 0
+ 127              		@ frame_needed = 0, uses_anonymous_args = 0
+ 128              		@ link register save eliminated.
+ 129              	.LVL4:
+ 172:libstr91x/src/91x_vic.c ****   u32 VIC_Mask = 1;
+ 173:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER)
+ 130              		.loc 1 173 0
+ 131 0080 0F0050E3 		cmp	r0, #15
+ 132 0084 0600008A 		bhi	.L10
+ 174:libstr91x/src/91x_vic.c ****   {
+ 175:libstr91x/src/91x_vic.c ****     if ((VIC0->RINTSR | VIC_Mask << VIC_Source) != RESET)
+ 133              		.loc 1 175 0
+ 134 0088 0F1CE0E3 		mvn	r1, #3840
+ 135 008c F73011E5 		ldr	r3, [r1, #-247]
+ 136 0090 0120A0E3 		mov	r2, #1
+ 176:libstr91x/src/91x_vic.c ****       return SET;
+ 137              		.loc 1 176 0
+ 138 0094 122093E1 		orrs	r2, r3, r2, asl r0
+ 139 0098 0000A003 		moveq	r0, #0
+ 140 009c 0100A013 		movne	r0, #1
+ 141              	.LVL5:
+ 142 00a0 1EFF2FE1 		bx	lr
+ 143              	.LVL6:
+ 144              	.L10:
+ 177:libstr91x/src/91x_vic.c ****     else
+ 178:libstr91x/src/91x_vic.c ****       return RESET;
+ 179:libstr91x/src/91x_vic.c ****   }
+ 180:libstr91x/src/91x_vic.c ****   else
+ 181:libstr91x/src/91x_vic.c ****   {
+ 182:libstr91x/src/91x_vic.c ****     if ((VIC1->RINTSR | VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER)) != RESET)
+ 145              		.loc 1 182 0
+ 146 00a4 3F33A0E3 		mov	r3, #-67108864
+ 147 00a8 082093E5 		ldr	r2, [r3, #8]
+ 148 00ac 100040E2 		sub	r0, r0, #16
+ 149              	.LVL7:
+ 150 00b0 01C0A0E3 		mov	ip, #1
+ 176:libstr91x/src/91x_vic.c ****       return SET;
+ 151              		.loc 1 176 0
+ 152 00b4 1C2092E1 		orrs	r2, r2, ip, asl r0
+ 153 00b8 0000A003 		moveq	r0, #0
+ 154 00bc 0100A013 		movne	r0, #1
+ 183:libstr91x/src/91x_vic.c ****       return SET;
+ 184:libstr91x/src/91x_vic.c ****     else
+ 185:libstr91x/src/91x_vic.c ****       return RESET;
+ 186:libstr91x/src/91x_vic.c ****   }
+ 187:libstr91x/src/91x_vic.c **** }
+ 155              		.loc 1 187 0
+ 156 00c0 1EFF2FE1 		bx	lr
+ 157              		.cfi_endproc
+ 158              	.LFE3:
+ 160              		.align	2
+ 161              		.global	VIC_GetSourceITStatus
+ 163              	VIC_GetSourceITStatus:
+ 164              	.LFB4:
+ 188:libstr91x/src/91x_vic.c **** 
+ 189:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 190:libstr91x/src/91x_vic.c **** * Function Name  : VIC_GetSourceITStatus
+ 191:libstr91x/src/91x_vic.c **** * Description    : Get the status of the source interrupts before masking.
+ 192:libstr91x/src/91x_vic.c **** * Input          : VIC_Source: specifies the number of the source line.
+ 193:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 194:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 195:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 196:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 197:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 198:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 199:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 200:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 201:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 202:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 203:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 204:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 205:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 206:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 207:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 208:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 209:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 210:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 211:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 212:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 213:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 214:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 215:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 216:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 217:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 218:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 219:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 220:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 221:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 222:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 223:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 224:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 225:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 226:libstr91x/src/91x_vic.c **** * Output         : None
+ 227:libstr91x/src/91x_vic.c **** * Return         : The status of the source interrupt before masking
+ 228:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 229:libstr91x/src/91x_vic.c **** FlagStatus VIC_GetSourceITStatus(u16 VIC_Source)
+ 230:libstr91x/src/91x_vic.c **** {
+ 165              		.loc 1 230 0
+ 166              		.cfi_startproc
+ 167              		@ args = 0, pretend = 0, frame = 0
+ 168              		@ frame_needed = 0, uses_anonymous_args = 0
+ 169              		@ link register save eliminated.
+ 170              	.LVL8:
+ 231:libstr91x/src/91x_vic.c ****   u32 VIC_Mask = 1;
+ 232:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER)
+ 171              		.loc 1 232 0
+ 172 00c4 0F0050E3 		cmp	r0, #15
+ 173 00c8 0600008A 		bhi	.L13
+ 233:libstr91x/src/91x_vic.c ****   {
+ 234:libstr91x/src/91x_vic.c ****     if ((VIC0->FSR | VIC_Mask << VIC_Source) != RESET)
+ 174              		.loc 1 234 0
+ 175 00cc 0F1CE0E3 		mvn	r1, #3840
+ 176 00d0 FB3011E5 		ldr	r3, [r1, #-251]
+ 177 00d4 0120A0E3 		mov	r2, #1
+ 235:libstr91x/src/91x_vic.c ****       return SET;
+ 178              		.loc 1 235 0
+ 179 00d8 122093E1 		orrs	r2, r3, r2, asl r0
+ 180 00dc 0000A003 		moveq	r0, #0
+ 181 00e0 0100A013 		movne	r0, #1
+ 182              	.LVL9:
+ 183 00e4 1EFF2FE1 		bx	lr
+ 184              	.LVL10:
+ 185              	.L13:
+ 236:libstr91x/src/91x_vic.c ****     else
+ 237:libstr91x/src/91x_vic.c ****       return RESET;
+ 238:libstr91x/src/91x_vic.c ****   }
+ 239:libstr91x/src/91x_vic.c ****   else
+ 240:libstr91x/src/91x_vic.c ****   {
+ 241:libstr91x/src/91x_vic.c ****     if ((VIC1->FSR | VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER)) != RESET)
+ 186              		.loc 1 241 0
+ 187 00e8 3F33A0E3 		mov	r3, #-67108864
+ 188 00ec 042093E5 		ldr	r2, [r3, #4]
+ 189 00f0 100040E2 		sub	r0, r0, #16
+ 190              	.LVL11:
+ 191 00f4 01C0A0E3 		mov	ip, #1
+ 235:libstr91x/src/91x_vic.c ****       return SET;
+ 192              		.loc 1 235 0
+ 193 00f8 1C2092E1 		orrs	r2, r2, ip, asl r0
+ 194 00fc 0000A003 		moveq	r0, #0
+ 195 0100 0100A013 		movne	r0, #1
+ 242:libstr91x/src/91x_vic.c ****       return SET;
+ 243:libstr91x/src/91x_vic.c ****     else
+ 244:libstr91x/src/91x_vic.c ****       return RESET;
+ 245:libstr91x/src/91x_vic.c ****   }
+ 246:libstr91x/src/91x_vic.c **** }
+ 196              		.loc 1 246 0
+ 197 0104 1EFF2FE1 		bx	lr
+ 198              		.cfi_endproc
+ 199              	.LFE4:
+ 201              		.align	2
+ 202              		.global	VIC_ITCmd
+ 204              	VIC_ITCmd:
+ 205              	.LFB6:
+ 247:libstr91x/src/91x_vic.c **** 
+ 248:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 249:libstr91x/src/91x_vic.c **** * Function Name  : VIC_ITModeConfig
+ 250:libstr91x/src/91x_vic.c **** * Description    : Select the type of interrupt (IRQ or FIQ)
+ 251:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 252:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 253:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 254:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 255:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 256:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 257:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 258:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 259:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 260:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 261:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 262:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 263:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 264:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 265:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 266:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 267:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 268:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 269:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 270:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 271:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 272:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 273:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 274:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 275:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 276:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 277:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 278:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 279:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 280:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 281:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 282:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 283:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 284:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 285:libstr91x/src/91x_vic.c **** * Input2         : VIC_LineMode :specifies the type of interrupt of the source
+ 286:libstr91x/src/91x_vic.c **** *                  line. This parameter can be one of the following values:
+ 287:libstr91x/src/91x_vic.c **** *                     - VIC_IRQ: the correspondent line is configured as IRQ.
+ 288:libstr91x/src/91x_vic.c **** *                     - VIC_FIQ: the correspondent line is configured as FIQ.
+ 289:libstr91x/src/91x_vic.c **** * Output         : None
+ 290:libstr91x/src/91x_vic.c **** * Return         : None
+ 291:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 292:libstr91x/src/91x_vic.c **** static void VIC_ITModeConfig(u16 VIC_Source, VIC_ITLineMode VIC_LineMode)
+ 293:libstr91x/src/91x_vic.c **** {
+ 294:libstr91x/src/91x_vic.c ****   u32 VIC_Mask = 1;
+ 295:libstr91x/src/91x_vic.c **** 
+ 296:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER) /* VIC0 */
+ 297:libstr91x/src/91x_vic.c ****   {
+ 298:libstr91x/src/91x_vic.c ****     if (VIC_LineMode == VIC_IRQ)
+ 299:libstr91x/src/91x_vic.c ****       VIC0->INTSR &= ~(VIC_Mask << VIC_Source);
+ 300:libstr91x/src/91x_vic.c ****     else /* VIC_LineMode == VIC_FIQ */
+ 301:libstr91x/src/91x_vic.c ****       VIC0->INTSR |= (VIC_Mask << VIC_Source);
+ 302:libstr91x/src/91x_vic.c ****   }
+ 303:libstr91x/src/91x_vic.c ****   else /* VIC1 */
+ 304:libstr91x/src/91x_vic.c ****   {
+ 305:libstr91x/src/91x_vic.c ****     if (VIC_LineMode == VIC_IRQ)
+ 306:libstr91x/src/91x_vic.c ****       VIC1->INTSR &= ~(VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 307:libstr91x/src/91x_vic.c ****     else /* VIC_LineMode == VIC_FIQ */
+ 308:libstr91x/src/91x_vic.c ****       VIC1->INTSR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 309:libstr91x/src/91x_vic.c ****   }
+ 310:libstr91x/src/91x_vic.c **** }
+ 311:libstr91x/src/91x_vic.c **** 
+ 312:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 313:libstr91x/src/91x_vic.c **** * Function Name  : VIC_ITCmd
+ 314:libstr91x/src/91x_vic.c **** * Description    : Enable or disable the interrupt request lines.
+ 315:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 316:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 317:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 318:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 319:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 320:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 321:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 322:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 323:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 324:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 325:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 326:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 327:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 328:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 329:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 330:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 331:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 332:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 333:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 334:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 335:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 336:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 337:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 338:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 339:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 340:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 341:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 342:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 343:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 344:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 345:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 346:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 347:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 348:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 349:libstr91x/src/91x_vic.c **** * Input2         : FMI_NewState: specifies the line status.
+ 350:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 351:libstr91x/src/91x_vic.c **** *                     - ENABLE:  The line is enabled.
+ 352:libstr91x/src/91x_vic.c **** *                     - DISABLE: The line is disabled.
+ 353:libstr91x/src/91x_vic.c **** * Output         : None
+ 354:libstr91x/src/91x_vic.c **** * Return         : None
+ 355:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 356:libstr91x/src/91x_vic.c **** void VIC_ITCmd(u16 VIC_Source, FunctionalState VIC_NewState)
+ 357:libstr91x/src/91x_vic.c **** {
+ 206              		.loc 1 357 0
+ 207              		.cfi_startproc
+ 208              		@ args = 0, pretend = 0, frame = 0
+ 209              		@ frame_needed = 0, uses_anonymous_args = 0
+ 210              		@ link register save eliminated.
+ 211              	.LVL12:
+ 358:libstr91x/src/91x_vic.c ****   u32 VIC_Mask = 1;
+ 359:libstr91x/src/91x_vic.c **** 
+ 360:libstr91x/src/91x_vic.c ****   if (VIC_NewState == ENABLE)
+ 212              		.loc 1 360 0
+ 213 0108 010051E3 		cmp	r1, #1
+ 214 010c 0E00000A 		beq	.L20
+ 361:libstr91x/src/91x_vic.c ****   {
+ 362:libstr91x/src/91x_vic.c ****     if (VIC_Source < VIC_REGISTER_NUMBER)  /* VIC0 */
+ 363:libstr91x/src/91x_vic.c ****       VIC0->INTER |= (VIC_Mask << VIC_Source);
+ 364:libstr91x/src/91x_vic.c ****     else /* VIC1 */
+ 365:libstr91x/src/91x_vic.c ****       VIC1->INTER |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 366:libstr91x/src/91x_vic.c ****   }
+ 367:libstr91x/src/91x_vic.c ****   else /* VIC_NewState == DISABLE */
+ 368:libstr91x/src/91x_vic.c ****   {
+ 369:libstr91x/src/91x_vic.c ****     if (VIC_Source < VIC_REGISTER_NUMBER)  /* VIC0 */
+ 215              		.loc 1 369 0
+ 216 0110 0F0050E3 		cmp	r0, #15
+ 217 0114 0600009A 		bls	.L21
+ 370:libstr91x/src/91x_vic.c ****       VIC0->INTECR |= (VIC_Mask << VIC_Source);
+ 371:libstr91x/src/91x_vic.c ****     else /* VIC1 */
+ 372:libstr91x/src/91x_vic.c ****       VIC1->INTECR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 218              		.loc 1 372 0
+ 219 0118 3F33A0E3 		mov	r3, #-67108864
+ 220 011c 142093E5 		ldr	r2, [r3, #20]
+ 221 0120 100040E2 		sub	r0, r0, #16
+ 222              	.LVL13:
+ 223 0124 0110A0E3 		mov	r1, #1
+ 224              	.LVL14:
+ 225 0128 11C082E1 		orr	ip, r2, r1, asl r0
+ 226 012c 14C083E5 		str	ip, [r3, #20]
+ 227 0130 1EFF2FE1 		bx	lr
+ 228              	.LVL15:
+ 229              	.L21:
+ 370:libstr91x/src/91x_vic.c ****       VIC0->INTECR |= (VIC_Mask << VIC_Source);
+ 230              		.loc 1 370 0
+ 231 0134 0F3CE0E3 		mvn	r3, #3840
+ 232 0138 EB2013E5 		ldr	r2, [r3, #-235]
+ 233 013c 0110A0E3 		mov	r1, #1
+ 234              	.LVL16:
+ 235 0140 110082E1 		orr	r0, r2, r1, asl r0
+ 236              	.LVL17:
+ 237 0144 EB0003E5 		str	r0, [r3, #-235]
+ 238 0148 1EFF2FE1 		bx	lr
+ 239              	.LVL18:
+ 240              	.L20:
+ 362:libstr91x/src/91x_vic.c ****     if (VIC_Source < VIC_REGISTER_NUMBER)  /* VIC0 */
+ 241              		.loc 1 362 0
+ 242 014c 0F0050E3 		cmp	r0, #15
+ 363:libstr91x/src/91x_vic.c ****       VIC0->INTER |= (VIC_Mask << VIC_Source);
+ 243              		.loc 1 363 0
+ 244 0150 0F3CE093 		mvnls	r3, #3840
+ 365:libstr91x/src/91x_vic.c ****       VIC1->INTER |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 245              		.loc 1 365 0
+ 246 0154 3F33A083 		movhi	r3, #-67108864
+ 363:libstr91x/src/91x_vic.c ****       VIC0->INTER |= (VIC_Mask << VIC_Source);
+ 247              		.loc 1 363 0
+ 248 0158 EF201395 		ldrls	r2, [r3, #-239]
+ 365:libstr91x/src/91x_vic.c ****       VIC1->INTER |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 249              		.loc 1 365 0
+ 250 015c 10209385 		ldrhi	r2, [r3, #16]
+ 251 0160 10004082 		subhi	r0, r0, #16
+ 252              	.LVL19:
+ 363:libstr91x/src/91x_vic.c ****       VIC0->INTER |= (VIC_Mask << VIC_Source);
+ 253              		.loc 1 363 0
+ 254 0164 11108291 		orrls	r1, r2, r1, asl r0
+ 255              	.LVL20:
+ 365:libstr91x/src/91x_vic.c ****       VIC1->INTER |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 256              		.loc 1 365 0
+ 257 0168 11108281 		orrhi	r1, r2, r1, asl r0
+ 363:libstr91x/src/91x_vic.c ****       VIC0->INTER |= (VIC_Mask << VIC_Source);
+ 258              		.loc 1 363 0
+ 259 016c EF100395 		strls	r1, [r3, #-239]
+ 365:libstr91x/src/91x_vic.c ****       VIC1->INTER |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 260              		.loc 1 365 0
+ 261 0170 10108385 		strhi	r1, [r3, #16]
+ 262 0174 1EFF2FE1 		bx	lr
+ 263              		.cfi_endproc
+ 264              	.LFE6:
+ 266              		.align	2
+ 267              		.global	VIC_SWITCmd
+ 269              	VIC_SWITCmd:
+ 270              	.LFB7:
+ 373:libstr91x/src/91x_vic.c ****   }
+ 374:libstr91x/src/91x_vic.c **** }
+ 375:libstr91x/src/91x_vic.c **** 
+ 376:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 377:libstr91x/src/91x_vic.c **** * Function Name  : VIC_SWITCmd
+ 378:libstr91x/src/91x_vic.c **** * Description    : Generate a software interrupt for the specific source 
+ 379:libstr91x/src/91x_vic.c **** *                  interrupt.
+ 380:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 381:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 382:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 383:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 384:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 385:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 386:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 387:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 388:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 389:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 390:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 391:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 392:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 393:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 394:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 395:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 396:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 397:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 398:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 399:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 400:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 401:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 402:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 403:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 404:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 405:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 406:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 407:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 408:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 409:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 410:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 411:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 412:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 413:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 414:libstr91x/src/91x_vic.c **** * Input2         : FMI_NewState: specifies the software interrupt status.
+ 415:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 416:libstr91x/src/91x_vic.c **** *                     - ENABLE:  The software interrupt is enabled.
+ 417:libstr91x/src/91x_vic.c **** *                     - DISABLE: The software interrupt is disabled.
+ 418:libstr91x/src/91x_vic.c **** * Output         : None
+ 419:libstr91x/src/91x_vic.c **** * Return         : None
+ 420:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 421:libstr91x/src/91x_vic.c **** void VIC_SWITCmd(u16 VIC_Source, FunctionalState VIC_NewState)
+ 422:libstr91x/src/91x_vic.c **** {
+ 271              		.loc 1 422 0
+ 272              		.cfi_startproc
+ 273              		@ args = 0, pretend = 0, frame = 0
+ 274              		@ frame_needed = 0, uses_anonymous_args = 0
+ 275              		@ link register save eliminated.
+ 276              	.LVL21:
+ 423:libstr91x/src/91x_vic.c ****   u32 VIC_Mask = 1;
+ 424:libstr91x/src/91x_vic.c **** 
+ 425:libstr91x/src/91x_vic.c ****   if (VIC_NewState == ENABLE)
+ 277              		.loc 1 425 0
+ 278 0178 010051E3 		cmp	r1, #1
+ 279 017c 0A00000A 		beq	.L27
+ 426:libstr91x/src/91x_vic.c ****   {
+ 427:libstr91x/src/91x_vic.c ****     if (VIC_Source < VIC_REGISTER_NUMBER)  /* VIC0 */
+ 428:libstr91x/src/91x_vic.c ****       VIC0->SWINTR |= (VIC_Mask << VIC_Source);
+ 429:libstr91x/src/91x_vic.c ****     else /* VIC1 */
+ 430:libstr91x/src/91x_vic.c ****       VIC1->SWINTR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 431:libstr91x/src/91x_vic.c ****   }
+ 432:libstr91x/src/91x_vic.c ****   else /* VIC_NewState == DISABLE */
+ 433:libstr91x/src/91x_vic.c ****   {
+ 434:libstr91x/src/91x_vic.c ****     if (VIC_Source < VIC_REGISTER_NUMBER)  /* VIC0 */
+ 280              		.loc 1 434 0
+ 281 0180 0F0050E3 		cmp	r0, #15
+ 435:libstr91x/src/91x_vic.c ****       VIC0->SWINTCR = (VIC_Mask << VIC_Source);
+ 436:libstr91x/src/91x_vic.c ****     else /* VIC1 */
+ 437:libstr91x/src/91x_vic.c ****       VIC1->SWINTCR = (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 282              		.loc 1 437 0
+ 283 0184 0130A083 		movhi	r3, #1
+ 284 0188 10004082 		subhi	r0, r0, #16
+ 285              	.LVL22:
+ 435:libstr91x/src/91x_vic.c ****       VIC0->SWINTCR = (VIC_Mask << VIC_Source);
+ 286              		.loc 1 435 0
+ 287 018c 0110A093 		movls	r1, #1
+ 288              	.LVL23:
+ 289              		.loc 1 437 0
+ 290 0190 1300A081 		movhi	r0, r3, asl r0
+ 435:libstr91x/src/91x_vic.c ****       VIC0->SWINTCR = (VIC_Mask << VIC_Source);
+ 291              		.loc 1 435 0
+ 292 0194 1100A091 		movls	r0, r1, asl r0
+ 293 0198 0F3CE093 		mvnls	r3, #3840
+ 294              		.loc 1 437 0
+ 295 019c 3F33A083 		movhi	r3, #-67108864
+ 435:libstr91x/src/91x_vic.c ****       VIC0->SWINTCR = (VIC_Mask << VIC_Source);
+ 296              		.loc 1 435 0
+ 297 01a0 E3000395 		strls	r0, [r3, #-227]
+ 298              		.loc 1 437 0
+ 299 01a4 1C008385 		strhi	r0, [r3, #28]
+ 300 01a8 1EFF2FE1 		bx	lr
+ 301              	.LVL24:
+ 302              	.L27:
+ 427:libstr91x/src/91x_vic.c ****     if (VIC_Source < VIC_REGISTER_NUMBER)  /* VIC0 */
+ 303              		.loc 1 427 0
+ 304 01ac 0F0050E3 		cmp	r0, #15
+ 428:libstr91x/src/91x_vic.c ****       VIC0->SWINTR |= (VIC_Mask << VIC_Source);
+ 305              		.loc 1 428 0
+ 306 01b0 0F3CE093 		mvnls	r3, #3840
+ 430:libstr91x/src/91x_vic.c ****       VIC1->SWINTR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 307              		.loc 1 430 0
+ 308 01b4 3F33A083 		movhi	r3, #-67108864
+ 428:libstr91x/src/91x_vic.c ****       VIC0->SWINTR |= (VIC_Mask << VIC_Source);
+ 309              		.loc 1 428 0
+ 310 01b8 E7201395 		ldrls	r2, [r3, #-231]
+ 430:libstr91x/src/91x_vic.c ****       VIC1->SWINTR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 311              		.loc 1 430 0
+ 312 01bc 18209385 		ldrhi	r2, [r3, #24]
+ 313 01c0 10004082 		subhi	r0, r0, #16
+ 314              	.LVL25:
+ 428:libstr91x/src/91x_vic.c ****       VIC0->SWINTR |= (VIC_Mask << VIC_Source);
+ 315              		.loc 1 428 0
+ 316 01c4 11108291 		orrls	r1, r2, r1, asl r0
+ 317              	.LVL26:
+ 430:libstr91x/src/91x_vic.c ****       VIC1->SWINTR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 318              		.loc 1 430 0
+ 319 01c8 11108281 		orrhi	r1, r2, r1, asl r0
+ 428:libstr91x/src/91x_vic.c ****       VIC0->SWINTR |= (VIC_Mask << VIC_Source);
+ 320              		.loc 1 428 0
+ 321 01cc E7100395 		strls	r1, [r3, #-231]
+ 430:libstr91x/src/91x_vic.c ****       VIC1->SWINTR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 322              		.loc 1 430 0
+ 323 01d0 18108385 		strhi	r1, [r3, #24]
+ 324 01d4 1EFF2FE1 		bx	lr
+ 325              		.cfi_endproc
+ 326              	.LFE7:
+ 328              		.align	2
+ 329              		.global	VIC_ProtectionCmd
+ 331              	VIC_ProtectionCmd:
+ 332              	.LFB8:
+ 438:libstr91x/src/91x_vic.c ****   }
+ 439:libstr91x/src/91x_vic.c **** }
+ 440:libstr91x/src/91x_vic.c **** 
+ 441:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 442:libstr91x/src/91x_vic.c **** * Function Name  : VIC_ProtectionCmd
+ 443:libstr91x/src/91x_vic.c **** * Description    : Enable or Disable the register access protection.
+ 444:libstr91x/src/91x_vic.c **** * Input          : FMI_NewState: specifies the protection status.
+ 445:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 446:libstr91x/src/91x_vic.c **** *                     - ENABLE:  The protection is enabled.
+ 447:libstr91x/src/91x_vic.c **** *                     - DISABLE: The protection is disabled.
+ 448:libstr91x/src/91x_vic.c **** * Output         : None
+ 449:libstr91x/src/91x_vic.c **** * Return         : None
+ 450:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 451:libstr91x/src/91x_vic.c **** void VIC_ProtectionCmd(FunctionalState VIC_NewState)
+ 452:libstr91x/src/91x_vic.c **** {
+ 333              		.loc 1 452 0
+ 334              		.cfi_startproc
+ 335              		@ args = 0, pretend = 0, frame = 0
+ 336              		@ frame_needed = 0, uses_anonymous_args = 0
+ 337              		@ link register save eliminated.
+ 338              	.LVL27:
+ 453:libstr91x/src/91x_vic.c ****   if (VIC_NewState == ENABLE)
+ 454:libstr91x/src/91x_vic.c ****   {
+ 455:libstr91x/src/91x_vic.c ****     VIC0->PER |= VIC_PROTECTION_ENABLE_MASK;
+ 339              		.loc 1 455 0
+ 340 01d8 0F2CE0E3 		mvn	r2, #3840
+ 341 01dc DF1012E5 		ldr	r1, [r2, #-223]
+ 453:libstr91x/src/91x_vic.c ****   if (VIC_NewState == ENABLE)
+ 342              		.loc 1 453 0
+ 343 01e0 010050E3 		cmp	r0, #1
+ 344              		.loc 1 455 0
+ 345 01e4 01108103 		orreq	r1, r1, #1
+ 456:libstr91x/src/91x_vic.c ****     VIC1->PER |= VIC_PROTECTION_ENABLE_MASK;
+ 457:libstr91x/src/91x_vic.c ****   }
+ 458:libstr91x/src/91x_vic.c ****   else
+ 459:libstr91x/src/91x_vic.c ****   {
+ 460:libstr91x/src/91x_vic.c ****     VIC0->PER &= VIC_PROTECTION_DISABLE_MASK;
+ 346              		.loc 1 460 0
+ 347 01e8 0110C113 		bicne	r1, r1, #1
+ 456:libstr91x/src/91x_vic.c ****     VIC1->PER |= VIC_PROTECTION_ENABLE_MASK;
+ 348              		.loc 1 456 0
+ 349 01ec 3F33A0E3 		mov	r3, #-67108864
+ 455:libstr91x/src/91x_vic.c ****     VIC0->PER |= VIC_PROTECTION_ENABLE_MASK;
+ 350              		.loc 1 455 0
+ 351 01f0 DF100205 		streq	r1, [r2, #-223]
+ 352              		.loc 1 460 0
+ 353 01f4 DF100215 		strne	r1, [r2, #-223]
+ 456:libstr91x/src/91x_vic.c ****     VIC1->PER |= VIC_PROTECTION_ENABLE_MASK;
+ 354              		.loc 1 456 0
+ 355 01f8 20209305 		ldreq	r2, [r3, #32]
+ 461:libstr91x/src/91x_vic.c ****     VIC1->PER &= VIC_PROTECTION_DISABLE_MASK;
+ 356              		.loc 1 461 0
+ 357 01fc 20209315 		ldrne	r2, [r3, #32]
+ 456:libstr91x/src/91x_vic.c ****     VIC1->PER |= VIC_PROTECTION_ENABLE_MASK;
+ 358              		.loc 1 456 0
+ 359 0200 01208203 		orreq	r2, r2, #1
+ 360              		.loc 1 461 0
+ 361 0204 0120C213 		bicne	r2, r2, #1
+ 362 0208 202083E5 		str	r2, [r3, #32]
+ 363 020c 1EFF2FE1 		bx	lr
+ 364              		.cfi_endproc
+ 365              	.LFE8:
+ 367              		.align	2
+ 368              		.global	VIC_GetCurrentISRAdd
+ 370              	VIC_GetCurrentISRAdd:
+ 371              	.LFB9:
+ 462:libstr91x/src/91x_vic.c ****   }
+ 463:libstr91x/src/91x_vic.c **** }
+ 464:libstr91x/src/91x_vic.c **** 
+ 465:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 466:libstr91x/src/91x_vic.c **** * Function Name  : VIC_GetCurrentISRAdd
+ 467:libstr91x/src/91x_vic.c **** * Description    : Get the address of the current active ISR.
+ 468:libstr91x/src/91x_vic.c **** * Input          : VICx: specifies the VIC peripheral
+ 469:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 470:libstr91x/src/91x_vic.c **** *                     - VIC0: To select VIC0.
+ 471:libstr91x/src/91x_vic.c **** *                     - VIC1: To select VIC1.
+ 472:libstr91x/src/91x_vic.c **** * Output         : None
+ 473:libstr91x/src/91x_vic.c **** * Return         : The Address of the active ISR.
+ 474:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 475:libstr91x/src/91x_vic.c **** u32 VIC_GetCurrentISRAdd(VIC_TypeDef* VICx)
+ 476:libstr91x/src/91x_vic.c **** {
+ 372              		.loc 1 476 0
+ 373              		.cfi_startproc
+ 374              		@ args = 0, pretend = 0, frame = 0
+ 375              		@ frame_needed = 0, uses_anonymous_args = 0
+ 376              		@ link register save eliminated.
+ 377              	.LVL28:
+ 477:libstr91x/src/91x_vic.c ****   return VICx->VAR;
+ 378              		.loc 1 477 0
+ 379 0210 300090E5 		ldr	r0, [r0, #48]
+ 380              	.LVL29:
+ 478:libstr91x/src/91x_vic.c **** }
+ 381              		.loc 1 478 0
+ 382 0214 1EFF2FE1 		bx	lr
+ 383              		.cfi_endproc
+ 384              	.LFE9:
+ 386              		.align	2
+ 387              		.global	VIC_GetISRVectAdd
+ 389              	VIC_GetISRVectAdd:
+ 390              	.LFB11:
+ 479:libstr91x/src/91x_vic.c **** 
+ 480:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 481:libstr91x/src/91x_vic.c **** * Function Name  : VIC_ISRVectAddConfig
+ 482:libstr91x/src/91x_vic.c **** * Description    : Configuration of the ISR vector address.
+ 483:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 484:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 485:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 486:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 487:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 488:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 489:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 490:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 491:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 492:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 493:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 494:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 495:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 496:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 497:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 498:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 499:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 500:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 501:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 502:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 503:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 504:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 505:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 506:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 507:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 508:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 509:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 510:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 511:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 512:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 513:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 514:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 515:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 516:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 517:libstr91x/src/91x_vic.c **** * Input2         : VIC_Priority: specifies the priority of the interrupt.
+ 518:libstr91x/src/91x_vic.c **** *                  It can be a value from 0 to 15. 0 is the highest priority.
+ 519:libstr91x/src/91x_vic.c **** * Input3         : void (*VIC_VectAddress)(void): specifies the ISR vector 
+ 520:libstr91x/src/91x_vic.c **** *                  address pointer.
+ 521:libstr91x/src/91x_vic.c **** * Output         : None
+ 522:libstr91x/src/91x_vic.c **** * Return         : None
+ 523:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 524:libstr91x/src/91x_vic.c **** static void VIC_ISRVectAddConfig(u16 VIC_Source, u16 VIC_Priority, \
+ 525:libstr91x/src/91x_vic.c ****                           void (*VIC_VectAddress)(void))
+ 526:libstr91x/src/91x_vic.c **** {
+ 527:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER) /* VIC0 */
+ 528:libstr91x/src/91x_vic.c ****     VIC0->VAiR[VIC_Priority] = (u32)VIC_VectAddress;
+ 529:libstr91x/src/91x_vic.c ****   else /* VIC1 */
+ 530:libstr91x/src/91x_vic.c ****     VIC1->VAiR[VIC_Priority] = (u32)VIC_VectAddress;
+ 531:libstr91x/src/91x_vic.c **** }
+ 532:libstr91x/src/91x_vic.c **** 
+ 533:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 534:libstr91x/src/91x_vic.c **** * Function Name  : VIC_GetISRVectAdd
+ 535:libstr91x/src/91x_vic.c **** * Description    : Get the ISR vector address of the correspondent line.
+ 536:libstr91x/src/91x_vic.c **** * Input1          : VIC_Source: specifies the number of the source line.
+ 537:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 538:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 539:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 540:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 541:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 542:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 543:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 544:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 545:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 546:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 547:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 548:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 549:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 550:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 551:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 552:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 553:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 554:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 555:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 556:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 557:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 558:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 559:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 560:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 561:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 562:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 563:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 564:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 565:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 566:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 567:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 568:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 569:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 570:libstr91x/src/91x_vic.c **** * Input2         : VIC_Priority: specifies the priority of the interrupt.
+ 571:libstr91x/src/91x_vic.c **** *                  It can be a value from 0 to 15. 0 is the highest priority.
+ 572:libstr91x/src/91x_vic.c **** * Output         : None
+ 573:libstr91x/src/91x_vic.c **** * Return         : The correspondent ISR vector address.
+ 574:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 575:libstr91x/src/91x_vic.c **** u32 VIC_GetISRVectAdd(u16 VIC_Source,u16 VIC_Priority)
+ 576:libstr91x/src/91x_vic.c **** {
+ 391              		.loc 1 576 0
+ 392              		.cfi_startproc
+ 393              		@ args = 0, pretend = 0, frame = 0
+ 394              		@ frame_needed = 0, uses_anonymous_args = 0
+ 395              		@ link register save eliminated.
+ 396              	.LVL30:
+ 577:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER) /* VIC0 */
+ 397              		.loc 1 577 0
+ 398 0218 0F0050E3 		cmp	r0, #15
+ 578:libstr91x/src/91x_vic.c ****     return VIC0->VAiR[VIC_Priority];
+ 399              		.loc 1 578 0
+ 400 021c 0111A091 		movls	r1, r1, asl #2
+ 401              	.LVL31:
+ 579:libstr91x/src/91x_vic.c ****   else /* VIC1 */
+ 580:libstr91x/src/91x_vic.c ****     return VIC1->VAiR[VIC_Priority]; 
+ 402              		.loc 1 580 0
+ 403 0220 40108182 		addhi	r1, r1, #64
+ 404 0224 3F33A083 		movhi	r3, #-67108864
+ 578:libstr91x/src/91x_vic.c ****     return VIC0->VAiR[VIC_Priority];
+ 405              		.loc 1 578 0
+ 406 0228 000F1195 		ldrls	r0, [r1, #-3840]
+ 407              	.LVL32:
+ 408              		.loc 1 580 0
+ 409 022c 01019387 		ldrhi	r0, [r3, r1, asl #2]
+ 581:libstr91x/src/91x_vic.c **** }
+ 410              		.loc 1 581 0
+ 411 0230 1EFF2FE1 		bx	lr
+ 412              		.cfi_endproc
+ 413              	.LFE11:
+ 415              		.align	2
+ 416              		.global	VIC_Config
+ 418              	VIC_Config:
+ 419              	.LFB14:
+ 582:libstr91x/src/91x_vic.c **** 
+ 583:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 584:libstr91x/src/91x_vic.c **** * Function Name  : VIC_VectEnableConfig
+ 585:libstr91x/src/91x_vic.c **** * Description    : Enable the vector interrupt.
+ 586:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 587:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 588:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 589:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 590:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 591:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 592:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 593:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 594:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 595:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 596:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 597:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 598:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 599:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 600:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 601:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 602:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 603:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 604:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 605:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 606:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 607:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 608:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 609:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 610:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 611:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 612:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 613:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 614:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 615:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 616:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 617:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 618:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 619:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 620:libstr91x/src/91x_vic.c **** * Input2         : VIC_Priority: specifies the priority of the interrupt.
+ 621:libstr91x/src/91x_vic.c **** *                  It can be a value from 0 to 15. 0 is the highest priority.
+ 622:libstr91x/src/91x_vic.c **** * Output         : None
+ 623:libstr91x/src/91x_vic.c **** * Return         : None
+ 624:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 625:libstr91x/src/91x_vic.c **** static void VIC_VectEnableConfig(u16 VIC_Source, u16 VIC_Priority)
+ 626:libstr91x/src/91x_vic.c **** {
+ 627:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER) /* VIC0 */
+ 628:libstr91x/src/91x_vic.c ****     VIC0->VCiR[VIC_Priority] |= VIC_VECTOR_ENABLE_MASK;
+ 629:libstr91x/src/91x_vic.c ****   else /* VIC1 */
+ 630:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] |= VIC_VECTOR_ENABLE_MASK;
+ 631:libstr91x/src/91x_vic.c **** }
+ 632:libstr91x/src/91x_vic.c **** 
+ 633:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 634:libstr91x/src/91x_vic.c **** * Function Name  : VIC_ITSourceConfig
+ 635:libstr91x/src/91x_vic.c **** * Description    : Select the interrupt source.
+ 636:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 637:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 638:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 639:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 640:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 641:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 642:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 643:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 644:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 645:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 646:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 647:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 648:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 649:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 650:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 651:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 652:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 653:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 654:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 655:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 656:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 657:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 658:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 659:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 660:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 661:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 662:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 663:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 664:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 665:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 666:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 667:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 668:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 669:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 670:libstr91x/src/91x_vic.c **** * Input2         : VIC_Priority: specifies the priority of the interrupt.
+ 671:libstr91x/src/91x_vic.c **** *                  It can be a value from 0 to 15. 0 is the highest priority.
+ 672:libstr91x/src/91x_vic.c **** * Output         : None
+ 673:libstr91x/src/91x_vic.c **** * Return         : None
+ 674:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 675:libstr91x/src/91x_vic.c **** static void VIC_ITSourceConfig(u16 VIC_Source, u16 VIC_Priority)
+ 676:libstr91x/src/91x_vic.c **** {
+ 677:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER) /* VIC0 */
+ 678:libstr91x/src/91x_vic.c ****   {
+ 679:libstr91x/src/91x_vic.c ****     VIC0->VCiR[VIC_Priority] &= VIC_IT_SOURCE_MASK;
+ 680:libstr91x/src/91x_vic.c ****     VIC0->VCiR[VIC_Priority] |= VIC_Source;
+ 681:libstr91x/src/91x_vic.c ****   }
+ 682:libstr91x/src/91x_vic.c ****   else /* VIC1 */
+ 683:libstr91x/src/91x_vic.c ****   {
+ 684:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] &= VIC_IT_SOURCE_MASK;
+ 685:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] |= VIC_Source - VIC_REGISTER_NUMBER;
+ 686:libstr91x/src/91x_vic.c ****   }
+ 687:libstr91x/src/91x_vic.c **** }
+ 688:libstr91x/src/91x_vic.c **** 
+ 689:libstr91x/src/91x_vic.c **** /*******************************************************************************
+ 690:libstr91x/src/91x_vic.c **** * Function Name  : VIC_Config
+ 691:libstr91x/src/91x_vic.c **** * Description    : Configure the ISR, the line, the mode and the priority for 
+ 692:libstr91x/src/91x_vic.c **** *                  each interrupt source line.
+ 693:libstr91x/src/91x_vic.c **** * Input1         : VIC_Source: specifies the number of the source line.
+ 694:libstr91x/src/91x_vic.c **** *                  This parameter can be one of the following values:
+ 695:libstr91x/src/91x_vic.c **** *                     - WDG_ITLine   : VIC source 0
+ 696:libstr91x/src/91x_vic.c **** *                     - SW_ITLine    : VIC source 1
+ 697:libstr91x/src/91x_vic.c **** *                     - ARMRX_ITLine : VIC source 2
+ 698:libstr91x/src/91x_vic.c **** *                     - ARMTX_ITLine : VIC source 3
+ 699:libstr91x/src/91x_vic.c **** *                     - TIM0_ITLine  : VIC source 4
+ 700:libstr91x/src/91x_vic.c **** *                     - TIM1_ITLine  : VIC source 5
+ 701:libstr91x/src/91x_vic.c **** *                     - TIM2_ITLine  : VIC source 6
+ 702:libstr91x/src/91x_vic.c **** *                     - TIM3_ITLine  : VIC source 7
+ 703:libstr91x/src/91x_vic.c **** *                     - USBHP_ITLine : VIC source 8
+ 704:libstr91x/src/91x_vic.c **** *                     - USBLP_ITLine : VIC source 9
+ 705:libstr91x/src/91x_vic.c **** *                     - SCU_ITLine   : VIC source 10
+ 706:libstr91x/src/91x_vic.c **** *                     - ENET_ITLine : VIC source 11
+ 707:libstr91x/src/91x_vic.c **** *                     - DMA_ITLine   : VIC source 12
+ 708:libstr91x/src/91x_vic.c **** *                     - CAN_ITLine   : VIC source 13
+ 709:libstr91x/src/91x_vic.c **** *                     - MC_ITLine    : VIC source 14
+ 710:libstr91x/src/91x_vic.c **** *                     - ADC_ITLine   : VIC source 15
+ 711:libstr91x/src/91x_vic.c **** *                     - UART0_ITLine : VIC source 16
+ 712:libstr91x/src/91x_vic.c **** *                     - UART1_ITLine : VIC source 17
+ 713:libstr91x/src/91x_vic.c **** *                     - UART2_ITLine : VIC source 18
+ 714:libstr91x/src/91x_vic.c **** *                     - I2C0_ITLine  : VIC source 19
+ 715:libstr91x/src/91x_vic.c **** *                     - I2C1_ITLine  : VIC source 20
+ 716:libstr91x/src/91x_vic.c **** *                     - SSP0_ITLine  : VIC source 21
+ 717:libstr91x/src/91x_vic.c **** *                     - SSP1_ITLine  : VIC source 22
+ 718:libstr91x/src/91x_vic.c **** *                     - LVD_ITLine   : VIC source 23
+ 719:libstr91x/src/91x_vic.c **** *                     - RTC_ITLine   : VIC source 24
+ 720:libstr91x/src/91x_vic.c **** *                     - WIU_ITLine   : VIC source 25
+ 721:libstr91x/src/91x_vic.c **** *                     - EXTIT0_ITLine: VIC source 26
+ 722:libstr91x/src/91x_vic.c **** *                     - EXTIT1_ITLine: VIC source 27
+ 723:libstr91x/src/91x_vic.c **** *                     - EXTIT2_ITLine: VIC source 28
+ 724:libstr91x/src/91x_vic.c **** *                     - EXTIT3_ITLine: VIC source 29
+ 725:libstr91x/src/91x_vic.c **** *                     - USBWU_ITLine : VIC source 30
+ 726:libstr91x/src/91x_vic.c **** *                     - PFQBC_ITLine : VIC source 31
+ 727:libstr91x/src/91x_vic.c **** * Input2         : VIC_LineMode :specifies the type of interrupt of the source
+ 728:libstr91x/src/91x_vic.c **** *                  line. This parameter can be one of the following values:
+ 729:libstr91x/src/91x_vic.c **** *                     - VIC_IRQ: the correspondent line is configured as IRQ.
+ 730:libstr91x/src/91x_vic.c **** *                     - VIC_FIQ: the correspondent line is configured as FIQ.
+ 731:libstr91x/src/91x_vic.c **** * Input3         : VIC_Priority: specifies the priority of the interrupt.
+ 732:libstr91x/src/91x_vic.c **** *                  It can be a value from 0 to 15. 0 is the highest priority.
+ 733:libstr91x/src/91x_vic.c **** * Output         : None
+ 734:libstr91x/src/91x_vic.c **** * Return         : None
+ 735:libstr91x/src/91x_vic.c **** *******************************************************************************/
+ 736:libstr91x/src/91x_vic.c **** void VIC_Config(u16 VIC_Source, VIC_ITLineMode VIC_LineMode, u8 VIC_Priority)
+ 737:libstr91x/src/91x_vic.c **** {
+ 420              		.loc 1 737 0
+ 421              		.cfi_startproc
+ 422              		@ args = 0, pretend = 0, frame = 0
+ 423              		@ frame_needed = 0, uses_anonymous_args = 0
+ 424              		@ link register save eliminated.
+ 425              	.LVL33:
+ 426 0234 04402DE5 		str	r4, [sp, #-4]!
+ 427              	.LCFI1:
+ 428              		.cfi_def_cfa_offset 4
+ 738:libstr91x/src/91x_vic.c ****   switch (VIC_Source)
+ 429              		.loc 1 738 0
+ 430 0238 1F0050E3 		cmp	r0, #31
+ 431 023c 00F19F97 		ldrls	pc, [pc, r0, asl #2]
+ 432 0240 1F0000EA 		b	.L36
+ 433              		.cfi_offset 4, -4
+ 434              	.L69:
+ 435 0244 68040000 		.word	.L37
+ 436 0248 58040000 		.word	.L38
+ 437 024c 48040000 		.word	.L39
+ 438 0250 38040000 		.word	.L40
+ 439 0254 28040000 		.word	.L41
+ 440 0258 18040000 		.word	.L42
+ 441 025c 08040000 		.word	.L43
+ 442 0260 F8030000 		.word	.L44
+ 443 0264 E8030000 		.word	.L45
+ 444 0268 D8030000 		.word	.L46
+ 445 026c C8030000 		.word	.L47
+ 446 0270 B8030000 		.word	.L48
+ 447 0274 A8030000 		.word	.L49
+ 448 0278 98030000 		.word	.L50
+ 449 027c 88030000 		.word	.L51
+ 450 0280 78030000 		.word	.L52
+ 451 0284 04050000 		.word	.L53
+ 452 0288 F0040000 		.word	.L54
+ 453 028c DC040000 		.word	.L55
+ 454 0290 C8040000 		.word	.L56
+ 455 0294 B4040000 		.word	.L57
+ 456 0298 A0040000 		.word	.L58
+ 457 029c 8C040000 		.word	.L59
+ 458 02a0 78040000 		.word	.L60
+ 459 02a4 54050000 		.word	.L61
+ 460 02a8 40050000 		.word	.L62
+ 461 02ac 2C050000 		.word	.L63
+ 462 02b0 18050000 		.word	.L64
+ 463 02b4 90050000 		.word	.L65
+ 464 02b8 68050000 		.word	.L66
+ 465 02bc 7C050000 		.word	.L67
+ 466 02c0 18030000 		.word	.L68
+ 467              	.L36:
+ 468              	.LVL34:
+ 469              	.LBB72:
+ 470              	.LBB74:
+ 296:libstr91x/src/91x_vic.c ****   if (VIC_Source < VIC_REGISTER_NUMBER) /* VIC0 */
+ 471              		.loc 1 296 0
+ 472 02c4 0F0050E3 		cmp	r0, #15
+ 473 02c8 1600008A 		bhi	.L78
+ 474              	.LVL35:
+ 475              	.L77:
+ 299:libstr91x/src/91x_vic.c ****       VIC0->INTSR &= ~(VIC_Mask << VIC_Source);
+ 476              		.loc 1 299 0
+ 477 02cc 0F3CE0E3 		mvn	r3, #3840
+ 298:libstr91x/src/91x_vic.c ****     if (VIC_LineMode == VIC_IRQ)
+ 478              		.loc 1 298 0
+ 479 02d0 000051E3 		cmp	r1, #0
+ 299:libstr91x/src/91x_vic.c ****       VIC0->INTSR &= ~(VIC_Mask << VIC_Source);
+ 480              		.loc 1 299 0
+ 481 02d4 F31013E5 		ldr	r1, [r3, #-243]
+ 482              	.LVL36:
+ 483 02d8 01C0A0E3 		mov	ip, #1
+ 484 02dc 1C10C101 		biceq	r1, r1, ip, asl r0
+ 301:libstr91x/src/91x_vic.c ****       VIC0->INTSR |= (VIC_Mask << VIC_Source);
+ 485              		.loc 1 301 0
+ 486 02e0 1C108111 		orrne	r1, r1, ip, asl r0
+ 487 02e4 F31003E5 		str	r1, [r3, #-243]
+ 488              	.LVL37:
+ 489              	.LBE74:
+ 490              	.LBE72:
+ 491              	.LBB76:
+ 492              	.LBB78:
+ 628:libstr91x/src/91x_vic.c ****     VIC0->VCiR[VIC_Priority] |= VIC_VECTOR_ENABLE_MASK;
+ 493              		.loc 1 628 0
+ 494 02e8 0211A0E1 		mov	r1, r2, asl #2
+ 495 02ec 00CE11E5 		ldr	ip, [r1, #-3584]
+ 496 02f0 20308CE3 		orr	r3, ip, #32
+ 497 02f4 003E01E5 		str	r3, [r1, #-3584]
+ 498              	.LVL38:
+ 499              	.LBE78:
+ 500              	.LBE76:
+ 501              	.LBB80:
+ 502              	.LBB81:
+ 679:libstr91x/src/91x_vic.c ****     VIC0->VCiR[VIC_Priority] &= VIC_IT_SOURCE_MASK;
+ 503              		.loc 1 679 0
+ 504 02f8 002E11E5 		ldr	r2, [r1, #-3584]
+ 505              	.LVL39:
+ 506 02fc 1FC0C2E3 		bic	ip, r2, #31
+ 507 0300 00CE01E5 		str	ip, [r1, #-3584]
+ 680:libstr91x/src/91x_vic.c ****     VIC0->VCiR[VIC_Priority] |= VIC_Source;
+ 508              		.loc 1 680 0
+ 509 0304 003E11E5 		ldr	r3, [r1, #-3584]
+ 510 0308 000083E1 		orr	r0, r3, r0
+ 511              	.LVL40:
+ 512 030c 000E01E5 		str	r0, [r1, #-3584]
+ 513              	.L35:
+ 514              	.LBE81:
+ 515              	.LBE80:
+ 739:libstr91x/src/91x_vic.c ****   {
+ 740:libstr91x/src/91x_vic.c ****     case 0:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, WDG_IRQHandler);
+ 741:libstr91x/src/91x_vic.c ****              break;
+ 742:libstr91x/src/91x_vic.c **** 
+ 743:libstr91x/src/91x_vic.c ****     case 1:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, SW_IRQHandler);
+ 744:libstr91x/src/91x_vic.c ****              break;
+ 745:libstr91x/src/91x_vic.c **** 
+ 746:libstr91x/src/91x_vic.c ****     case 2:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, ARMRX_IRQHandler);
+ 747:libstr91x/src/91x_vic.c ****              break;
+ 748:libstr91x/src/91x_vic.c **** 
+ 749:libstr91x/src/91x_vic.c ****     case 3:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, ARMTX_IRQHandler);
+ 750:libstr91x/src/91x_vic.c ****              break;
+ 751:libstr91x/src/91x_vic.c **** 
+ 752:libstr91x/src/91x_vic.c ****     case 4:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, TIM0_IRQHandler);
+ 753:libstr91x/src/91x_vic.c ****              break;
+ 754:libstr91x/src/91x_vic.c **** 
+ 755:libstr91x/src/91x_vic.c ****     case 5:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, TIM1_IRQHandler);
+ 756:libstr91x/src/91x_vic.c ****              break;
+ 757:libstr91x/src/91x_vic.c **** 
+ 758:libstr91x/src/91x_vic.c ****     case 6:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, TIM2_IRQHandler);
+ 759:libstr91x/src/91x_vic.c ****              break;
+ 760:libstr91x/src/91x_vic.c **** 
+ 761:libstr91x/src/91x_vic.c ****     case 7:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, TIM3_IRQHandler);
+ 762:libstr91x/src/91x_vic.c ****              break;
+ 763:libstr91x/src/91x_vic.c **** 
+ 764:libstr91x/src/91x_vic.c ****     case 8:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, USBHP_IRQHandler);
+ 765:libstr91x/src/91x_vic.c ****              break;
+ 766:libstr91x/src/91x_vic.c **** 
+ 767:libstr91x/src/91x_vic.c ****     case 9:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, USBLP_IRQHandler);
+ 768:libstr91x/src/91x_vic.c ****              break;
+ 769:libstr91x/src/91x_vic.c **** 
+ 770:libstr91x/src/91x_vic.c ****     case 10:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, SCU_IRQHandler);
+ 771:libstr91x/src/91x_vic.c ****               break;
+ 772:libstr91x/src/91x_vic.c **** 
+ 773:libstr91x/src/91x_vic.c ****     case 11:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, ENET_IRQHandler);
+ 774:libstr91x/src/91x_vic.c ****               break;
+ 775:libstr91x/src/91x_vic.c **** 
+ 776:libstr91x/src/91x_vic.c ****     case 12:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, DMA_IRQHandler);
+ 777:libstr91x/src/91x_vic.c ****               break;
+ 778:libstr91x/src/91x_vic.c **** 
+ 779:libstr91x/src/91x_vic.c ****     case 13:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, CAN_IRQHandler);
+ 780:libstr91x/src/91x_vic.c ****               break;
+ 781:libstr91x/src/91x_vic.c **** 
+ 782:libstr91x/src/91x_vic.c ****     case 14:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, MC_IRQHandler);
+ 783:libstr91x/src/91x_vic.c ****               break;
+ 784:libstr91x/src/91x_vic.c **** 
+ 785:libstr91x/src/91x_vic.c ****     case 15:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, ADC_IRQHandler);
+ 786:libstr91x/src/91x_vic.c ****               break;
+ 787:libstr91x/src/91x_vic.c **** 
+ 788:libstr91x/src/91x_vic.c ****     case 16:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, UART0_IRQHandler);
+ 789:libstr91x/src/91x_vic.c ****               break;
+ 790:libstr91x/src/91x_vic.c **** 
+ 791:libstr91x/src/91x_vic.c ****     case 17:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, UART1_IRQHandler);
+ 792:libstr91x/src/91x_vic.c ****               break;
+ 793:libstr91x/src/91x_vic.c **** 
+ 794:libstr91x/src/91x_vic.c ****     case 18:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, UART2_IRQHandler);
+ 795:libstr91x/src/91x_vic.c ****               break;
+ 796:libstr91x/src/91x_vic.c **** 
+ 797:libstr91x/src/91x_vic.c ****     case 19:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, I2C0_IRQHandler);
+ 798:libstr91x/src/91x_vic.c ****               break;
+ 799:libstr91x/src/91x_vic.c **** 
+ 800:libstr91x/src/91x_vic.c ****     case 20:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, I2C1_IRQHandler);
+ 801:libstr91x/src/91x_vic.c ****               break;
+ 802:libstr91x/src/91x_vic.c **** 
+ 803:libstr91x/src/91x_vic.c ****     case 21:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, SSP0_IRQHandler);
+ 804:libstr91x/src/91x_vic.c ****               break;
+ 805:libstr91x/src/91x_vic.c **** 
+ 806:libstr91x/src/91x_vic.c ****     case 22:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, SSP1_IRQHandler);
+ 807:libstr91x/src/91x_vic.c ****               break;
+ 808:libstr91x/src/91x_vic.c **** 
+ 809:libstr91x/src/91x_vic.c ****     case 23:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, LVD_IRQHandler);
+ 810:libstr91x/src/91x_vic.c ****               break;
+ 811:libstr91x/src/91x_vic.c **** 
+ 812:libstr91x/src/91x_vic.c ****     case 24:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, RTC_IRQHandler);
+ 813:libstr91x/src/91x_vic.c ****               break;
+ 814:libstr91x/src/91x_vic.c **** 
+ 815:libstr91x/src/91x_vic.c ****     case 25:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, WIU_IRQHandler);
+ 816:libstr91x/src/91x_vic.c ****               break;
+ 817:libstr91x/src/91x_vic.c **** 
+ 818:libstr91x/src/91x_vic.c ****     case 26:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, EXTIT0_IRQHandler);
+ 819:libstr91x/src/91x_vic.c ****               break;
+ 820:libstr91x/src/91x_vic.c **** 
+ 821:libstr91x/src/91x_vic.c ****     case 27:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, EXTIT1_IRQHandler);
+ 822:libstr91x/src/91x_vic.c ****               break;
+ 823:libstr91x/src/91x_vic.c **** 
+ 824:libstr91x/src/91x_vic.c ****     case 28:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, EXTIT2_IRQHandler);
+ 825:libstr91x/src/91x_vic.c ****               break;
+ 826:libstr91x/src/91x_vic.c **** 
+ 827:libstr91x/src/91x_vic.c ****     case 29:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, EXTIT3_IRQHandler);
+ 828:libstr91x/src/91x_vic.c ****               break;
+ 829:libstr91x/src/91x_vic.c **** 
+ 830:libstr91x/src/91x_vic.c ****     case 30:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, USBWU_IRQHandler);
+ 831:libstr91x/src/91x_vic.c ****               break;
+ 832:libstr91x/src/91x_vic.c **** 
+ 833:libstr91x/src/91x_vic.c ****     case 31:  VIC_ISRVectAddConfig(VIC_Source, VIC_Priority, PFQBC_IRQHandler);
+ 834:libstr91x/src/91x_vic.c ****               break;
+ 835:libstr91x/src/91x_vic.c **** 
+ 836:libstr91x/src/91x_vic.c ****     default:  break;
+ 837:libstr91x/src/91x_vic.c ****   }
+ 838:libstr91x/src/91x_vic.c ****   VIC_ITModeConfig(VIC_Source, VIC_LineMode);
+ 839:libstr91x/src/91x_vic.c ****   VIC_VectEnableConfig(VIC_Source, VIC_Priority);
+ 840:libstr91x/src/91x_vic.c ****   VIC_ITSourceConfig(VIC_Source, VIC_Priority);
+ 841:libstr91x/src/91x_vic.c **** }
+ 516              		.loc 1 841 0
+ 517 0310 04409DE4 		ldmfd	sp!, {r4}
+ 518 0314 1EFF2FE1 		bx	lr
+ 519              	.LVL41:
+ 520              	.L68:
+ 521              	.LBB83:
+ 522              	.LBB84:
+ 530:libstr91x/src/91x_vic.c ****     VIC1->VAiR[VIC_Priority] = (u32)VIC_VectAddress;
+ 523              		.loc 1 530 0
+ 524 0318 84429FE5 		ldr	r4, .L80
+ 525 031c 40C082E2 		add	ip, r2, #64
+ 526 0320 3F33A0E3 		mov	r3, #-67108864
+ 527 0324 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 528              	.LVL42:
+ 529              	.L78:
+ 530              	.LBE84:
+ 531              	.LBE83:
+ 532              	.LBB85:
+ 533              	.LBB73:
+ 306:libstr91x/src/91x_vic.c ****       VIC1->INTSR &= ~(VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 534              		.loc 1 306 0
+ 535 0328 3F33A0E3 		mov	r3, #-67108864
+ 305:libstr91x/src/91x_vic.c ****     if (VIC_LineMode == VIC_IRQ)
+ 536              		.loc 1 305 0
+ 537 032c 000051E3 		cmp	r1, #0
+ 306:libstr91x/src/91x_vic.c ****       VIC1->INTSR &= ~(VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 538              		.loc 1 306 0
+ 539 0330 0C1093E5 		ldr	r1, [r3, #12]
+ 540              	.LVL43:
+ 541 0334 100040E2 		sub	r0, r0, #16
+ 542              	.LVL44:
+ 543 0338 01C0A0E3 		mov	ip, #1
+ 544 033c 1C10C101 		biceq	r1, r1, ip, asl r0
+ 308:libstr91x/src/91x_vic.c ****       VIC1->INTSR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 545              		.loc 1 308 0
+ 546 0340 1C108111 		orrne	r1, r1, ip, asl r0
+ 547              	.LBE73:
+ 548              	.LBE85:
+ 549              	.LBB86:
+ 550              	.LBB77:
+ 630:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] |= VIC_VECTOR_ENABLE_MASK;
+ 551              		.loc 1 630 0
+ 552 0344 802082E2 		add	r2, r2, #128
+ 553              	.LVL45:
+ 554              	.LBE77:
+ 555              	.LBE86:
+ 556              	.LBB87:
+ 557              	.LBB75:
+ 308:libstr91x/src/91x_vic.c ****       VIC1->INTSR |= (VIC_Mask << (VIC_Source - VIC_REGISTER_NUMBER));
+ 558              		.loc 1 308 0
+ 559 0348 0C1083E5 		str	r1, [r3, #12]
+ 560              	.LBE75:
+ 561              	.LBE87:
+ 562              	.LBB88:
+ 563              	.LBB79:
+ 630:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] |= VIC_VECTOR_ENABLE_MASK;
+ 564              		.loc 1 630 0
+ 565 034c 3F33A0E3 		mov	r3, #-67108864
+ 566 0350 02C193E7 		ldr	ip, [r3, r2, asl #2]
+ 567 0354 20108CE3 		orr	r1, ip, #32
+ 568 0358 021183E7 		str	r1, [r3, r2, asl #2]
+ 569              	.LBE79:
+ 570              	.LBE88:
+ 571              	.LBB89:
+ 572              	.LBB82:
+ 684:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] &= VIC_IT_SOURCE_MASK;
+ 573              		.loc 1 684 0
+ 574 035c 02C193E7 		ldr	ip, [r3, r2, asl #2]
+ 575 0360 1F10CCE3 		bic	r1, ip, #31
+ 576 0364 021183E7 		str	r1, [r3, r2, asl #2]
+ 685:libstr91x/src/91x_vic.c ****     VIC1->VCiR[VIC_Priority] |= VIC_Source - VIC_REGISTER_NUMBER;
+ 577              		.loc 1 685 0
+ 578 0368 02C193E7 		ldr	ip, [r3, r2, asl #2]
+ 579 036c 0C1080E1 		orr	r1, r0, ip
+ 580 0370 021183E7 		str	r1, [r3, r2, asl #2]
+ 581 0374 E5FFFFEA 		b	.L35
+ 582              	.LVL46:
+ 583              	.L52:
+ 584              	.LBE82:
+ 585              	.LBE89:
+ 586              	.LBB90:
+ 587              	.LBB91:
+ 528:libstr91x/src/91x_vic.c ****     VIC0->VAiR[VIC_Priority] = (u32)VIC_VectAddress;
+ 588              		.loc 1 528 0
+ 589 0378 28C29FE5 		ldr	ip, .L80+4
+ 590 037c 0231A0E1 		mov	r3, r2, asl #2
+ 591 0380 00CF03E5 		str	ip, [r3, #-3840]
+ 592              	.LVL47:
+ 593 0384 D0FFFFEA 		b	.L77
+ 594              	.LVL48:
+ 595              	.L51:
+ 596              	.LBE91:
+ 597              	.LBE90:
+ 598              	.LBB92:
+ 599              	.LBB93:
+ 600 0388 1CC29FE5 		ldr	ip, .L80+8
+ 601 038c 0231A0E1 		mov	r3, r2, asl #2
+ 602 0390 00CF03E5 		str	ip, [r3, #-3840]
+ 603 0394 CCFFFFEA 		b	.L77
+ 604              	.LVL49:
+ 605              	.L50:
+ 606              	.LBE93:
+ 607              	.LBE92:
+ 608              	.LBB94:
+ 609              	.LBB95:
+ 610 0398 10C29FE5 		ldr	ip, .L80+12
+ 611 039c 0231A0E1 		mov	r3, r2, asl #2
+ 612 03a0 00CF03E5 		str	ip, [r3, #-3840]
+ 613 03a4 C8FFFFEA 		b	.L77
+ 614              	.LVL50:
+ 615              	.L49:
+ 616              	.LBE95:
+ 617              	.LBE94:
+ 618              	.LBB96:
+ 619              	.LBB97:
+ 620 03a8 04C29FE5 		ldr	ip, .L80+16
+ 621 03ac 0231A0E1 		mov	r3, r2, asl #2
+ 622 03b0 00CF03E5 		str	ip, [r3, #-3840]
+ 623 03b4 C4FFFFEA 		b	.L77
+ 624              	.LVL51:
+ 625              	.L48:
+ 626              	.LBE97:
+ 627              	.LBE96:
+ 628              	.LBB98:
+ 629              	.LBB99:
+ 630 03b8 F8C19FE5 		ldr	ip, .L80+20
+ 631 03bc 0231A0E1 		mov	r3, r2, asl #2
+ 632 03c0 00CF03E5 		str	ip, [r3, #-3840]
+ 633 03c4 C0FFFFEA 		b	.L77
+ 634              	.LVL52:
+ 635              	.L47:
+ 636              	.LBE99:
+ 637              	.LBE98:
+ 638              	.LBB100:
+ 639              	.LBB101:
+ 640 03c8 ECC19FE5 		ldr	ip, .L80+24
+ 641 03cc 0231A0E1 		mov	r3, r2, asl #2
+ 642 03d0 00CF03E5 		str	ip, [r3, #-3840]
+ 643 03d4 BCFFFFEA 		b	.L77
+ 644              	.LVL53:
+ 645              	.L46:
+ 646              	.LBE101:
+ 647              	.LBE100:
+ 648              	.LBB102:
+ 649              	.LBB103:
+ 650 03d8 E0C19FE5 		ldr	ip, .L80+28
+ 651 03dc 0231A0E1 		mov	r3, r2, asl #2
+ 652 03e0 00CF03E5 		str	ip, [r3, #-3840]
+ 653 03e4 B8FFFFEA 		b	.L77
+ 654              	.LVL54:
+ 655              	.L45:
+ 656              	.LBE103:
+ 657              	.LBE102:
+ 658              	.LBB104:
+ 659              	.LBB105:
+ 660 03e8 D4C19FE5 		ldr	ip, .L80+32
+ 661 03ec 0231A0E1 		mov	r3, r2, asl #2
+ 662 03f0 00CF03E5 		str	ip, [r3, #-3840]
+ 663 03f4 B4FFFFEA 		b	.L77
+ 664              	.LVL55:
+ 665              	.L44:
+ 666              	.LBE105:
+ 667              	.LBE104:
+ 668              	.LBB106:
+ 669              	.LBB107:
+ 670 03f8 C8C19FE5 		ldr	ip, .L80+36
+ 671 03fc 0231A0E1 		mov	r3, r2, asl #2
+ 672 0400 00CF03E5 		str	ip, [r3, #-3840]
+ 673 0404 B0FFFFEA 		b	.L77
+ 674              	.LVL56:
+ 675              	.L43:
+ 676              	.LBE107:
+ 677              	.LBE106:
+ 678              	.LBB108:
+ 679              	.LBB109:
+ 680 0408 BCC19FE5 		ldr	ip, .L80+40
+ 681 040c 0231A0E1 		mov	r3, r2, asl #2
+ 682 0410 00CF03E5 		str	ip, [r3, #-3840]
+ 683 0414 ACFFFFEA 		b	.L77
+ 684              	.LVL57:
+ 685              	.L42:
+ 686              	.LBE109:
+ 687              	.LBE108:
+ 688              	.LBB110:
+ 689              	.LBB111:
+ 690 0418 B0C19FE5 		ldr	ip, .L80+44
+ 691 041c 0231A0E1 		mov	r3, r2, asl #2
+ 692 0420 00CF03E5 		str	ip, [r3, #-3840]
+ 693 0424 A8FFFFEA 		b	.L77
+ 694              	.LVL58:
+ 695              	.L41:
+ 696              	.LBE111:
+ 697              	.LBE110:
+ 698              	.LBB112:
+ 699              	.LBB113:
+ 700 0428 A4C19FE5 		ldr	ip, .L80+48
+ 701 042c 0231A0E1 		mov	r3, r2, asl #2
+ 702 0430 00CF03E5 		str	ip, [r3, #-3840]
+ 703 0434 A4FFFFEA 		b	.L77
+ 704              	.LVL59:
+ 705              	.L40:
+ 706              	.LBE113:
+ 707              	.LBE112:
+ 708              	.LBB114:
+ 709              	.LBB115:
+ 710 0438 98C19FE5 		ldr	ip, .L80+52
+ 711 043c 0231A0E1 		mov	r3, r2, asl #2
+ 712 0440 00CF03E5 		str	ip, [r3, #-3840]
+ 713 0444 A0FFFFEA 		b	.L77
+ 714              	.LVL60:
+ 715              	.L39:
+ 716              	.LBE115:
+ 717              	.LBE114:
+ 718              	.LBB116:
+ 719              	.LBB117:
+ 720 0448 8CC19FE5 		ldr	ip, .L80+56
+ 721 044c 0231A0E1 		mov	r3, r2, asl #2
+ 722 0450 00CF03E5 		str	ip, [r3, #-3840]
+ 723 0454 9CFFFFEA 		b	.L77
+ 724              	.LVL61:
+ 725              	.L38:
+ 726              	.LBE117:
+ 727              	.LBE116:
+ 728              	.LBB118:
+ 729              	.LBB119:
+ 730 0458 80C19FE5 		ldr	ip, .L80+60
+ 731 045c 0231A0E1 		mov	r3, r2, asl #2
+ 732 0460 00CF03E5 		str	ip, [r3, #-3840]
+ 733 0464 98FFFFEA 		b	.L77
+ 734              	.LVL62:
+ 735              	.L37:
+ 736              	.LBE119:
+ 737              	.LBE118:
+ 738              	.LBB120:
+ 739              	.LBB121:
+ 740 0468 74C19FE5 		ldr	ip, .L80+64
+ 741 046c 0231A0E1 		mov	r3, r2, asl #2
+ 742 0470 00CF03E5 		str	ip, [r3, #-3840]
+ 743 0474 94FFFFEA 		b	.L77
+ 744              	.LVL63:
+ 745              	.L60:
+ 746              	.LBE121:
+ 747              	.LBE120:
+ 748              	.LBB122:
+ 749              	.LBB123:
+ 530:libstr91x/src/91x_vic.c ****     VIC1->VAiR[VIC_Priority] = (u32)VIC_VectAddress;
+ 750              		.loc 1 530 0
+ 751 0478 68419FE5 		ldr	r4, .L80+68
+ 752 047c 40C082E2 		add	ip, r2, #64
+ 753 0480 3F33A0E3 		mov	r3, #-67108864
+ 754 0484 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 755 0488 A6FFFFEA 		b	.L78
+ 756              	.LVL64:
+ 757              	.L59:
+ 758              	.LBE123:
+ 759              	.LBE122:
+ 760              	.LBB124:
+ 761              	.LBB125:
+ 762 048c 58419FE5 		ldr	r4, .L80+72
+ 763 0490 40C082E2 		add	ip, r2, #64
+ 764 0494 3F33A0E3 		mov	r3, #-67108864
+ 765 0498 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 766 049c A1FFFFEA 		b	.L78
+ 767              	.LVL65:
+ 768              	.L58:
+ 769              	.LBE125:
+ 770              	.LBE124:
+ 771              	.LBB126:
+ 772              	.LBB127:
+ 773 04a0 48419FE5 		ldr	r4, .L80+76
+ 774 04a4 40C082E2 		add	ip, r2, #64
+ 775 04a8 3F33A0E3 		mov	r3, #-67108864
+ 776 04ac 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 777 04b0 9CFFFFEA 		b	.L78
+ 778              	.LVL66:
+ 779              	.L57:
+ 780              	.LBE127:
+ 781              	.LBE126:
+ 782              	.LBB128:
+ 783              	.LBB129:
+ 784 04b4 38419FE5 		ldr	r4, .L80+80
+ 785 04b8 40C082E2 		add	ip, r2, #64
+ 786 04bc 3F33A0E3 		mov	r3, #-67108864
+ 787 04c0 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 788 04c4 97FFFFEA 		b	.L78
+ 789              	.LVL67:
+ 790              	.L56:
+ 791              	.LBE129:
+ 792              	.LBE128:
+ 793              	.LBB130:
+ 794              	.LBB131:
+ 795 04c8 28419FE5 		ldr	r4, .L80+84
+ 796 04cc 40C082E2 		add	ip, r2, #64
+ 797 04d0 3F33A0E3 		mov	r3, #-67108864
+ 798 04d4 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 799 04d8 92FFFFEA 		b	.L78
+ 800              	.LVL68:
+ 801              	.L55:
+ 802              	.LBE131:
+ 803              	.LBE130:
+ 804              	.LBB132:
+ 805              	.LBB133:
+ 806 04dc 18419FE5 		ldr	r4, .L80+88
+ 807 04e0 40C082E2 		add	ip, r2, #64
+ 808 04e4 3F33A0E3 		mov	r3, #-67108864
+ 809 04e8 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 810 04ec 8DFFFFEA 		b	.L78
+ 811              	.LVL69:
+ 812              	.L54:
+ 813              	.LBE133:
+ 814              	.LBE132:
+ 815              	.LBB134:
+ 816              	.LBB135:
+ 817 04f0 08419FE5 		ldr	r4, .L80+92
+ 818 04f4 40C082E2 		add	ip, r2, #64
+ 819 04f8 3F33A0E3 		mov	r3, #-67108864
+ 820 04fc 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 821 0500 88FFFFEA 		b	.L78
+ 822              	.LVL70:
+ 823              	.L53:
+ 824              	.LBE135:
+ 825              	.LBE134:
+ 826              	.LBB136:
+ 827              	.LBB137:
+ 828 0504 F8409FE5 		ldr	r4, .L80+96
+ 829 0508 40C082E2 		add	ip, r2, #64
+ 830 050c 3F33A0E3 		mov	r3, #-67108864
+ 831 0510 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 832 0514 83FFFFEA 		b	.L78
+ 833              	.LVL71:
+ 834              	.L64:
+ 835              	.LBE137:
+ 836              	.LBE136:
+ 837              	.LBB138:
+ 838              	.LBB139:
+ 839 0518 E8409FE5 		ldr	r4, .L80+100
+ 840 051c 40C082E2 		add	ip, r2, #64
+ 841 0520 3F33A0E3 		mov	r3, #-67108864
+ 842 0524 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 843 0528 7EFFFFEA 		b	.L78
+ 844              	.LVL72:
+ 845              	.L63:
+ 846              	.LBE139:
+ 847              	.LBE138:
+ 848              	.LBB140:
+ 849              	.LBB141:
+ 850 052c D8409FE5 		ldr	r4, .L80+104
+ 851 0530 40C082E2 		add	ip, r2, #64
+ 852 0534 3F33A0E3 		mov	r3, #-67108864
+ 853 0538 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 854 053c 79FFFFEA 		b	.L78
+ 855              	.LVL73:
+ 856              	.L62:
+ 857              	.LBE141:
+ 858              	.LBE140:
+ 859              	.LBB142:
+ 860              	.LBB143:
+ 861 0540 C8409FE5 		ldr	r4, .L80+108
+ 862 0544 40C082E2 		add	ip, r2, #64
+ 863 0548 3F33A0E3 		mov	r3, #-67108864
+ 864 054c 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 865 0550 74FFFFEA 		b	.L78
+ 866              	.LVL74:
+ 867              	.L61:
+ 868              	.LBE143:
+ 869              	.LBE142:
+ 870              	.LBB144:
+ 871              	.LBB145:
+ 872 0554 B8409FE5 		ldr	r4, .L80+112
+ 873 0558 40C082E2 		add	ip, r2, #64
+ 874 055c 3F33A0E3 		mov	r3, #-67108864
+ 875 0560 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 876 0564 6FFFFFEA 		b	.L78
+ 877              	.LVL75:
+ 878              	.L66:
+ 879              	.LBE145:
+ 880              	.LBE144:
+ 881              	.LBB146:
+ 882              	.LBB147:
+ 883 0568 A8409FE5 		ldr	r4, .L80+116
+ 884 056c 40C082E2 		add	ip, r2, #64
+ 885 0570 3F33A0E3 		mov	r3, #-67108864
+ 886 0574 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 887 0578 6AFFFFEA 		b	.L78
+ 888              	.LVL76:
+ 889              	.L67:
+ 890              	.LBE147:
+ 891              	.LBE146:
+ 892              	.LBB148:
+ 893              	.LBB149:
+ 894 057c 98409FE5 		ldr	r4, .L80+120
+ 895 0580 40C082E2 		add	ip, r2, #64
+ 896 0584 3F33A0E3 		mov	r3, #-67108864
+ 897 0588 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 898 058c 65FFFFEA 		b	.L78
+ 899              	.LVL77:
+ 900              	.L65:
+ 901              	.LBE149:
+ 902              	.LBE148:
+ 903              	.LBB150:
+ 904              	.LBB151:
+ 905 0590 88409FE5 		ldr	r4, .L80+124
+ 906 0594 40C082E2 		add	ip, r2, #64
+ 907 0598 3F33A0E3 		mov	r3, #-67108864
+ 908 059c 0C4183E7 		str	r4, [r3, ip, asl #2]
+ 909 05a0 60FFFFEA 		b	.L78
+ 910              	.L81:
+ 911              		.align	2
+ 912              	.L80:
+ 913 05a4 00000000 		.word	PFQBC_IRQHandler
+ 914 05a8 00000000 		.word	ADC_IRQHandler
+ 915 05ac 00000000 		.word	MC_IRQHandler
+ 916 05b0 00000000 		.word	CAN_IRQHandler
+ 917 05b4 00000000 		.word	DMA_IRQHandler
+ 918 05b8 00000000 		.word	ENET_IRQHandler
+ 919 05bc 00000000 		.word	SCU_IRQHandler
+ 920 05c0 00000000 		.word	USBLP_IRQHandler
+ 921 05c4 00000000 		.word	USBHP_IRQHandler
+ 922 05c8 00000000 		.word	TIM3_IRQHandler
+ 923 05cc 00000000 		.word	TIM2_IRQHandler
+ 924 05d0 00000000 		.word	TIM1_IRQHandler
+ 925 05d4 00000000 		.word	TIM0_IRQHandler
+ 926 05d8 00000000 		.word	ARMTX_IRQHandler
+ 927 05dc 00000000 		.word	ARMRX_IRQHandler
+ 928 05e0 00000000 		.word	SW_IRQHandler
+ 929 05e4 00000000 		.word	WDG_IRQHandler
+ 930 05e8 00000000 		.word	LVD_IRQHandler
+ 931 05ec 00000000 		.word	SSP1_IRQHandler
+ 932 05f0 00000000 		.word	SSP0_IRQHandler
+ 933 05f4 00000000 		.word	I2C1_IRQHandler
+ 934 05f8 00000000 		.word	I2C0_IRQHandler
+ 935 05fc 00000000 		.word	UART2_IRQHandler
+ 936 0600 00000000 		.word	UART1_IRQHandler
+ 937 0604 00000000 		.word	UART0_IRQHandler
+ 938 0608 00000000 		.word	EXTIT1_IRQHandler
+ 939 060c 00000000 		.word	EXTIT0_IRQHandler
+ 940 0610 00000000 		.word	WIU_IRQHandler
+ 941 0614 00000000 		.word	RTC_IRQHandler
+ 942 0618 00000000 		.word	EXTIT3_IRQHandler
+ 943 061c 00000000 		.word	USBWU_IRQHandler
+ 944 0620 00000000 		.word	EXTIT2_IRQHandler
+ 945              	.LBE151:
+ 946              	.LBE150:
+ 947              		.cfi_endproc
+ 948              	.LFE14:
+ 950              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_vic.c
+     /tmp/ccGNsIIG.s:21     .text:00000000 $a
+     /tmp/ccGNsIIG.s:24     .text:00000000 VIC_DeInit
+     /tmp/ccGNsIIG.s:53     .text:00000020 VIC_InitDefaultVectors
+     /tmp/ccGNsIIG.s:74     .text:00000038 $d
+     /tmp/ccGNsIIG.s:78     .text:0000003c $a
+     /tmp/ccGNsIIG.s:81     .text:0000003c VIC_GetIRQStatus
+     /tmp/ccGNsIIG.s:122    .text:00000080 VIC_GetFIQStatus
+     /tmp/ccGNsIIG.s:163    .text:000000c4 VIC_GetSourceITStatus
+     /tmp/ccGNsIIG.s:204    .text:00000108 VIC_ITCmd
+     /tmp/ccGNsIIG.s:269    .text:00000178 VIC_SWITCmd
+     /tmp/ccGNsIIG.s:331    .text:000001d8 VIC_ProtectionCmd
+     /tmp/ccGNsIIG.s:370    .text:00000210 VIC_GetCurrentISRAdd
+     /tmp/ccGNsIIG.s:389    .text:00000218 VIC_GetISRVectAdd
+     /tmp/ccGNsIIG.s:418    .text:00000234 VIC_Config
+     /tmp/ccGNsIIG.s:435    .text:00000244 $d
+     /tmp/ccGNsIIG.s:472    .text:000002c4 $a
+     /tmp/ccGNsIIG.s:913    .text:000005a4 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_AHBPeriphReset
+DefaultVector_Handler
+PFQBC_IRQHandler
+ADC_IRQHandler
+MC_IRQHandler
+CAN_IRQHandler
+DMA_IRQHandler
+ENET_IRQHandler
+SCU_IRQHandler
+USBLP_IRQHandler
+USBHP_IRQHandler
+TIM3_IRQHandler
+TIM2_IRQHandler
+TIM1_IRQHandler
+TIM0_IRQHandler
+ARMTX_IRQHandler
+ARMRX_IRQHandler
+SW_IRQHandler
+WDG_IRQHandler
+LVD_IRQHandler
+SSP1_IRQHandler
+SSP0_IRQHandler
+I2C1_IRQHandler
+I2C0_IRQHandler
+UART2_IRQHandler
+UART1_IRQHandler
+UART0_IRQHandler
+EXTIT1_IRQHandler
+EXTIT0_IRQHandler
+WIU_IRQHandler
+RTC_IRQHandler
+EXTIT3_IRQHandler
+USBWU_IRQHandler
+EXTIT2_IRQHandler

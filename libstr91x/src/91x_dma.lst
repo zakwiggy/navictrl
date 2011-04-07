@@ -1,0 +1,2208 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_dma.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	DMA_ITMaskConfig
+  24              	DMA_ITMaskConfig:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_dma.c"
+   1:libstr91x/src/91x_dma.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_dma.c **** * File Name          : 91x_dma.c
+   3:libstr91x/src/91x_dma.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_dma.c **** * Version            : V2.1
+   5:libstr91x/src/91x_dma.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_dma.c **** * Description        : This file provides all the DMA firmware functions
+   7:libstr91x/src/91x_dma.c **** *                      needed to access all DMA registers.
+   8:libstr91x/src/91x_dma.c **** ********************************************************************************
+   9:libstr91x/src/91x_dma.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+  10:libstr91x/src/91x_dma.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  11:libstr91x/src/91x_dma.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  12:libstr91x/src/91x_dma.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  13:libstr91x/src/91x_dma.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  14:libstr91x/src/91x_dma.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  15:libstr91x/src/91x_dma.c **** *******************************************************************************/
+  16:libstr91x/src/91x_dma.c **** 
+  17:libstr91x/src/91x_dma.c **** /* Includes ------------------------------------------------------------------*/
+  18:libstr91x/src/91x_dma.c **** 
+  19:libstr91x/src/91x_dma.c **** # include"91x_dma.h"
+  20:libstr91x/src/91x_dma.c **** # include"91x_scu.h"
+  21:libstr91x/src/91x_dma.c **** 
+  22:libstr91x/src/91x_dma.c **** /* Private typedef -----------------------------------------------------------*/
+  23:libstr91x/src/91x_dma.c **** /* Private define ------------------------------------------------------------*/
+  24:libstr91x/src/91x_dma.c **** /* Private macro -------------------------------------------------------------*/
+  25:libstr91x/src/91x_dma.c **** /* Private variables ---------------------------------------------------------*/
+  26:libstr91x/src/91x_dma.c **** 
+  27:libstr91x/src/91x_dma.c **** 
+  28:libstr91x/src/91x_dma.c **** /* DMA Masks "used" only in this module */
+  29:libstr91x/src/91x_dma.c **** 
+  30:libstr91x/src/91x_dma.c **** #define       DMA_Width_DES_MASK	        0xFF1FFFFF
+  31:libstr91x/src/91x_dma.c **** #define       DMA_Width_SRC_MASK	        0xFFE3FFFF
+  32:libstr91x/src/91x_dma.c **** #define       DMA_Bst_DES_MASK           	0xFFFC7FFF
+  33:libstr91x/src/91x_dma.c **** #define       DMA_Bst_SRC_MASK	                0xFFFF8FFF
+  34:libstr91x/src/91x_dma.c **** #define       DMA_FlowCntrl_Mask	        0xFFFFC7FF
+  35:libstr91x/src/91x_dma.c **** #define       DMA_TrsfSisze_Mask	        0xFFFFF000
+  36:libstr91x/src/91x_dma.c **** #define       SRC_Mask	                        0xFFFFFFE1
+  37:libstr91x/src/91x_dma.c **** #define       DES_Mask	                        0xFFFFFC3F
+  38:libstr91x/src/91x_dma.c **** #define       DMA_TCIE	                        0x80000000
+  39:libstr91x/src/91x_dma.c **** #define       DMA_ChannelDESInc	                0x08000000
+  40:libstr91x/src/91x_dma.c **** #define       DMA_ChannelSRCInc	                0x04000000
+  41:libstr91x/src/91x_dma.c **** #define       DMA_BufferChannel	                0x20000000
+  42:libstr91x/src/91x_dma.c **** #define       DMA_HaltChannel	                0x00040000
+  43:libstr91x/src/91x_dma.c **** #define       DMA_LockChannel	                0x00010000
+  44:libstr91x/src/91x_dma.c **** #define       DMA_CacheChannel	                0x40000000
+  45:libstr91x/src/91x_dma.c **** #define       DMA_ChannelActive	                0x00020000
+  46:libstr91x/src/91x_dma.c **** #define       DMA_Enable                        0x00000001
+  47:libstr91x/src/91x_dma.c **** #define       DMA_ChannelEnable                 0x00000001
+  48:libstr91x/src/91x_dma.c **** 
+  49:libstr91x/src/91x_dma.c **** /*LLI Masks used for linked list's control word stucture*/
+  50:libstr91x/src/91x_dma.c **** 
+  51:libstr91x/src/91x_dma.c **** #define   DMA_SrcIncrement_MASK	                0xFBFFFFFF
+  52:libstr91x/src/91x_dma.c **** #define   DMA_DesIncrement_MASK                 0xF7FFFFFF
+  53:libstr91x/src/91x_dma.c **** #define   DMA_CacheableAccess_MASK              0xEFFFFFFF
+  54:libstr91x/src/91x_dma.c **** #define   DMA_BufferableAccess_MASK             0xDFFFFFFF
+  55:libstr91x/src/91x_dma.c **** #define   DMA_PrivilegedAccess_MASK             0xBFFFFFFF
+  56:libstr91x/src/91x_dma.c **** #define   DMA_TCInterrupt_MASK                  0x7FFFFFFF
+  57:libstr91x/src/91x_dma.c ****    
+  58:libstr91x/src/91x_dma.c **** 
+  59:libstr91x/src/91x_dma.c **** 
+  60:libstr91x/src/91x_dma.c **** /* Private function prototypes -----------------------------------------------*/
+  61:libstr91x/src/91x_dma.c **** /* Private functions ---------------------------------------------------------*/
+  62:libstr91x/src/91x_dma.c **** 
+  63:libstr91x/src/91x_dma.c **** /*******************************************************************************
+  64:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ITMaskConfig
+  65:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the specified DMA_Channelx Mask interrupt.
+  66:libstr91x/src/91x_dma.c **** * Input          :
+  67:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+  68:libstr91x/src/91x_dma.c **** *                  -DMA_ITMask: specifies the DMA interrupt mask source to be enabled or disabled.
+  69:libstr91x/src/91x_dma.c **** *                                This parameter can be:
+  70:libstr91x/src/91x_dma.c **** *                                    - DMA_ITMask_IE  (Interrupt error mask).
+  71:libstr91x/src/91x_dma.c **** *                                    - DMA_ITMask_ITC (Terminal count interrupt mask).
+  72:libstr91x/src/91x_dma.c **** *                                    - DMA_ITMask_ALL ( All interrupts mask)
+  73:libstr91x/src/91x_dma.c **** *
+  74:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+  75:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+  76:libstr91x/src/91x_dma.c **** * Output         : None.
+  77:libstr91x/src/91x_dma.c **** * Return         : None.
+  78:libstr91x/src/91x_dma.c **** *******************************************************************************/
+  79:libstr91x/src/91x_dma.c **** 
+  80:libstr91x/src/91x_dma.c **** 
+  81:libstr91x/src/91x_dma.c **** void DMA_ITMaskConfig(DMA_Channel_TypeDef * DMA_Channelx, u16 DMA_ITMask , FunctionalState NewState
+  82:libstr91x/src/91x_dma.c **** 
+  83:libstr91x/src/91x_dma.c **** {
+  27              		.loc 1 83 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  84:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Mask the Interrupt */
+  85:libstr91x/src/91x_dma.c ****   {
+  86:libstr91x/src/91x_dma.c ****     DMA_Channelx-> CCNF |= DMA_ITMask ;
+  33              		.loc 1 86 0
+  34 0000 103090E5 		ldr	r3, [r0, #16]
+  84:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Mask the Interrupt */
+  35              		.loc 1 84 0
+  36 0004 010052E3 		cmp	r2, #1
+  37              		.loc 1 86 0
+  38 0008 03108101 		orreq	r1, r1, r3
+  39              	.LVL1:
+  87:libstr91x/src/91x_dma.c ****   }
+  88:libstr91x/src/91x_dma.c **** 
+  89:libstr91x/src/91x_dma.c ****   else /* Disable the Interrupt Mask*/
+  90:libstr91x/src/91x_dma.c ****   {
+  91:libstr91x/src/91x_dma.c ****     DMA_Channelx-> CCNF &= ~ DMA_ITMask ;
+  40              		.loc 1 91 0
+  41 000c 0110C311 		bicne	r1, r3, r1
+  42 0010 101080E5 		str	r1, [r0, #16]
+  43 0014 1EFF2FE1 		bx	lr
+  44              		.cfi_endproc
+  45              	.LFE0:
+  47              		.align	2
+  48              		.global	DMA_ITConfig
+  50              	DMA_ITConfig:
+  51              	.LFB1:
+  92:libstr91x/src/91x_dma.c ****   }
+  93:libstr91x/src/91x_dma.c **** }
+  94:libstr91x/src/91x_dma.c **** 
+  95:libstr91x/src/91x_dma.c **** 
+  96:libstr91x/src/91x_dma.c **** 
+  97:libstr91x/src/91x_dma.c **** 
+  98:libstr91x/src/91x_dma.c **** 
+  99:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 100:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ITConfig
+ 101:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the DMA_Channelx Terminal Count interrupt.
+ 102:libstr91x/src/91x_dma.c **** * Input          :
+ 103:libstr91x/src/91x_dma.c **** *                 -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 104:libstr91x/src/91x_dma.c **** *                 -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 105:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 106:libstr91x/src/91x_dma.c **** * Output         : None.
+ 107:libstr91x/src/91x_dma.c **** * Return         : None.
+ 108:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 109:libstr91x/src/91x_dma.c **** 
+ 110:libstr91x/src/91x_dma.c **** 
+ 111:libstr91x/src/91x_dma.c **** void DMA_ITConfig(DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 112:libstr91x/src/91x_dma.c **** 
+ 113:libstr91x/src/91x_dma.c **** {
+  52              		.loc 1 113 0
+  53              		.cfi_startproc
+  54              		@ args = 0, pretend = 0, frame = 0
+  55              		@ frame_needed = 0, uses_anonymous_args = 0
+  56              		@ link register save eliminated.
+  57              	.LVL2:
+ 114:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Enable the Terminal Count Interrupt */
+ 115:libstr91x/src/91x_dma.c ****   {
+ 116:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_TCIE ;
+  58              		.loc 1 116 0
+  59 0018 0C3090E5 		ldr	r3, [r0, #12]
+ 114:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Enable the Terminal Count Interrupt */
+  60              		.loc 1 114 0
+  61 001c 010051E3 		cmp	r1, #1
+  62              		.loc 1 116 0
+  63 0020 02318303 		orreq	r3, r3, #-2147483648
+ 117:libstr91x/src/91x_dma.c ****   }
+ 118:libstr91x/src/91x_dma.c **** 
+ 119:libstr91x/src/91x_dma.c ****   else /* Disable the Terminal Count Interrupt  */
+ 120:libstr91x/src/91x_dma.c ****   {
+ 121:libstr91x/src/91x_dma.c ****     DMA_Channelx-> CC &= ~ DMA_TCIE ;
+  64              		.loc 1 121 0
+  65 0024 0231C313 		bicne	r3, r3, #-2147483648
+  66 0028 0C3080E5 		str	r3, [r0, #12]
+  67 002c 1EFF2FE1 		bx	lr
+  68              		.cfi_endproc
+  69              	.LFE1:
+  71              		.align	2
+  72              		.global	DMA_SyncConfig
+  74              	DMA_SyncConfig:
+  75              	.LFB2:
+ 122:libstr91x/src/91x_dma.c ****   }
+ 123:libstr91x/src/91x_dma.c **** }
+ 124:libstr91x/src/91x_dma.c **** 
+ 125:libstr91x/src/91x_dma.c **** 
+ 126:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 127:libstr91x/src/91x_dma.c **** * Function Name  : DMA_SyncConfig
+ 128:libstr91x/src/91x_dma.c **** * Description    : Enables or disables synchronization logic for the corresponding DMA Request Sign
+ 129:libstr91x/src/91x_dma.c **** * Input          :
+ 130:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 131:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 132:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 133:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 134:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 135:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 136:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 137:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 138:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 139:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 140:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 141:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 142:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 143:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 144:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 145:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 146:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 147:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 148:libstr91x/src/91x_dma.c **** *
+ 149:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 150:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 151:libstr91x/src/91x_dma.c **** * Output         : None.
+ 152:libstr91x/src/91x_dma.c **** * Return         : None.
+ 153:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 154:libstr91x/src/91x_dma.c **** 
+ 155:libstr91x/src/91x_dma.c **** 
+ 156:libstr91x/src/91x_dma.c **** void DMA_SyncConfig(u16 SRCReq, FunctionalState NewState)
+ 157:libstr91x/src/91x_dma.c **** 
+ 158:libstr91x/src/91x_dma.c **** {
+  76              		.loc 1 158 0
+  77              		.cfi_startproc
+  78              		@ args = 0, pretend = 0, frame = 0
+  79              		@ frame_needed = 0, uses_anonymous_args = 0
+  80              		@ link register save eliminated.
+  81              	.LVL3:
+ 159:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Enable the synchronization logic for the corresponding DMA Request Signa
+ 160:libstr91x/src/91x_dma.c ****   {
+ 161:libstr91x/src/91x_dma.c **** 
+ 162:libstr91x/src/91x_dma.c ****     DMA->SYNR &= ~ SRCReq ;
+  82              		.loc 1 162 0
+  83 0030 1E33A0E3 		mov	r3, #2013265920
+  84 0034 342093E5 		ldr	r2, [r3, #52]
+ 159:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Enable the synchronization logic for the corresponding DMA Request Signa
+  85              		.loc 1 159 0
+  86 0038 010051E3 		cmp	r1, #1
+  87              		.loc 1 162 0
+  88 003c 0000C201 		biceq	r0, r2, r0
+  89              	.LVL4:
+ 163:libstr91x/src/91x_dma.c **** 
+ 164:libstr91x/src/91x_dma.c ****   }
+ 165:libstr91x/src/91x_dma.c **** 
+ 166:libstr91x/src/91x_dma.c ****   else /* Disable the synchronization logic for the corresponding DMA Request Signal.  */
+ 167:libstr91x/src/91x_dma.c ****   {
+ 168:libstr91x/src/91x_dma.c ****     DMA->SYNR |= SRCReq ;
+  90              		.loc 1 168 0
+  91 0040 02008011 		orrne	r0, r0, r2
+  92 0044 340083E5 		str	r0, [r3, #52]
+  93 0048 1EFF2FE1 		bx	lr
+  94              		.cfi_endproc
+  95              	.LFE2:
+  97              		.align	2
+  98              		.global	DMA_SetSReq
+ 100              	DMA_SetSReq:
+ 101              	.LFB3:
+ 169:libstr91x/src/91x_dma.c **** 
+ 170:libstr91x/src/91x_dma.c ****   }
+ 171:libstr91x/src/91x_dma.c **** }
+ 172:libstr91x/src/91x_dma.c **** 
+ 173:libstr91x/src/91x_dma.c **** 
+ 174:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 175:libstr91x/src/91x_dma.c **** * Function Name  : DMA_SetSReq
+ 176:libstr91x/src/91x_dma.c **** * Description    : Set the DMA to generate a Single transfer request for the corresponding DMA Requ
+ 177:libstr91x/src/91x_dma.c **** * Input          :
+ 178:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 179:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 180:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 181:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 182:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 183:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 184:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 185:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 186:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 187:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 188:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 189:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 190:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 191:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 192:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 193:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 194:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 195:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 196:libstr91x/src/91x_dma.c **** *
+ 197:libstr91x/src/91x_dma.c **** * Output         : None.
+ 198:libstr91x/src/91x_dma.c **** * Return         : None.
+ 199:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 200:libstr91x/src/91x_dma.c **** 
+ 201:libstr91x/src/91x_dma.c **** 
+ 202:libstr91x/src/91x_dma.c **** void DMA_SetSReq(u16 SRCReq)
+ 203:libstr91x/src/91x_dma.c **** 
+ 204:libstr91x/src/91x_dma.c **** { /* Set the DMA to generate a Single transfer request for the corresponding DMA Request Source */
+ 102              		.loc 1 204 0
+ 103              		.cfi_startproc
+ 104              		@ args = 0, pretend = 0, frame = 0
+ 105              		@ frame_needed = 0, uses_anonymous_args = 0
+ 106              		@ link register save eliminated.
+ 107              	.LVL5:
+ 205:libstr91x/src/91x_dma.c ****   DMA->SSRR |= SRCReq ;
+ 108              		.loc 1 205 0
+ 109 004c 1E33A0E3 		mov	r3, #2013265920
+ 110 0050 241093E5 		ldr	r1, [r3, #36]
+ 111 0054 012080E1 		orr	r2, r0, r1
+ 112 0058 242083E5 		str	r2, [r3, #36]
+ 206:libstr91x/src/91x_dma.c **** }
+ 113              		.loc 1 206 0
+ 114 005c 1EFF2FE1 		bx	lr
+ 115              		.cfi_endproc
+ 116              	.LFE3:
+ 118              		.align	2
+ 119              		.global	DMA_SetLSReq
+ 121              	DMA_SetLSReq:
+ 122              	.LFB4:
+ 207:libstr91x/src/91x_dma.c **** 
+ 208:libstr91x/src/91x_dma.c **** 
+ 209:libstr91x/src/91x_dma.c **** 
+ 210:libstr91x/src/91x_dma.c **** 
+ 211:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 212:libstr91x/src/91x_dma.c **** * Function Name  : DMA_SetLSReq
+ 213:libstr91x/src/91x_dma.c **** * Description    : Set the DMA to generate a Last Single transfer request for the corresponding DMA
+ 214:libstr91x/src/91x_dma.c **** * Input          :
+ 215:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 216:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 217:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 218:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 219:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 220:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 221:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 222:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 223:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 224:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 225:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 226:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 227:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 228:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 229:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 230:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 231:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 232:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 233:libstr91x/src/91x_dma.c **** * Output         : None.
+ 234:libstr91x/src/91x_dma.c **** * Return         : None.
+ 235:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 236:libstr91x/src/91x_dma.c **** 
+ 237:libstr91x/src/91x_dma.c **** void DMA_SetLSReq(u16 SRCReq )
+ 238:libstr91x/src/91x_dma.c **** { /* Set the DMA to generate a Last Single transfer request for the corresponding DMA Request Sourc
+ 123              		.loc 1 238 0
+ 124              		.cfi_startproc
+ 125              		@ args = 0, pretend = 0, frame = 0
+ 126              		@ frame_needed = 0, uses_anonymous_args = 0
+ 127              		@ link register save eliminated.
+ 128              	.LVL6:
+ 239:libstr91x/src/91x_dma.c ****   DMA->SLSRR |= SRCReq ;
+ 129              		.loc 1 239 0
+ 130 0060 1E33A0E3 		mov	r3, #2013265920
+ 131 0064 2C1093E5 		ldr	r1, [r3, #44]
+ 132 0068 012080E1 		orr	r2, r0, r1
+ 133 006c 2C2083E5 		str	r2, [r3, #44]
+ 240:libstr91x/src/91x_dma.c **** }
+ 134              		.loc 1 240 0
+ 135 0070 1EFF2FE1 		bx	lr
+ 136              		.cfi_endproc
+ 137              	.LFE4:
+ 139              		.align	2
+ 140              		.global	DMA_SetBReq
+ 142              	DMA_SetBReq:
+ 143              	.LFB5:
+ 241:libstr91x/src/91x_dma.c **** 
+ 242:libstr91x/src/91x_dma.c **** 
+ 243:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 244:libstr91x/src/91x_dma.c **** * Function Name  : DMA_SetBReq
+ 245:libstr91x/src/91x_dma.c **** * Description    : Set the DMA to generate a Burst transfer request for the corresponding DMA Reque
+ 246:libstr91x/src/91x_dma.c **** * Input          :
+ 247:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 248:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 249:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 250:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 251:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 252:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 253:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 254:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 255:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 256:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 257:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 258:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 259:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 260:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 261:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 262:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 263:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 264:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 265:libstr91x/src/91x_dma.c **** * Output         : None.
+ 266:libstr91x/src/91x_dma.c **** * Return         : None.
+ 267:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 268:libstr91x/src/91x_dma.c **** 
+ 269:libstr91x/src/91x_dma.c **** 
+ 270:libstr91x/src/91x_dma.c **** void DMA_SetBReq(u16 SRCReq)
+ 271:libstr91x/src/91x_dma.c **** 
+ 272:libstr91x/src/91x_dma.c **** { /* Set the DMA to generate a Burst transfer request for the corresponding DMA Request Source */
+ 144              		.loc 1 272 0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+ 148              		@ link register save eliminated.
+ 149              	.LVL7:
+ 273:libstr91x/src/91x_dma.c ****   DMA->SBRR |= SRCReq ;
+ 150              		.loc 1 273 0
+ 151 0074 1E33A0E3 		mov	r3, #2013265920
+ 152 0078 201093E5 		ldr	r1, [r3, #32]
+ 153 007c 012080E1 		orr	r2, r0, r1
+ 154 0080 202083E5 		str	r2, [r3, #32]
+ 274:libstr91x/src/91x_dma.c **** }
+ 155              		.loc 1 274 0
+ 156 0084 1EFF2FE1 		bx	lr
+ 157              		.cfi_endproc
+ 158              	.LFE5:
+ 160              		.align	2
+ 161              		.global	DMA_SetLBReq
+ 163              	DMA_SetLBReq:
+ 164              	.LFB6:
+ 275:libstr91x/src/91x_dma.c **** 
+ 276:libstr91x/src/91x_dma.c **** 
+ 277:libstr91x/src/91x_dma.c **** 
+ 278:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 279:libstr91x/src/91x_dma.c **** * Function Name  : DMA_SetLBReq
+ 280:libstr91x/src/91x_dma.c **** * Description    : Set the DMA to generate a Last Burst transfer request for the corresponding DMA 
+ 281:libstr91x/src/91x_dma.c **** * Input          :
+ 282:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 283:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 284:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 285:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 286:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 287:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 288:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 289:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 290:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 291:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 292:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 293:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 294:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 295:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 296:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 297:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 298:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 299:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 300:libstr91x/src/91x_dma.c **** * Output         : None.
+ 301:libstr91x/src/91x_dma.c **** * Return         : None.
+ 302:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 303:libstr91x/src/91x_dma.c **** 
+ 304:libstr91x/src/91x_dma.c **** 
+ 305:libstr91x/src/91x_dma.c **** void DMA_SetLBReq(u16 SRCReq)
+ 306:libstr91x/src/91x_dma.c **** 
+ 307:libstr91x/src/91x_dma.c **** { /* Set the DMA to generate a Last Burst transfer request for the corresponding DMA Request Source
+ 165              		.loc 1 307 0
+ 166              		.cfi_startproc
+ 167              		@ args = 0, pretend = 0, frame = 0
+ 168              		@ frame_needed = 0, uses_anonymous_args = 0
+ 169              		@ link register save eliminated.
+ 170              	.LVL8:
+ 308:libstr91x/src/91x_dma.c ****   DMA->SLBRR |= SRCReq ;
+ 171              		.loc 1 308 0
+ 172 0088 1E33A0E3 		mov	r3, #2013265920
+ 173 008c 281093E5 		ldr	r1, [r3, #40]
+ 174 0090 012080E1 		orr	r2, r0, r1
+ 175 0094 282083E5 		str	r2, [r3, #40]
+ 309:libstr91x/src/91x_dma.c **** }
+ 176              		.loc 1 309 0
+ 177 0098 1EFF2FE1 		bx	lr
+ 178              		.cfi_endproc
+ 179              	.LFE6:
+ 181              		.align	2
+ 182              		.global	DMA_GetSReq
+ 184              	DMA_GetSReq:
+ 185              	.LFB7:
+ 310:libstr91x/src/91x_dma.c **** 
+ 311:libstr91x/src/91x_dma.c **** 
+ 312:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 313:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetSReq
+ 314:libstr91x/src/91x_dma.c **** * Description    : Check for a specific source if it request a Single transfer .
+ 315:libstr91x/src/91x_dma.c **** * Input          :
+ 316:libstr91x/src/91x_dma.c **** * Input          :
+ 317:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 318:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 319:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 320:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 321:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 322:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 323:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 324:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 325:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 326:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 327:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 328:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 329:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 330:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 331:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 332:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 333:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 334:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 335:libstr91x/src/91x_dma.c **** * Output         : None.
+ 336:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 337:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 338:libstr91x/src/91x_dma.c **** 
+ 339:libstr91x/src/91x_dma.c **** 
+ 340:libstr91x/src/91x_dma.c **** FlagStatus DMA_GetSReq(u16 SRCReq)
+ 341:libstr91x/src/91x_dma.c **** 
+ 342:libstr91x/src/91x_dma.c **** { /* Check for a specific source if it request a Single transfer . */
+ 186              		.loc 1 342 0
+ 187              		.cfi_startproc
+ 188              		@ args = 0, pretend = 0, frame = 0
+ 189              		@ frame_needed = 0, uses_anonymous_args = 0
+ 190              		@ link register save eliminated.
+ 191              	.LVL9:
+ 343:libstr91x/src/91x_dma.c ****  if ( (DMA->SSRR & SRCReq )!= RESET )
+ 192              		.loc 1 343 0
+ 193 009c 1E13A0E3 		mov	r1, #2013265920
+ 194 00a0 243091E5 		ldr	r3, [r1, #36]
+ 344:libstr91x/src/91x_dma.c ****  {
+ 345:libstr91x/src/91x_dma.c ****    return SET;
+ 195              		.loc 1 345 0
+ 196 00a4 030010E1 		tst	r0, r3
+ 346:libstr91x/src/91x_dma.c ****  }
+ 347:libstr91x/src/91x_dma.c **** 
+ 348:libstr91x/src/91x_dma.c ****  else
+ 349:libstr91x/src/91x_dma.c ****  {
+ 350:libstr91x/src/91x_dma.c ****   return RESET;
+ 351:libstr91x/src/91x_dma.c ****  }
+ 352:libstr91x/src/91x_dma.c **** }
+ 197              		.loc 1 352 0
+ 198 00a8 0000A003 		moveq	r0, #0
+ 199 00ac 0100A013 		movne	r0, #1
+ 200              	.LVL10:
+ 201 00b0 1EFF2FE1 		bx	lr
+ 202              		.cfi_endproc
+ 203              	.LFE7:
+ 205              		.align	2
+ 206              		.global	DMA_GetLSReq
+ 208              	DMA_GetLSReq:
+ 209              	.LFB8:
+ 353:libstr91x/src/91x_dma.c **** 
+ 354:libstr91x/src/91x_dma.c **** 
+ 355:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 356:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetLSReq
+ 357:libstr91x/src/91x_dma.c **** * Description    : Check for a specific source if it request a Last Single transfer .
+ 358:libstr91x/src/91x_dma.c **** * Input          :
+ 359:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 360:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 361:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 362:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 363:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 364:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 365:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 366:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 367:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 368:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 369:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 370:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 371:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 372:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 373:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 374:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 375:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 376:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 377:libstr91x/src/91x_dma.c **** * Output         : None.
+ 378:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 379:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 380:libstr91x/src/91x_dma.c **** 
+ 381:libstr91x/src/91x_dma.c **** 
+ 382:libstr91x/src/91x_dma.c **** FlagStatus DMA_GetLSReq(u16 SRCReq)
+ 383:libstr91x/src/91x_dma.c **** 
+ 384:libstr91x/src/91x_dma.c **** { /* Check for a specific source if it request a Last Single transfer . */
+ 210              		.loc 1 384 0
+ 211              		.cfi_startproc
+ 212              		@ args = 0, pretend = 0, frame = 0
+ 213              		@ frame_needed = 0, uses_anonymous_args = 0
+ 214              		@ link register save eliminated.
+ 215              	.LVL11:
+ 385:libstr91x/src/91x_dma.c ****  if ( (DMA->SLSRR & SRCReq)!= RESET  )
+ 216              		.loc 1 385 0
+ 217 00b4 1E13A0E3 		mov	r1, #2013265920
+ 218 00b8 2C3091E5 		ldr	r3, [r1, #44]
+ 386:libstr91x/src/91x_dma.c ****  {
+ 387:libstr91x/src/91x_dma.c ****    return SET;
+ 219              		.loc 1 387 0
+ 220 00bc 030010E1 		tst	r0, r3
+ 388:libstr91x/src/91x_dma.c ****  }
+ 389:libstr91x/src/91x_dma.c **** 
+ 390:libstr91x/src/91x_dma.c ****  else
+ 391:libstr91x/src/91x_dma.c ****  {
+ 392:libstr91x/src/91x_dma.c ****   return RESET;
+ 393:libstr91x/src/91x_dma.c ****  }
+ 394:libstr91x/src/91x_dma.c **** }
+ 221              		.loc 1 394 0
+ 222 00c0 0000A003 		moveq	r0, #0
+ 223 00c4 0100A013 		movne	r0, #1
+ 224              	.LVL12:
+ 225 00c8 1EFF2FE1 		bx	lr
+ 226              		.cfi_endproc
+ 227              	.LFE8:
+ 229              		.align	2
+ 230              		.global	DMA_GetBReq
+ 232              	DMA_GetBReq:
+ 233              	.LFB9:
+ 395:libstr91x/src/91x_dma.c **** 
+ 396:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 397:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetBReq
+ 398:libstr91x/src/91x_dma.c **** * Description    : Check for a specific source if it request a Burst transfer .
+ 399:libstr91x/src/91x_dma.c **** * Input          :
+ 400:libstr91x/src/91x_dma.c **** *                 -SRCReq:specifies the DMA Request Source.
+ 401:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 402:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 403:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 404:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 405:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 406:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 407:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 408:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 409:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 410:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 411:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 412:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 413:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 414:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 415:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 416:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 417:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 418:libstr91x/src/91x_dma.c **** * Output         : None.
+ 419:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 420:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 421:libstr91x/src/91x_dma.c **** 
+ 422:libstr91x/src/91x_dma.c **** 
+ 423:libstr91x/src/91x_dma.c **** FlagStatus DMA_GetBReq(u16 SRCReq)
+ 424:libstr91x/src/91x_dma.c **** 
+ 425:libstr91x/src/91x_dma.c **** { /* Check for a specific source if it request a Burst transfer . */
+ 234              		.loc 1 425 0
+ 235              		.cfi_startproc
+ 236              		@ args = 0, pretend = 0, frame = 0
+ 237              		@ frame_needed = 0, uses_anonymous_args = 0
+ 238              		@ link register save eliminated.
+ 239              	.LVL13:
+ 426:libstr91x/src/91x_dma.c ****  if (( DMA->SBRR & SRCReq ) != RESET )
+ 240              		.loc 1 426 0
+ 241 00cc 1E13A0E3 		mov	r1, #2013265920
+ 242 00d0 203091E5 		ldr	r3, [r1, #32]
+ 427:libstr91x/src/91x_dma.c ****  {
+ 428:libstr91x/src/91x_dma.c ****    return SET;
+ 243              		.loc 1 428 0
+ 244 00d4 030010E1 		tst	r0, r3
+ 429:libstr91x/src/91x_dma.c ****  }
+ 430:libstr91x/src/91x_dma.c **** 
+ 431:libstr91x/src/91x_dma.c ****  else
+ 432:libstr91x/src/91x_dma.c ****  {
+ 433:libstr91x/src/91x_dma.c ****   return RESET;
+ 434:libstr91x/src/91x_dma.c ****  }
+ 435:libstr91x/src/91x_dma.c **** }
+ 245              		.loc 1 435 0
+ 246 00d8 0000A003 		moveq	r0, #0
+ 247 00dc 0100A013 		movne	r0, #1
+ 248              	.LVL14:
+ 249 00e0 1EFF2FE1 		bx	lr
+ 250              		.cfi_endproc
+ 251              	.LFE9:
+ 253              		.align	2
+ 254              		.global	DMA_GetLBReq
+ 256              	DMA_GetLBReq:
+ 257              	.LFB10:
+ 436:libstr91x/src/91x_dma.c **** 
+ 437:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 438:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetLSReq
+ 439:libstr91x/src/91x_dma.c **** * Description    : Check for a specific source if it request a Last Burst transfer .
+ 440:libstr91x/src/91x_dma.c **** * Input          :
+ 441:libstr91x/src/91x_dma.c **** * Input          :
+ 442:libstr91x/src/91x_dma.c **** *                 - SRCReq:specifies the DMA Request Source.
+ 443:libstr91x/src/91x_dma.c **** *                  This parameter can be:
+ 444:libstr91x/src/91x_dma.c **** *                     -DMA_USB_RX_Mask	           
+ 445:libstr91x/src/91x_dma.c **** *                     -DMA_USB_TX_Mask	           
+ 446:libstr91x/src/91x_dma.c **** *                     -DMA_TIM0_Mask	               
+ 447:libstr91x/src/91x_dma.c **** *                     -DMA_TIM1_Mask	              
+ 448:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_RX_Mask             
+ 449:libstr91x/src/91x_dma.c **** *                     -DMA_UART0_TX_Mask             
+ 450:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_RX_Mask           
+ 451:libstr91x/src/91x_dma.c **** *                     -DMA_UART1_TX_Mask            
+ 452:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req0_Mask        
+ 453:libstr91x/src/91x_dma.c **** *                     -DMA_External_Req1_Mask	    
+ 454:libstr91x/src/91x_dma.c **** *                     -DMA_I2C0_Mask	                
+ 455:libstr91x/src/91x_dma.c **** *                     -DMA_I2C1_Mask	               
+ 456:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_RX_Mask	            
+ 457:libstr91x/src/91x_dma.c **** *                     -DMA_SSP0_TX_Mask	            
+ 458:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_RX_Mask	            
+ 459:libstr91x/src/91x_dma.c **** *                     -DMA_SSP1_TX_Mask	            
+ 460:libstr91x/src/91x_dma.c **** * Output         : None.
+ 461:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 462:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 463:libstr91x/src/91x_dma.c **** 
+ 464:libstr91x/src/91x_dma.c **** 
+ 465:libstr91x/src/91x_dma.c **** FlagStatus DMA_GetLBReq(u16 SRCReq)
+ 466:libstr91x/src/91x_dma.c **** 
+ 467:libstr91x/src/91x_dma.c **** { /* Check for a specific source if it request a Last Burst transfer . */
+ 258              		.loc 1 467 0
+ 259              		.cfi_startproc
+ 260              		@ args = 0, pretend = 0, frame = 0
+ 261              		@ frame_needed = 0, uses_anonymous_args = 0
+ 262              		@ link register save eliminated.
+ 263              	.LVL15:
+ 468:libstr91x/src/91x_dma.c ****  if ( ( DMA->SLBRR & SRCReq ) != RESET )
+ 264              		.loc 1 468 0
+ 265 00e4 1E13A0E3 		mov	r1, #2013265920
+ 266 00e8 283091E5 		ldr	r3, [r1, #40]
+ 469:libstr91x/src/91x_dma.c ****  {
+ 470:libstr91x/src/91x_dma.c ****    return SET;
+ 267              		.loc 1 470 0
+ 268 00ec 030010E1 		tst	r0, r3
+ 471:libstr91x/src/91x_dma.c ****  }
+ 472:libstr91x/src/91x_dma.c **** 
+ 473:libstr91x/src/91x_dma.c ****  else
+ 474:libstr91x/src/91x_dma.c ****  {
+ 475:libstr91x/src/91x_dma.c ****   return RESET;
+ 476:libstr91x/src/91x_dma.c ****  }
+ 477:libstr91x/src/91x_dma.c **** }
+ 269              		.loc 1 477 0
+ 270 00f0 0000A003 		moveq	r0, #0
+ 271 00f4 0100A013 		movne	r0, #1
+ 272              	.LVL16:
+ 273 00f8 1EFF2FE1 		bx	lr
+ 274              		.cfi_endproc
+ 275              	.LFE10:
+ 277              		.align	2
+ 278              		.global	DMA_ChannelHalt
+ 280              	DMA_ChannelHalt:
+ 281              	.LFB11:
+ 478:libstr91x/src/91x_dma.c **** 
+ 479:libstr91x/src/91x_dma.c **** 
+ 480:libstr91x/src/91x_dma.c **** 
+ 481:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 482:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelHalt
+ 483:libstr91x/src/91x_dma.c **** * Description    : Enables DMA requests or ignore extra source DMA requests for
+ 484:libstr91x/src/91x_dma.c ****                    the specified channel.
+ 485:libstr91x/src/91x_dma.c **** * Input          :
+ 486:libstr91x/src/91x_dma.c ****                   -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 487:libstr91x/src/91x_dma.c ****                   -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 488:libstr91x/src/91x_dma.c ****                              This parameter can be: ENABLE or DISABLE.
+ 489:libstr91x/src/91x_dma.c **** * Output         : None.
+ 490:libstr91x/src/91x_dma.c **** * Return         : None.
+ 491:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 492:libstr91x/src/91x_dma.c **** 
+ 493:libstr91x/src/91x_dma.c **** 
+ 494:libstr91x/src/91x_dma.c **** void DMA_ChannelHalt(DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 495:libstr91x/src/91x_dma.c **** 
+ 496:libstr91x/src/91x_dma.c **** {
+ 282              		.loc 1 496 0
+ 283              		.cfi_startproc
+ 284              		@ args = 0, pretend = 0, frame = 0
+ 285              		@ frame_needed = 0, uses_anonymous_args = 0
+ 286              		@ link register save eliminated.
+ 287              	.LVL17:
+ 497:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Enables DMA requests */
+ 498:libstr91x/src/91x_dma.c **** 
+ 499:libstr91x/src/91x_dma.c ****   {
+ 500:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_HaltChannel ;
+ 288              		.loc 1 500 0
+ 289 00fc 103090E5 		ldr	r3, [r0, #16]
+ 497:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Enables DMA requests */
+ 290              		.loc 1 497 0
+ 291 0100 010051E3 		cmp	r1, #1
+ 292              		.loc 1 500 0
+ 293 0104 01378303 		orreq	r3, r3, #262144
+ 501:libstr91x/src/91x_dma.c ****   }
+ 502:libstr91x/src/91x_dma.c **** 
+ 503:libstr91x/src/91x_dma.c ****   else /* Ignore extra source DMA request */
+ 504:libstr91x/src/91x_dma.c ****   {
+ 505:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= ~ DMA_HaltChannel ;
+ 294              		.loc 1 505 0
+ 295 0108 0137C313 		bicne	r3, r3, #262144
+ 296 010c 103080E5 		str	r3, [r0, #16]
+ 297 0110 1EFF2FE1 		bx	lr
+ 298              		.cfi_endproc
+ 299              	.LFE11:
+ 301              		.align	2
+ 302              		.global	DMA_ChannelLockTrsf
+ 304              	DMA_ChannelLockTrsf:
+ 305              	.LFB12:
+ 506:libstr91x/src/91x_dma.c ****   }
+ 507:libstr91x/src/91x_dma.c **** }
+ 508:libstr91x/src/91x_dma.c **** 
+ 509:libstr91x/src/91x_dma.c **** 
+ 510:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 511:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelLockTrsf
+ 512:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the Locked Transfers Feature for the specified DMA_Channelx
+ 513:libstr91x/src/91x_dma.c **** * Input          :
+ 514:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 515:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 516:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 517:libstr91x/src/91x_dma.c **** * Output         : None.
+ 518:libstr91x/src/91x_dma.c **** * Return         : None.
+ 519:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 520:libstr91x/src/91x_dma.c **** 
+ 521:libstr91x/src/91x_dma.c **** 
+ 522:libstr91x/src/91x_dma.c **** void DMA_ChannelLockTrsf(DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 523:libstr91x/src/91x_dma.c **** 
+ 524:libstr91x/src/91x_dma.c **** {
+ 306              		.loc 1 524 0
+ 307              		.cfi_startproc
+ 308              		@ args = 0, pretend = 0, frame = 0
+ 309              		@ frame_needed = 0, uses_anonymous_args = 0
+ 310              		@ link register save eliminated.
+ 311              	.LVL18:
+ 525:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Locked transfers enabled on channel x */
+ 526:libstr91x/src/91x_dma.c **** 
+ 527:libstr91x/src/91x_dma.c ****   {
+ 528:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_LockChannel ;
+ 312              		.loc 1 528 0
+ 313 0114 103090E5 		ldr	r3, [r0, #16]
+ 525:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Locked transfers enabled on channel x */
+ 314              		.loc 1 525 0
+ 315 0118 010051E3 		cmp	r1, #1
+ 316              		.loc 1 528 0
+ 317 011c 01388303 		orreq	r3, r3, #65536
+ 529:libstr91x/src/91x_dma.c ****   }
+ 530:libstr91x/src/91x_dma.c **** 
+ 531:libstr91x/src/91x_dma.c ****   else /* Locked transfers disabled on channel xt */
+ 532:libstr91x/src/91x_dma.c ****   {
+ 533:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= ~ DMA_LockChannel;
+ 318              		.loc 1 533 0
+ 319 0120 0138C313 		bicne	r3, r3, #65536
+ 320 0124 103080E5 		str	r3, [r0, #16]
+ 321 0128 1EFF2FE1 		bx	lr
+ 322              		.cfi_endproc
+ 323              	.LFE12:
+ 325              		.align	2
+ 326              		.global	DMA_ChannelCache
+ 328              	DMA_ChannelCache:
+ 329              	.LFB13:
+ 534:libstr91x/src/91x_dma.c ****   }
+ 535:libstr91x/src/91x_dma.c **** }
+ 536:libstr91x/src/91x_dma.c **** 
+ 537:libstr91x/src/91x_dma.c **** 
+ 538:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 539:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelCache
+ 540:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the cacheability Feature for the specified DMA_Channelx
+ 541:libstr91x/src/91x_dma.c **** * Input          :
+ 542:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 543:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 544:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 545:libstr91x/src/91x_dma.c **** * Output         : None.
+ 546:libstr91x/src/91x_dma.c **** * Return         : None.
+ 547:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 548:libstr91x/src/91x_dma.c **** 
+ 549:libstr91x/src/91x_dma.c **** 
+ 550:libstr91x/src/91x_dma.c **** void DMA_ChannelCache (DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 551:libstr91x/src/91x_dma.c **** 
+ 552:libstr91x/src/91x_dma.c **** {
+ 330              		.loc 1 552 0
+ 331              		.cfi_startproc
+ 332              		@ args = 0, pretend = 0, frame = 0
+ 333              		@ frame_needed = 0, uses_anonymous_args = 0
+ 334              		@ link register save eliminated.
+ 335              	.LVL19:
+ 553:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Cacheability Feature enabled on channelx */
+ 554:libstr91x/src/91x_dma.c **** 
+ 555:libstr91x/src/91x_dma.c ****   {
+ 556:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_CacheChannel ;
+ 336              		.loc 1 556 0
+ 337 012c 0C3090E5 		ldr	r3, [r0, #12]
+ 553:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Cacheability Feature enabled on channelx */
+ 338              		.loc 1 553 0
+ 339 0130 010051E3 		cmp	r1, #1
+ 340              		.loc 1 556 0
+ 341 0134 01318303 		orreq	r3, r3, #1073741824
+ 557:libstr91x/src/91x_dma.c ****   }
+ 558:libstr91x/src/91x_dma.c **** 
+ 559:libstr91x/src/91x_dma.c ****   else /* Cacheability Feature disabled on channelx */
+ 560:libstr91x/src/91x_dma.c ****   {
+ 561:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= ~ DMA_CacheChannel ;
+ 342              		.loc 1 561 0
+ 343 0138 0131C313 		bicne	r3, r3, #1073741824
+ 344 013c 0C3080E5 		str	r3, [r0, #12]
+ 345 0140 1EFF2FE1 		bx	lr
+ 346              		.cfi_endproc
+ 347              	.LFE13:
+ 349              		.align	2
+ 350              		.global	DMA_ChannelBuffering
+ 352              	DMA_ChannelBuffering:
+ 353              	.LFB14:
+ 562:libstr91x/src/91x_dma.c ****   }
+ 563:libstr91x/src/91x_dma.c **** }
+ 564:libstr91x/src/91x_dma.c **** 
+ 565:libstr91x/src/91x_dma.c **** 
+ 566:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 567:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelBuffering
+ 568:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the Buffering Feature for the specified DMA_Channelx
+ 569:libstr91x/src/91x_dma.c **** * Input          :
+ 570:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 571:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 572:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 573:libstr91x/src/91x_dma.c **** * Output         : None.
+ 574:libstr91x/src/91x_dma.c **** * Return         : None.
+ 575:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 576:libstr91x/src/91x_dma.c **** 
+ 577:libstr91x/src/91x_dma.c **** 
+ 578:libstr91x/src/91x_dma.c **** void DMA_ChannelBuffering (DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 579:libstr91x/src/91x_dma.c **** 
+ 580:libstr91x/src/91x_dma.c **** {
+ 354              		.loc 1 580 0
+ 355              		.cfi_startproc
+ 356              		@ args = 0, pretend = 0, frame = 0
+ 357              		@ frame_needed = 0, uses_anonymous_args = 0
+ 358              		@ link register save eliminated.
+ 359              	.LVL20:
+ 581:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Cacheability Feature enabled on channel x */
+ 582:libstr91x/src/91x_dma.c **** 
+ 583:libstr91x/src/91x_dma.c ****   {
+ 584:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_BufferChannel ;
+ 360              		.loc 1 584 0
+ 361 0144 0C3090E5 		ldr	r3, [r0, #12]
+ 581:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* Cacheability Feature enabled on channel x */
+ 362              		.loc 1 581 0
+ 363 0148 010051E3 		cmp	r1, #1
+ 364              		.loc 1 584 0
+ 365 014c 02328303 		orreq	r3, r3, #536870912
+ 585:libstr91x/src/91x_dma.c ****   }
+ 586:libstr91x/src/91x_dma.c **** 
+ 587:libstr91x/src/91x_dma.c ****   else /* Cacheability Feature disabled on channel xt */
+ 588:libstr91x/src/91x_dma.c ****   {
+ 589:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= ~ DMA_BufferChannel ;
+ 366              		.loc 1 589 0
+ 367 0150 0232C313 		bicne	r3, r3, #536870912
+ 368 0154 0C3080E5 		str	r3, [r0, #12]
+ 369 0158 1EFF2FE1 		bx	lr
+ 370              		.cfi_endproc
+ 371              	.LFE14:
+ 373              		.align	2
+ 374              		.global	DMA_ChannelProt0Mode
+ 376              	DMA_ChannelProt0Mode:
+ 377              	.LFB15:
+ 590:libstr91x/src/91x_dma.c ****   }
+ 591:libstr91x/src/91x_dma.c **** }
+ 592:libstr91x/src/91x_dma.c **** 
+ 593:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 594:libstr91x/src/91x_dma.c **** * Function Name  : MA_ChannelProt0Mod
+ 595:libstr91x/src/91x_dma.c **** * Description    : Sets The User or Privileged mode for the specified DMA_Channelx
+ 596:libstr91x/src/91x_dma.c **** * Input          :
+ 597:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 598:libstr91x/src/91x_dma.c **** *                  -Prot0Mode: Specifies the Privileged mode Or the User mode.
+ 599:libstr91x/src/91x_dma.c **** *                                This parameter can be:
+ 600:libstr91x/src/91x_dma.c **** *                      - DMA_PrevilegedMode
+ 601:libstr91x/src/91x_dma.c **** *                      - DMA_UserMode
+ 602:libstr91x/src/91x_dma.c **** *
+ 603:libstr91x/src/91x_dma.c **** *
+ 604:libstr91x/src/91x_dma.c **** * Output         : None.
+ 605:libstr91x/src/91x_dma.c **** * Return         : None.
+ 606:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 607:libstr91x/src/91x_dma.c **** 
+ 608:libstr91x/src/91x_dma.c **** 
+ 609:libstr91x/src/91x_dma.c **** void DMA_ChannelProt0Mode (DMA_Channel_TypeDef * DMA_Channelx, u32 Prot0Mode)
+ 610:libstr91x/src/91x_dma.c **** 
+ 611:libstr91x/src/91x_dma.c **** {
+ 378              		.loc 1 611 0
+ 379              		.cfi_startproc
+ 380              		@ args = 0, pretend = 0, frame = 0
+ 381              		@ frame_needed = 0, uses_anonymous_args = 0
+ 382              		@ link register save eliminated.
+ 383              	.LVL21:
+ 612:libstr91x/src/91x_dma.c ****   if (Prot0Mode==DMA_PrevilegedMode) /* Privileged mode */
+ 613:libstr91x/src/91x_dma.c ****   {
+ 614:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_PrevilegedMode ;
+ 384              		.loc 1 614 0
+ 385 015c 0C3090E5 		ldr	r3, [r0, #12]
+ 612:libstr91x/src/91x_dma.c ****   if (Prot0Mode==DMA_PrevilegedMode) /* Privileged mode */
+ 386              		.loc 1 612 0
+ 387 0160 010251E3 		cmp	r1, #268435456
+ 388              		.loc 1 614 0
+ 389 0164 01328303 		orreq	r3, r3, #268435456
+ 615:libstr91x/src/91x_dma.c ****   }
+ 616:libstr91x/src/91x_dma.c **** 
+ 617:libstr91x/src/91x_dma.c ****   else /* User mode */
+ 618:libstr91x/src/91x_dma.c ****   {
+ 619:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_UserMode ;
+ 390              		.loc 1 619 0
+ 391 0168 0132C313 		bicne	r3, r3, #268435456
+ 392 016c 0C3080E5 		str	r3, [r0, #12]
+ 393 0170 1EFF2FE1 		bx	lr
+ 394              		.cfi_endproc
+ 395              	.LFE15:
+ 397              		.align	2
+ 398              		.global	DMA_ChannelSRCIncConfig
+ 400              	DMA_ChannelSRCIncConfig:
+ 401              	.LFB16:
+ 620:libstr91x/src/91x_dma.c ****   }
+ 621:libstr91x/src/91x_dma.c **** }
+ 622:libstr91x/src/91x_dma.c **** 
+ 623:libstr91x/src/91x_dma.c **** 
+ 624:libstr91x/src/91x_dma.c **** 
+ 625:libstr91x/src/91x_dma.c **** 
+ 626:libstr91x/src/91x_dma.c **** 
+ 627:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 628:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelSRCIncConfig
+ 629:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the Source address incrementation after each transfer for
+ 630:libstr91x/src/91x_dma.c **** *                   the specified DMA_Channelx
+ 631:libstr91x/src/91x_dma.c **** * Input          :
+ 632:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 633:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 634:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 635:libstr91x/src/91x_dma.c **** * Output         : None.
+ 636:libstr91x/src/91x_dma.c **** * Return         : None.
+ 637:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 638:libstr91x/src/91x_dma.c **** 
+ 639:libstr91x/src/91x_dma.c **** 
+ 640:libstr91x/src/91x_dma.c **** void DMA_ChannelSRCIncConfig (DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 641:libstr91x/src/91x_dma.c **** 
+ 642:libstr91x/src/91x_dma.c **** {
+ 402              		.loc 1 642 0
+ 403              		.cfi_startproc
+ 404              		@ args = 0, pretend = 0, frame = 0
+ 405              		@ frame_needed = 0, uses_anonymous_args = 0
+ 406              		@ link register save eliminated.
+ 407              	.LVL22:
+ 643:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* The Source address is incremented after each transfer */
+ 644:libstr91x/src/91x_dma.c **** 
+ 645:libstr91x/src/91x_dma.c ****   {
+ 646:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_ChannelSRCInc ;
+ 408              		.loc 1 646 0
+ 409 0174 0C3090E5 		ldr	r3, [r0, #12]
+ 643:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* The Source address is incremented after each transfer */
+ 410              		.loc 1 643 0
+ 411 0178 010051E3 		cmp	r1, #1
+ 412              		.loc 1 646 0
+ 413 017c 01338303 		orreq	r3, r3, #67108864
+ 647:libstr91x/src/91x_dma.c ****   }
+ 648:libstr91x/src/91x_dma.c **** 
+ 649:libstr91x/src/91x_dma.c ****   else /* The Source address is not incremented after each Transfer */
+ 650:libstr91x/src/91x_dma.c ****   {
+ 651:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= ~ DMA_ChannelSRCInc  ;
+ 414              		.loc 1 651 0
+ 415 0180 0133C313 		bicne	r3, r3, #67108864
+ 416 0184 0C3080E5 		str	r3, [r0, #12]
+ 417 0188 1EFF2FE1 		bx	lr
+ 418              		.cfi_endproc
+ 419              	.LFE16:
+ 421              		.align	2
+ 422              		.global	DMA_ChannelDESIncConfig
+ 424              	DMA_ChannelDESIncConfig:
+ 425              	.LFB17:
+ 652:libstr91x/src/91x_dma.c ****   }
+ 653:libstr91x/src/91x_dma.c **** }
+ 654:libstr91x/src/91x_dma.c **** 
+ 655:libstr91x/src/91x_dma.c **** 
+ 656:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 657:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelDESIncConfig
+ 658:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the Destination address incrementation after each transfer f
+ 659:libstr91x/src/91x_dma.c **** *                   the specified DMA_Channelx
+ 660:libstr91x/src/91x_dma.c **** * Input          :
+ 661:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 662:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 663:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 664:libstr91x/src/91x_dma.c **** * Output         : None.
+ 665:libstr91x/src/91x_dma.c **** * Return         : None.
+ 666:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 667:libstr91x/src/91x_dma.c **** 
+ 668:libstr91x/src/91x_dma.c **** 
+ 669:libstr91x/src/91x_dma.c **** void DMA_ChannelDESIncConfig (DMA_Channel_TypeDef * DMA_Channelx, FunctionalState NewState)
+ 670:libstr91x/src/91x_dma.c **** 
+ 671:libstr91x/src/91x_dma.c **** {
+ 426              		.loc 1 671 0
+ 427              		.cfi_startproc
+ 428              		@ args = 0, pretend = 0, frame = 0
+ 429              		@ frame_needed = 0, uses_anonymous_args = 0
+ 430              		@ link register save eliminated.
+ 431              	.LVL23:
+ 672:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* The Destination address is incremented after each transfer */
+ 673:libstr91x/src/91x_dma.c **** 
+ 674:libstr91x/src/91x_dma.c ****   {
+ 675:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_ChannelDESInc ;
+ 432              		.loc 1 675 0
+ 433 018c 0C3090E5 		ldr	r3, [r0, #12]
+ 672:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* The Destination address is incremented after each transfer */
+ 434              		.loc 1 672 0
+ 435 0190 010051E3 		cmp	r1, #1
+ 436              		.loc 1 675 0
+ 437 0194 02338303 		orreq	r3, r3, #134217728
+ 676:libstr91x/src/91x_dma.c ****   }
+ 677:libstr91x/src/91x_dma.c **** 
+ 678:libstr91x/src/91x_dma.c ****   else /* The Destination address is not incremented after each Transfer */
+ 679:libstr91x/src/91x_dma.c ****   {
+ 680:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= ~ DMA_ChannelDESInc  ;
+ 438              		.loc 1 680 0
+ 439 0198 0233C313 		bicne	r3, r3, #134217728
+ 440 019c 0C3080E5 		str	r3, [r0, #12]
+ 441 01a0 1EFF2FE1 		bx	lr
+ 442              		.cfi_endproc
+ 443              	.LFE17:
+ 445              		.align	2
+ 446              		.global	DMA_GetChannelStatus
+ 448              	DMA_GetChannelStatus:
+ 449              	.LFB18:
+ 681:libstr91x/src/91x_dma.c ****   }
+ 682:libstr91x/src/91x_dma.c **** }
+ 683:libstr91x/src/91x_dma.c **** 
+ 684:libstr91x/src/91x_dma.c **** 
+ 685:libstr91x/src/91x_dma.c **** 
+ 686:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 687:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetChannelStatus
+ 688:libstr91x/src/91x_dma.c **** * Description    : Checks the status of DMA channelx ( Enabled or Disabled).
+ 689:libstr91x/src/91x_dma.c **** *                  - ChannelIndx:specifies the DMA Channel to be checked.
+ 690:libstr91x/src/91x_dma.c **** *                   This parameter can be:
+ 691:libstr91x/src/91x_dma.c **** *				      - Channel0
+ 692:libstr91x/src/91x_dma.c **** *					  - Channel1
+ 693:libstr91x/src/91x_dma.c **** *					  - Channel2
+ 694:libstr91x/src/91x_dma.c **** *					  - Channel3
+ 695:libstr91x/src/91x_dma.c **** *					  - Channel4
+ 696:libstr91x/src/91x_dma.c **** *					  - Channel5
+ 697:libstr91x/src/91x_dma.c **** *				      - Channel6
+ 698:libstr91x/src/91x_dma.c **** *					  - Channel7
+ 699:libstr91x/src/91x_dma.c **** * Output         : None.
+ 700:libstr91x/src/91x_dma.c **** *
+ 701:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 702:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 703:libstr91x/src/91x_dma.c **** 
+ 704:libstr91x/src/91x_dma.c **** 
+ 705:libstr91x/src/91x_dma.c **** FlagStatus  DMA_GetChannelStatus(u8 ChannelIndx )
+ 706:libstr91x/src/91x_dma.c **** 
+ 707:libstr91x/src/91x_dma.c **** {
+ 450              		.loc 1 707 0
+ 451              		.cfi_startproc
+ 452              		@ args = 0, pretend = 0, frame = 0
+ 453              		@ frame_needed = 0, uses_anonymous_args = 0
+ 454              		@ link register save eliminated.
+ 455              	.LVL24:
+ 708:libstr91x/src/91x_dma.c **** 
+ 709:libstr91x/src/91x_dma.c ****  if ( ( DMA->ENCSR & (1 <<  ChannelIndx )) != RESET )
+ 456              		.loc 1 709 0
+ 457 01a4 1E13A0E3 		mov	r1, #2013265920
+ 458 01a8 1C3091E5 		ldr	r3, [r1, #28]
+ 459 01ac 0120A0E3 		mov	r2, #1
+ 710:libstr91x/src/91x_dma.c ****  {
+ 711:libstr91x/src/91x_dma.c ****    return SET; /*  Channelx Enabled */
+ 460              		.loc 1 711 0
+ 461 01b0 122013E0 		ands	r2, r3, r2, asl r0
+ 712:libstr91x/src/91x_dma.c ****  }
+ 713:libstr91x/src/91x_dma.c **** 
+ 714:libstr91x/src/91x_dma.c ****  else
+ 715:libstr91x/src/91x_dma.c **** 
+ 716:libstr91x/src/91x_dma.c ****  {
+ 717:libstr91x/src/91x_dma.c **** 
+ 718:libstr91x/src/91x_dma.c ****   return RESET; /*  Channelx Disabled */
+ 719:libstr91x/src/91x_dma.c **** 
+ 720:libstr91x/src/91x_dma.c ****  }
+ 721:libstr91x/src/91x_dma.c **** 
+ 722:libstr91x/src/91x_dma.c **** }
+ 462              		.loc 1 722 0
+ 463 01b4 0000A003 		moveq	r0, #0
+ 464 01b8 0100A013 		movne	r0, #1
+ 465              	.LVL25:
+ 466 01bc 1EFF2FE1 		bx	lr
+ 467              		.cfi_endproc
+ 468              	.LFE18:
+ 470              		.align	2
+ 471              		.global	DMA_GetITStatus
+ 473              	DMA_GetITStatus:
+ 474              	.LFB19:
+ 723:libstr91x/src/91x_dma.c **** 
+ 724:libstr91x/src/91x_dma.c **** 
+ 725:libstr91x/src/91x_dma.c **** 
+ 726:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 727:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetITStatus
+ 728:libstr91x/src/91x_dma.c **** * Description    : Checks the status of Terminal Count and  Error interrupts request after and befo
+ 729:libstr91x/src/91x_dma.c **** * Input          :
+ 730:libstr91x/src/91x_dma.c **** *                  - ChannelIndx:specifies the DMA Channel to be checked.
+ 731:libstr91x/src/91x_dma.c **** *                   This parameter can be:
+ 732:libstr91x/src/91x_dma.c **** *				      - Channel0
+ 733:libstr91x/src/91x_dma.c **** *					  - Channel1
+ 734:libstr91x/src/91x_dma.c **** *					  - Channel2
+ 735:libstr91x/src/91x_dma.c **** *					  - Channel3
+ 736:libstr91x/src/91x_dma.c **** *					  - Channel4
+ 737:libstr91x/src/91x_dma.c **** *					  - Channel5
+ 738:libstr91x/src/91x_dma.c **** *				      - Channel6
+ 739:libstr91x/src/91x_dma.c **** *					  - Channel7
+ 740:libstr91x/src/91x_dma.c **** *
+ 741:libstr91x/src/91x_dma.c **** *.                 - DMA_ITReq: specifies the DMA interrupt request status to be checked.
+ 742:libstr91x/src/91x_dma.c **** *                   This parameter can be:
+ 743:libstr91x/src/91x_dma.c **** *
+ 744:libstr91x/src/91x_dma.c **** *					  - DMA_IS 
+ 745:libstr91x/src/91x_dma.c **** *					  - DMA_TCS 
+ 746:libstr91x/src/91x_dma.c **** *					  - DMA_ES
+ 747:libstr91x/src/91x_dma.c **** *					  - DMA_TCRS
+ 748:libstr91x/src/91x_dma.c **** *					  - DMA_ERS.
+ 749:libstr91x/src/91x_dma.c **** *
+ 750:libstr91x/src/91x_dma.c **** * Output         : None.
+ 751:libstr91x/src/91x_dma.c **** *
+ 752:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 753:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 754:libstr91x/src/91x_dma.c **** 
+ 755:libstr91x/src/91x_dma.c **** 
+ 756:libstr91x/src/91x_dma.c **** ITStatus DMA_GetITStatus(u8 ChannelIndx,u8 DMA_ITReq)
+ 757:libstr91x/src/91x_dma.c **** 
+ 758:libstr91x/src/91x_dma.c **** {
+ 475              		.loc 1 758 0
+ 476              		.cfi_startproc
+ 477              		@ args = 0, pretend = 0, frame = 0
+ 478              		@ frame_needed = 0, uses_anonymous_args = 0
+ 479              		@ link register save eliminated.
+ 480              	.LVL26:
+ 759:libstr91x/src/91x_dma.c ****   u32 DMAReg = 0;
+ 760:libstr91x/src/91x_dma.c **** 
+ 761:libstr91x/src/91x_dma.c ****   switch(DMA_ITReq)
+ 481              		.loc 1 761 0
+ 482 01c0 011041E2 		sub	r1, r1, #1
+ 483              	.LVL27:
+ 484 01c4 040051E3 		cmp	r1, #4
+ 485 01c8 01F19F97 		ldrls	pc, [pc, r1, asl #2]
+ 486 01cc 0B0000EA 		b	.L49
+ 487              	.L47:
+ 488 01d0 08020000 		.word	.L42
+ 489 01d4 24020000 		.word	.L43
+ 490 01d8 40020000 		.word	.L44
+ 491 01dc 5C020000 		.word	.L45
+ 492 01e0 E4010000 		.word	.L46
+ 493              	.L46:
+ 762:libstr91x/src/91x_dma.c **** 
+ 763:libstr91x/src/91x_dma.c ****  {
+ 764:libstr91x/src/91x_dma.c **** 
+ 765:libstr91x/src/91x_dma.c ****    case (DMA_IS):  /*The status of the interrupts after masking : logical or of all Interrupts afte
+ 766:libstr91x/src/91x_dma.c ****     DMAReg = DMA->ISR;	
+ 767:libstr91x/src/91x_dma.c ****     break;
+ 768:libstr91x/src/91x_dma.c **** 
+ 769:libstr91x/src/91x_dma.c ****   			
+ 770:libstr91x/src/91x_dma.c **** 
+ 771:libstr91x/src/91x_dma.c ****    case (DMA_TCS):     /* The status of the Terminal count request after masking */
+ 772:libstr91x/src/91x_dma.c ****     DMAReg = DMA->TCISR;
+ 773:libstr91x/src/91x_dma.c ****     break;
+ 774:libstr91x/src/91x_dma.c **** 
+ 775:libstr91x/src/91x_dma.c **** 
+ 776:libstr91x/src/91x_dma.c ****    case (DMA_ES):   /* The status of the error request after masking */
+ 777:libstr91x/src/91x_dma.c ****     DMAReg = DMA->EISR;
+ 778:libstr91x/src/91x_dma.c ****     break;
+ 779:libstr91x/src/91x_dma.c **** 
+ 780:libstr91x/src/91x_dma.c **** 
+ 781:libstr91x/src/91x_dma.c ****    case (DMA_TCRS): /* Indicates if the DMA channel is requesting a transfer complete (terminal cou
+ 782:libstr91x/src/91x_dma.c ****     DMAReg = DMA->TCRISR;
+ 783:libstr91x/src/91x_dma.c ****     break;
+ 784:libstr91x/src/91x_dma.c **** 
+ 785:libstr91x/src/91x_dma.c ****    case (DMA_ERS):  /* Indicates if the DMA channel is requesting an Error Interrupt prior to maski
+ 786:libstr91x/src/91x_dma.c ****      DMAReg = DMA->ERISR;
+ 494              		.loc 1 786 0
+ 495 01e4 1E33A0E3 		mov	r3, #2013265920
+ 496 01e8 182093E5 		ldr	r2, [r3, #24]
+ 497              	.LVL28:
+ 787:libstr91x/src/91x_dma.c ****      break;
+ 788:libstr91x/src/91x_dma.c **** 
+ 789:libstr91x/src/91x_dma.c **** 
+ 790:libstr91x/src/91x_dma.c ****   }
+ 791:libstr91x/src/91x_dma.c **** 
+ 792:libstr91x/src/91x_dma.c ****   if((DMAReg &(1 <<  ChannelIndx )) != RESET )
+ 498              		.loc 1 792 0
+ 499 01ec 01C0A0E3 		mov	ip, #1
+ 756:libstr91x/src/91x_dma.c **** ITStatus DMA_GetITStatus(u8 ChannelIndx,u8 DMA_ITReq)
+ 500              		.loc 1 756 0
+ 501 01f0 1C3012E0 		ands	r3, r2, ip, asl r0
+ 793:libstr91x/src/91x_dma.c **** 
+ 794:libstr91x/src/91x_dma.c ****   {
+ 795:libstr91x/src/91x_dma.c ****    return SET;
+ 502              		.loc 1 795 0
+ 503 01f4 0000A003 		moveq	r0, #0
+ 504 01f8 0100A013 		movne	r0, #1
+ 505              	.LVL29:
+ 506 01fc 1EFF2FE1 		bx	lr
+ 507              	.LVL30:
+ 508              	.L49:
+ 796:libstr91x/src/91x_dma.c ****   }
+ 797:libstr91x/src/91x_dma.c **** 
+ 798:libstr91x/src/91x_dma.c ****   else
+ 799:libstr91x/src/91x_dma.c **** 
+ 800:libstr91x/src/91x_dma.c ****   {
+ 801:libstr91x/src/91x_dma.c **** 
+ 802:libstr91x/src/91x_dma.c ****   return RESET;
+ 509              		.loc 1 802 0
+ 510 0200 0000A0E3 		mov	r0, #0
+ 511              	.LVL31:
+ 803:libstr91x/src/91x_dma.c **** 				
+ 804:libstr91x/src/91x_dma.c **** 
+ 805:libstr91x/src/91x_dma.c ****   }
+ 806:libstr91x/src/91x_dma.c **** 
+ 807:libstr91x/src/91x_dma.c **** }
+ 512              		.loc 1 807 0
+ 513 0204 1EFF2FE1 		bx	lr
+ 514              	.LVL32:
+ 515              	.L42:
+ 766:libstr91x/src/91x_dma.c ****     DMAReg = DMA->ISR;	
+ 516              		.loc 1 766 0
+ 517 0208 1E33A0E3 		mov	r3, #2013265920
+ 518 020c 002093E5 		ldr	r2, [r3, #0]
+ 519              	.LVL33:
+ 792:libstr91x/src/91x_dma.c ****   if((DMAReg &(1 <<  ChannelIndx )) != RESET )
+ 520              		.loc 1 792 0
+ 521 0210 01C0A0E3 		mov	ip, #1
+ 756:libstr91x/src/91x_dma.c **** ITStatus DMA_GetITStatus(u8 ChannelIndx,u8 DMA_ITReq)
+ 522              		.loc 1 756 0
+ 523 0214 1C3012E0 		ands	r3, r2, ip, asl r0
+ 795:libstr91x/src/91x_dma.c ****    return SET;
+ 524              		.loc 1 795 0
+ 525 0218 0000A003 		moveq	r0, #0
+ 526 021c 0100A013 		movne	r0, #1
+ 527              	.LVL34:
+ 528 0220 1EFF2FE1 		bx	lr
+ 529              	.LVL35:
+ 530              	.L43:
+ 772:libstr91x/src/91x_dma.c ****     DMAReg = DMA->TCISR;
+ 531              		.loc 1 772 0
+ 532 0224 1E23A0E3 		mov	r2, #2013265920
+ 533 0228 042092E5 		ldr	r2, [r2, #4]
+ 534              	.LVL36:
+ 792:libstr91x/src/91x_dma.c ****   if((DMAReg &(1 <<  ChannelIndx )) != RESET )
+ 535              		.loc 1 792 0
+ 536 022c 01C0A0E3 		mov	ip, #1
+ 756:libstr91x/src/91x_dma.c **** ITStatus DMA_GetITStatus(u8 ChannelIndx,u8 DMA_ITReq)
+ 537              		.loc 1 756 0
+ 538 0230 1C3012E0 		ands	r3, r2, ip, asl r0
+ 795:libstr91x/src/91x_dma.c ****    return SET;
+ 539              		.loc 1 795 0
+ 540 0234 0000A003 		moveq	r0, #0
+ 541 0238 0100A013 		movne	r0, #1
+ 542              	.LVL37:
+ 543 023c 1EFF2FE1 		bx	lr
+ 544              	.LVL38:
+ 545              	.L44:
+ 777:libstr91x/src/91x_dma.c ****     DMAReg = DMA->EISR;
+ 546              		.loc 1 777 0
+ 547 0240 1EC3A0E3 		mov	ip, #2013265920
+ 548 0244 0C209CE5 		ldr	r2, [ip, #12]
+ 549              	.LVL39:
+ 792:libstr91x/src/91x_dma.c ****   if((DMAReg &(1 <<  ChannelIndx )) != RESET )
+ 550              		.loc 1 792 0
+ 551 0248 01C0A0E3 		mov	ip, #1
+ 756:libstr91x/src/91x_dma.c **** ITStatus DMA_GetITStatus(u8 ChannelIndx,u8 DMA_ITReq)
+ 552              		.loc 1 756 0
+ 553 024c 1C3012E0 		ands	r3, r2, ip, asl r0
+ 795:libstr91x/src/91x_dma.c ****    return SET;
+ 554              		.loc 1 795 0
+ 555 0250 0000A003 		moveq	r0, #0
+ 556 0254 0100A013 		movne	r0, #1
+ 557              	.LVL40:
+ 558 0258 1EFF2FE1 		bx	lr
+ 559              	.LVL41:
+ 560              	.L45:
+ 782:libstr91x/src/91x_dma.c ****     DMAReg = DMA->TCRISR;
+ 561              		.loc 1 782 0
+ 562 025c 1E13A0E3 		mov	r1, #2013265920
+ 563 0260 142091E5 		ldr	r2, [r1, #20]
+ 564              	.LVL42:
+ 792:libstr91x/src/91x_dma.c ****   if((DMAReg &(1 <<  ChannelIndx )) != RESET )
+ 565              		.loc 1 792 0
+ 566 0264 01C0A0E3 		mov	ip, #1
+ 756:libstr91x/src/91x_dma.c **** ITStatus DMA_GetITStatus(u8 ChannelIndx,u8 DMA_ITReq)
+ 567              		.loc 1 756 0
+ 568 0268 1C3012E0 		ands	r3, r2, ip, asl r0
+ 795:libstr91x/src/91x_dma.c ****    return SET;
+ 569              		.loc 1 795 0
+ 570 026c 0000A003 		moveq	r0, #0
+ 571 0270 0100A013 		movne	r0, #1
+ 572              	.LVL43:
+ 573 0274 1EFF2FE1 		bx	lr
+ 574              		.cfi_endproc
+ 575              	.LFE19:
+ 577              		.align	2
+ 578              		.global	DMA_ClearIT
+ 580              	DMA_ClearIT:
+ 581              	.LFB20:
+ 808:libstr91x/src/91x_dma.c **** 
+ 809:libstr91x/src/91x_dma.c **** 
+ 810:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 811:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ClearIT
+ 812:libstr91x/src/91x_dma.c **** * Description    : Clears The Interrupt pending bits for termnal count or Error interrupts for a sp
+ 813:libstr91x/src/91x_dma.c **** *                  - ChannelIndx:specifies the DMA Channel to be checked.
+ 814:libstr91x/src/91x_dma.c **** *                   This parameter can be:
+ 815:libstr91x/src/91x_dma.c **** *				      - Channel0
+ 816:libstr91x/src/91x_dma.c **** *					  - Channel1
+ 817:libstr91x/src/91x_dma.c **** *					  - Channel2
+ 818:libstr91x/src/91x_dma.c **** *					  - Channel3
+ 819:libstr91x/src/91x_dma.c **** *					  - Channel4
+ 820:libstr91x/src/91x_dma.c **** *					  - Channel5
+ 821:libstr91x/src/91x_dma.c **** *				      - Channel6
+ 822:libstr91x/src/91x_dma.c **** *					  - Channel7
+ 823:libstr91x/src/91x_dma.c **** *				  - DMA_ITClr : Specifies the DMA interrupt pending to be cleared.
+ 824:libstr91x/src/91x_dma.c **** *.                    This parameter can be:
+ 825:libstr91x/src/91x_dma.c **** *                     - DMA_TCC
+ 826:libstr91x/src/91x_dma.c **** *					  - DMA_EC.
+ 827:libstr91x/src/91x_dma.c **** *
+ 828:libstr91x/src/91x_dma.c **** * Output         : None.
+ 829:libstr91x/src/91x_dma.c **** 
+ 830:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 831:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 832:libstr91x/src/91x_dma.c **** 
+ 833:libstr91x/src/91x_dma.c **** 
+ 834:libstr91x/src/91x_dma.c **** void DMA_ClearIT(u8 ChannelIndx,u8 DMA_ITClr)
+ 835:libstr91x/src/91x_dma.c **** 
+ 836:libstr91x/src/91x_dma.c **** {
+ 582              		.loc 1 836 0
+ 583              		.cfi_startproc
+ 584              		@ args = 0, pretend = 0, frame = 0
+ 585              		@ frame_needed = 0, uses_anonymous_args = 0
+ 586              		@ link register save eliminated.
+ 587              	.LVL44:
+ 837:libstr91x/src/91x_dma.c **** 
+ 838:libstr91x/src/91x_dma.c **** 
+ 839:libstr91x/src/91x_dma.c ****  switch(DMA_ITClr)
+ 588              		.loc 1 839 0
+ 589 0278 010051E3 		cmp	r1, #1
+ 590 027c 0700000A 		beq	.L53
+ 591 0280 020051E3 		cmp	r1, #2
+ 592 0284 1EFF2F11 		bxne	lr
+ 840:libstr91x/src/91x_dma.c **** 
+ 841:libstr91x/src/91x_dma.c ****  {
+ 842:libstr91x/src/91x_dma.c **** 
+ 843:libstr91x/src/91x_dma.c ****   case (DMA_TCC): /* Clear The status of the Terminal count interrupt on the corresponding channel.
+ 844:libstr91x/src/91x_dma.c ****     DMA->TCICR |=(1 <<  ChannelIndx );
+ 845:libstr91x/src/91x_dma.c ****     break;         	
+ 846:libstr91x/src/91x_dma.c **** 
+ 847:libstr91x/src/91x_dma.c **** 
+ 848:libstr91x/src/91x_dma.c **** 
+ 849:libstr91x/src/91x_dma.c ****   case (DMA_EC): /* Clear The status of the error interrupt on the corresponding channel.*/
+ 850:libstr91x/src/91x_dma.c ****     DMA->EICR |=(1 <<  ChannelIndx );
+ 593              		.loc 1 850 0
+ 594 0288 1EC3A0E3 		mov	ip, #2013265920
+ 595 028c 10309CE5 		ldr	r3, [ip, #16]
+ 596 0290 0110A0E3 		mov	r1, #1
+ 597              	.LVL45:
+ 598 0294 110083E1 		orr	r0, r3, r1, asl r0
+ 599              	.LVL46:
+ 600 0298 10008CE5 		str	r0, [ip, #16]
+ 601 029c 1EFF2FE1 		bx	lr
+ 602              	.LVL47:
+ 603              	.L53:
+ 844:libstr91x/src/91x_dma.c ****     DMA->TCICR |=(1 <<  ChannelIndx );
+ 604              		.loc 1 844 0
+ 605 02a0 1E33A0E3 		mov	r3, #2013265920
+ 606 02a4 082093E5 		ldr	r2, [r3, #8]
+ 607 02a8 111082E1 		orr	r1, r2, r1, asl r0
+ 608              	.LVL48:
+ 609 02ac 081083E5 		str	r1, [r3, #8]
+ 845:libstr91x/src/91x_dma.c ****     break;         	
+ 610              		.loc 1 845 0
+ 611 02b0 1EFF2FE1 		bx	lr
+ 612              		.cfi_endproc
+ 613              	.LFE20:
+ 615              		.align	2
+ 616              		.global	DMA_Cmd
+ 618              	DMA_Cmd:
+ 619              	.LFB21:
+ 851:libstr91x/src/91x_dma.c ****     break;		
+ 852:libstr91x/src/91x_dma.c **** 
+ 853:libstr91x/src/91x_dma.c **** 				
+ 854:libstr91x/src/91x_dma.c **** 
+ 855:libstr91x/src/91x_dma.c ****  }
+ 856:libstr91x/src/91x_dma.c **** 
+ 857:libstr91x/src/91x_dma.c **** 
+ 858:libstr91x/src/91x_dma.c **** 
+ 859:libstr91x/src/91x_dma.c **** }
+ 860:libstr91x/src/91x_dma.c **** 
+ 861:libstr91x/src/91x_dma.c **** 
+ 862:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 863:libstr91x/src/91x_dma.c **** * Function Name  : DMA_Cmd(FunctionalState NewState)
+ 864:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the DMA peripheral.
+ 865:libstr91x/src/91x_dma.c **** *
+ 866:libstr91x/src/91x_dma.c **** * Input          :
+ 867:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the DMA.
+ 868:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 869:libstr91x/src/91x_dma.c **** * Output         : None.
+ 870:libstr91x/src/91x_dma.c **** * Return         : None.
+ 871:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 872:libstr91x/src/91x_dma.c **** 
+ 873:libstr91x/src/91x_dma.c **** 
+ 874:libstr91x/src/91x_dma.c **** void DMA_Cmd(FunctionalState NewState)
+ 875:libstr91x/src/91x_dma.c **** 
+ 876:libstr91x/src/91x_dma.c **** {
+ 620              		.loc 1 876 0
+ 621              		.cfi_startproc
+ 622              		@ args = 0, pretend = 0, frame = 0
+ 623              		@ frame_needed = 0, uses_anonymous_args = 0
+ 624              		@ link register save eliminated.
+ 625              	.LVL49:
+ 877:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* ENABLE the DMA peripheral  */
+ 878:libstr91x/src/91x_dma.c **** 
+ 879:libstr91x/src/91x_dma.c ****   {
+ 880:libstr91x/src/91x_dma.c ****     DMA-> CNFR |= DMA_Enable ;
+ 626              		.loc 1 880 0
+ 627 02b4 1E33A0E3 		mov	r3, #2013265920
+ 628 02b8 302093E5 		ldr	r2, [r3, #48]
+ 877:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /* ENABLE the DMA peripheral  */
+ 629              		.loc 1 877 0
+ 630 02bc 010050E3 		cmp	r0, #1
+ 631              		.loc 1 880 0
+ 632 02c0 01208203 		orreq	r2, r2, #1
+ 881:libstr91x/src/91x_dma.c ****   }
+ 882:libstr91x/src/91x_dma.c **** 
+ 883:libstr91x/src/91x_dma.c ****   else /* DISABLE the DMA peripheral */
+ 884:libstr91x/src/91x_dma.c ****   {
+ 885:libstr91x/src/91x_dma.c ****     DMA-> CNFR &= ~ DMA_Enable ;
+ 633              		.loc 1 885 0
+ 634 02c4 0120C213 		bicne	r2, r2, #1
+ 635 02c8 302083E5 		str	r2, [r3, #48]
+ 636 02cc 1EFF2FE1 		bx	lr
+ 637              		.cfi_endproc
+ 638              	.LFE21:
+ 640              		.align	2
+ 641              		.global	DMA_ChannelCmd
+ 643              	DMA_ChannelCmd:
+ 644              	.LFB22:
+ 886:libstr91x/src/91x_dma.c ****   }
+ 887:libstr91x/src/91x_dma.c **** }
+ 888:libstr91x/src/91x_dma.c **** 
+ 889:libstr91x/src/91x_dma.c **** 
+ 890:libstr91x/src/91x_dma.c **** 
+ 891:libstr91x/src/91x_dma.c **** /*******************************************************************************
+ 892:libstr91x/src/91x_dma.c **** * Function Name  : DMA_ChannelCmd
+ 893:libstr91x/src/91x_dma.c **** * Description    : Enables or disables the specified DMA_Channelx
+ 894:libstr91x/src/91x_dma.c **** *
+ 895:libstr91x/src/91x_dma.c **** * Input          :
+ 896:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 897:libstr91x/src/91x_dma.c **** *                  -NewState: new state of the specified DMA_Channelx mask interrupt.
+ 898:libstr91x/src/91x_dma.c **** *                             This parameter can be: ENABLE or DISABLE.
+ 899:libstr91x/src/91x_dma.c **** * Output         : None.
+ 900:libstr91x/src/91x_dma.c **** * Return         : None.
+ 901:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 902:libstr91x/src/91x_dma.c **** 
+ 903:libstr91x/src/91x_dma.c **** 
+ 904:libstr91x/src/91x_dma.c **** void DMA_ChannelCmd (DMA_Channel_TypeDef *DMA_Channelx,FunctionalState NewState)
+ 905:libstr91x/src/91x_dma.c **** 
+ 906:libstr91x/src/91x_dma.c **** {
+ 645              		.loc 1 906 0
+ 646              		.cfi_startproc
+ 647              		@ args = 0, pretend = 0, frame = 0
+ 648              		@ frame_needed = 0, uses_anonymous_args = 0
+ 649              		@ link register save eliminated.
+ 650              	.LVL50:
+ 907:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /*  Enable The Channelx */
+ 908:libstr91x/src/91x_dma.c **** 
+ 909:libstr91x/src/91x_dma.c ****   {
+ 910:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_ChannelEnable ;
+ 651              		.loc 1 910 0
+ 652 02d0 103090E5 		ldr	r3, [r0, #16]
+ 907:libstr91x/src/91x_dma.c ****   if (NewState==ENABLE) /*  Enable The Channelx */
+ 653              		.loc 1 907 0
+ 654 02d4 010051E3 		cmp	r1, #1
+ 655              		.loc 1 910 0
+ 656 02d8 01308303 		orreq	r3, r3, #1
+ 911:libstr91x/src/91x_dma.c ****   }
+ 912:libstr91x/src/91x_dma.c **** 
+ 913:libstr91x/src/91x_dma.c ****   else /* Disable The Channelx */
+ 914:libstr91x/src/91x_dma.c ****   {
+ 915:libstr91x/src/91x_dma.c ****     DMA_Channelx-> CCNF &= ~ DMA_ChannelEnable ;
+ 657              		.loc 1 915 0
+ 658 02dc 0130C313 		bicne	r3, r3, #1
+ 659 02e0 103080E5 		str	r3, [r0, #16]
+ 660 02e4 1EFF2FE1 		bx	lr
+ 661              		.cfi_endproc
+ 662              	.LFE22:
+ 664              		.align	2
+ 665              		.global	DMA_GetChannelActiveStatus
+ 667              	DMA_GetChannelActiveStatus:
+ 668              	.LFB23:
+ 916:libstr91x/src/91x_dma.c ****   }
+ 917:libstr91x/src/91x_dma.c **** }
+ 918:libstr91x/src/91x_dma.c **** 
+ 919:libstr91x/src/91x_dma.c **** 
+ 920:libstr91x/src/91x_dma.c **** 
+ 921:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 922:libstr91x/src/91x_dma.c **** * Function Name  : DMA_GetChannelActiveStatus
+ 923:libstr91x/src/91x_dma.c **** * Description    : Checks The DMA_Channelx FIFO if it has data or not.
+ 924:libstr91x/src/91x_dma.c **** * Input          :
+ 925:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+ 926:libstr91x/src/91x_dma.c **** *
+ 927:libstr91x/src/91x_dma.c **** *
+ 928:libstr91x/src/91x_dma.c **** * Output         : None.
+ 929:libstr91x/src/91x_dma.c **** *
+ 930:libstr91x/src/91x_dma.c **** * Return         : SET or RESET.
+ 931:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 932:libstr91x/src/91x_dma.c **** 
+ 933:libstr91x/src/91x_dma.c **** 
+ 934:libstr91x/src/91x_dma.c **** FlagStatus  DMA_GetChannelActiveStatus( DMA_Channel_TypeDef * DMA_Channelx )
+ 935:libstr91x/src/91x_dma.c **** 
+ 936:libstr91x/src/91x_dma.c **** {
+ 669              		.loc 1 936 0
+ 670              		.cfi_startproc
+ 671              		@ args = 0, pretend = 0, frame = 0
+ 672              		@ frame_needed = 0, uses_anonymous_args = 0
+ 673              		@ link register save eliminated.
+ 674              	.LVL51:
+ 937:libstr91x/src/91x_dma.c **** 
+ 938:libstr91x/src/91x_dma.c ****  if ( ( DMA_Channelx->CCNF & DMA_ChannelActive) != RESET )
+ 675              		.loc 1 938 0
+ 676 02e8 103090E5 		ldr	r3, [r0, #16]
+ 939:libstr91x/src/91x_dma.c ****  {
+ 940:libstr91x/src/91x_dma.c ****    return SET; /* The DMA_Channelx FIFO has data */
+ 677              		.loc 1 940 0
+ 678 02ec 020813E3 		tst	r3, #131072
+ 941:libstr91x/src/91x_dma.c ****  }
+ 942:libstr91x/src/91x_dma.c **** 
+ 943:libstr91x/src/91x_dma.c ****  else
+ 944:libstr91x/src/91x_dma.c **** 
+ 945:libstr91x/src/91x_dma.c ****  {
+ 946:libstr91x/src/91x_dma.c **** 
+ 947:libstr91x/src/91x_dma.c ****   return RESET; /* No data in the DMA_Channelx FIFO */
+ 948:libstr91x/src/91x_dma.c **** 
+ 949:libstr91x/src/91x_dma.c **** 
+ 950:libstr91x/src/91x_dma.c ****  }
+ 951:libstr91x/src/91x_dma.c **** 
+ 952:libstr91x/src/91x_dma.c **** }
+ 679              		.loc 1 952 0
+ 680 02f0 0000A003 		moveq	r0, #0
+ 681 02f4 0100A013 		movne	r0, #1
+ 682              	.LVL52:
+ 683 02f8 1EFF2FE1 		bx	lr
+ 684              		.cfi_endproc
+ 685              	.LFE23:
+ 687              		.align	2
+ 688              		.global	DMA_DeInit
+ 690              	DMA_DeInit:
+ 691              	.LFB24:
+ 953:libstr91x/src/91x_dma.c **** 
+ 954:libstr91x/src/91x_dma.c **** 
+ 955:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 956:libstr91x/src/91x_dma.c **** * Function Name   : DMA_DeInit
+ 957:libstr91x/src/91x_dma.c **** * Description     : Initializes the DMA peripheral registers to their default reset values.
+ 958:libstr91x/src/91x_dma.c **** *
+ 959:libstr91x/src/91x_dma.c **** *
+ 960:libstr91x/src/91x_dma.c **** * Input           : None
+ 961:libstr91x/src/91x_dma.c **** *
+ 962:libstr91x/src/91x_dma.c **** * Output          : None.
+ 963:libstr91x/src/91x_dma.c **** *
+ 964:libstr91x/src/91x_dma.c **** * Called Functions:
+ 965:libstr91x/src/91x_dma.c **** *
+ 966:libstr91x/src/91x_dma.c **** *                   - SCU_AHBPeriphReset: Function defined in the System clock Unit "scu.c".
+ 967:libstr91x/src/91x_dma.c **** *
+ 968:libstr91x/src/91x_dma.c **** *
+ 969:libstr91x/src/91x_dma.c **** * Return          : None
+ 970:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 971:libstr91x/src/91x_dma.c **** 
+ 972:libstr91x/src/91x_dma.c **** 
+ 973:libstr91x/src/91x_dma.c **** void DMA_DeInit(void)
+ 974:libstr91x/src/91x_dma.c **** 
+ 975:libstr91x/src/91x_dma.c **** {
+ 692              		.loc 1 975 0
+ 693              		.cfi_startproc
+ 694              		@ args = 0, pretend = 0, frame = 0
+ 695              		@ frame_needed = 0, uses_anonymous_args = 0
+ 696 02fc 10402DE9 		stmfd	sp!, {r4, lr}
+ 697              	.LCFI0:
+ 698              		.cfi_def_cfa_offset 8
+ 976:libstr91x/src/91x_dma.c ****  
+ 977:libstr91x/src/91x_dma.c ****   SCU_AHBPeriphReset(__DMA, ENABLE);         /*DMA peripheral is under Reset " Reset on"*/
+ 699              		.loc 1 977 0
+ 700 0300 010CA0E3 		mov	r0, #256
+ 701 0304 0110A0E3 		mov	r1, #1
+ 702              		.cfi_offset 14, -4
+ 703              		.cfi_offset 4, -8
+ 704 0308 FEFFFFEB 		bl	SCU_AHBPeriphReset
+ 978:libstr91x/src/91x_dma.c ****   SCU_AHBPeriphReset(__DMA, DISABLE);        /*DMA peripheral Reset off*/
+ 705              		.loc 1 978 0
+ 706 030c 010CA0E3 		mov	r0, #256
+ 707 0310 0010A0E3 		mov	r1, #0
+ 979:libstr91x/src/91x_dma.c **** }
+ 708              		.loc 1 979 0
+ 709 0314 1040BDE8 		ldmfd	sp!, {r4, lr}
+ 978:libstr91x/src/91x_dma.c ****   SCU_AHBPeriphReset(__DMA, DISABLE);        /*DMA peripheral Reset off*/
+ 710              		.loc 1 978 0
+ 711 0318 FEFFFFEA 		b	SCU_AHBPeriphReset
+ 712              		.cfi_endproc
+ 713              	.LFE24:
+ 715              		.align	2
+ 716              		.global	DMA_StructInit
+ 718              	DMA_StructInit:
+ 719              	.LFB25:
+ 980:libstr91x/src/91x_dma.c **** 
+ 981:libstr91x/src/91x_dma.c **** 
+ 982:libstr91x/src/91x_dma.c **** 
+ 983:libstr91x/src/91x_dma.c **** /********************************************************************************
+ 984:libstr91x/src/91x_dma.c **** * Function Name  : DMA_StructInit
+ 985:libstr91x/src/91x_dma.c **** * Description    : Fills each DMA_InitStruct member with its reset value.
+ 986:libstr91x/src/91x_dma.c **** * Input          :
+ 987:libstr91x/src/91x_dma.c **** *                  -DMA_InitStruct: pointer to a DMA_InitTypeDef structure which will be initialize
+ 988:libstr91x/src/91x_dma.c **** *
+ 989:libstr91x/src/91x_dma.c **** * Output         : None.
+ 990:libstr91x/src/91x_dma.c **** *
+ 991:libstr91x/src/91x_dma.c **** * Return         : None
+ 992:libstr91x/src/91x_dma.c **** *******************************************************************************/
+ 993:libstr91x/src/91x_dma.c **** 
+ 994:libstr91x/src/91x_dma.c **** 
+ 995:libstr91x/src/91x_dma.c **** void DMA_StructInit(DMA_InitTypeDef * DMA_InitStruct)
+ 996:libstr91x/src/91x_dma.c **** 
+ 997:libstr91x/src/91x_dma.c **** {
+ 720              		.loc 1 997 0
+ 721              		.cfi_startproc
+ 722              		@ args = 0, pretend = 0, frame = 0
+ 723              		@ frame_needed = 0, uses_anonymous_args = 0
+ 724              		@ link register save eliminated.
+ 725              	.LVL53:
+ 998:libstr91x/src/91x_dma.c **** 
+ 999:libstr91x/src/91x_dma.c **** 	 /* Initialize The current source address */
+1000:libstr91x/src/91x_dma.c ****      DMA_InitStruct-> DMA_Channel_SrcAdd =0x0000000;
+ 726              		.loc 1 1000 0
+ 727 031c 0030A0E3 		mov	r3, #0
+ 728 0320 003080E5 		str	r3, [r0, #0]
+1001:libstr91x/src/91x_dma.c **** 
+1002:libstr91x/src/91x_dma.c **** 
+1003:libstr91x/src/91x_dma.c ****      /* Initialize The current Destination address */
+1004:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_DesAdd=0x00000000;
+ 729              		.loc 1 1004 0
+ 730 0324 043080E5 		str	r3, [r0, #4]
+1005:libstr91x/src/91x_dma.c **** 
+1006:libstr91x/src/91x_dma.c **** 
+1007:libstr91x/src/91x_dma.c **** 
+1008:libstr91x/src/91x_dma.c **** 	 /* Initialize The Linked List Items */
+1009:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_LLstItm=0x00000000 ;
+ 731              		.loc 1 1009 0
+ 732 0328 083080E5 		str	r3, [r0, #8]
+1010:libstr91x/src/91x_dma.c **** 
+1011:libstr91x/src/91x_dma.c **** 
+1012:libstr91x/src/91x_dma.c **** 
+1013:libstr91x/src/91x_dma.c ****      /* Initialize The Destination width */
+1014:libstr91x/src/91x_dma.c **** 	 DMA_InitStruct->DMA_Channel_DesWidth= DMA_DesWidth_Byte;
+ 733              		.loc 1 1014 0
+ 734 032c 0C3080E5 		str	r3, [r0, #12]
+1015:libstr91x/src/91x_dma.c **** 
+1016:libstr91x/src/91x_dma.c **** 
+1017:libstr91x/src/91x_dma.c **** 
+1018:libstr91x/src/91x_dma.c ****      /* Initialize The source width */
+1019:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_SrcWidth= DMA_SrcWidth_Byte;
+ 735              		.loc 1 1019 0
+ 736 0330 103080E5 		str	r3, [r0, #16]
+1020:libstr91x/src/91x_dma.c **** 
+1021:libstr91x/src/91x_dma.c **** 
+1022:libstr91x/src/91x_dma.c ****      /* Initialize The Burst Size for the Destination */
+1023:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_DesBstSize= DMA_DesBst_1Data; /* 1 Data "one Data can be byte, hal
+ 737              		.loc 1 1023 0
+ 738 0334 143080E5 		str	r3, [r0, #20]
+1024:libstr91x/src/91x_dma.c **** 
+1025:libstr91x/src/91x_dma.c **** 
+1026:libstr91x/src/91x_dma.c **** 
+1027:libstr91x/src/91x_dma.c ****      /* Initialize The Burst Size for the Source*/
+1028:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_SrcBstSize= DMA_SrcBst_1Data; /* 1 Data "one Data can be byte, hal
+ 739              		.loc 1 1028 0
+ 740 0338 183080E5 		str	r3, [r0, #24]
+1029:libstr91x/src/91x_dma.c **** 
+1030:libstr91x/src/91x_dma.c ****     /* Initialize The Flow control and transfer type for the DMA transfer */
+1031:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_FlowCntrl=DMA_FlowCntrlt0_DMA; /* memory to memory transfer with D
+ 741              		.loc 1 1031 0
+ 742 033c 203080E5 		str	r3, [r0, #32]
+1032:libstr91x/src/91x_dma.c **** 
+1033:libstr91x/src/91x_dma.c **** 
+1034:libstr91x/src/91x_dma.c ****      /* Initialize The Transfer Size */
+1035:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_TrsfSize =0x00;
+ 743              		.loc 1 1035 0
+ 744 0340 1C3080E5 		str	r3, [r0, #28]
+1036:libstr91x/src/91x_dma.c **** 
+1037:libstr91x/src/91x_dma.c **** 	
+1038:libstr91x/src/91x_dma.c **** 
+1039:libstr91x/src/91x_dma.c ****      /* Initialize the DMA source request peripheral :"This field is ignored if the source of the t
+1040:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_Src =0x00;
+ 745              		.loc 1 1040 0
+ 746 0344 243080E5 		str	r3, [r0, #36]
+1041:libstr91x/src/91x_dma.c **** 
+1042:libstr91x/src/91x_dma.c **** 
+1043:libstr91x/src/91x_dma.c **** 
+1044:libstr91x/src/91x_dma.c ****      /* Initialize the DMA Destination request peripheral :"This field is ignored if the destinatio
+1045:libstr91x/src/91x_dma.c **** 
+1046:libstr91x/src/91x_dma.c ****      DMA_InitStruct->DMA_Channel_Des=0x00;
+ 747              		.loc 1 1046 0
+ 748 0348 283080E5 		str	r3, [r0, #40]
+1047:libstr91x/src/91x_dma.c **** 
+1048:libstr91x/src/91x_dma.c **** 
+1049:libstr91x/src/91x_dma.c **** }
+ 749              		.loc 1 1049 0
+ 750 034c 1EFF2FE1 		bx	lr
+ 751              		.cfi_endproc
+ 752              	.LFE25:
+ 754              		.align	2
+ 755              		.global	DMA_Init
+ 757              	DMA_Init:
+ 758              	.LFB26:
+1050:libstr91x/src/91x_dma.c **** 
+1051:libstr91x/src/91x_dma.c **** 
+1052:libstr91x/src/91x_dma.c **** 
+1053:libstr91x/src/91x_dma.c **** 
+1054:libstr91x/src/91x_dma.c **** /********************************************************************************
+1055:libstr91x/src/91x_dma.c **** * Function Name  : DMA_Init
+1056:libstr91x/src/91x_dma.c **** * Description    : Initializes the DMA_Channelx according to the specified parameters
+1057:libstr91x/src/91x_dma.c **** *                    in the DMA_InitStruct .
+1058:libstr91x/src/91x_dma.c **** *
+1059:libstr91x/src/91x_dma.c **** * Input          :
+1060:libstr91x/src/91x_dma.c **** *                  -DMA_Channelx: where x can be 0,1,2,3,4,5,6,or 7 to select the DMA Channel.
+1061:libstr91x/src/91x_dma.c **** *				  -DMA_InitStruct: pointer to a DMA_InitTypeDef structure
+1062:libstr91x/src/91x_dma.c **** *				  ( Structure Config to be load in DMA Registers). .
+1063:libstr91x/src/91x_dma.c **** *
+1064:libstr91x/src/91x_dma.c **** * Output         : None.
+1065:libstr91x/src/91x_dma.c **** *
+1066:libstr91x/src/91x_dma.c **** * Return         : None
+1067:libstr91x/src/91x_dma.c **** *******************************************************************************/
+1068:libstr91x/src/91x_dma.c **** 
+1069:libstr91x/src/91x_dma.c **** 
+1070:libstr91x/src/91x_dma.c **** void DMA_Init(DMA_Channel_TypeDef * DMA_Channelx, DMA_InitTypeDef * DMA_InitStruct)
+1071:libstr91x/src/91x_dma.c **** 
+1072:libstr91x/src/91x_dma.c **** {
+ 759              		.loc 1 1072 0
+ 760              		.cfi_startproc
+ 761              		@ args = 0, pretend = 0, frame = 0
+ 762              		@ frame_needed = 0, uses_anonymous_args = 0
+ 763              		@ link register save eliminated.
+ 764              	.LVL54:
+1073:libstr91x/src/91x_dma.c **** 
+1074:libstr91x/src/91x_dma.c **** 
+1075:libstr91x/src/91x_dma.c **** 
+1076:libstr91x/src/91x_dma.c ****    /* Select the DMA source peripheral request */
+1077:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= SRC_Mask;
+ 765              		.loc 1 1077 0
+ 766 0350 102090E5 		ldr	r2, [r0, #16]
+1072:libstr91x/src/91x_dma.c **** {
+ 767              		.loc 1 1072 0
+ 768 0354 30002DE9 		stmfd	sp!, {r4, r5}
+ 769              	.LCFI1:
+ 770              		.cfi_def_cfa_offset 8
+ 771              		.loc 1 1077 0
+ 772 0358 1E50C2E3 		bic	r5, r2, #30
+ 773              		.cfi_offset 5, -4
+ 774              		.cfi_offset 4, -8
+ 775 035c 105080E5 		str	r5, [r0, #16]
+1078:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_InitStruct->DMA_Channel_Src;
+ 776              		.loc 1 1078 0
+ 777 0360 10C090E5 		ldr	ip, [r0, #16]
+ 778 0364 243091E5 		ldr	r3, [r1, #36]
+1079:libstr91x/src/91x_dma.c **** 
+1080:libstr91x/src/91x_dma.c **** 
+1081:libstr91x/src/91x_dma.c ****  /* Select the flow controller and the transfer type */
+1082:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= DMA_FlowCntrl_Mask;
+1083:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |=DMA_InitStruct->DMA_Channel_FlowCntrl;
+ 779              		.loc 1 1083 0
+ 780 0368 205091E5 		ldr	r5, [r1, #32]
+1078:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_InitStruct->DMA_Channel_Src;
+ 781              		.loc 1 1078 0
+ 782 036c 03408CE1 		orr	r4, ip, r3
+ 783 0370 104080E5 		str	r4, [r0, #16]
+1082:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= DMA_FlowCntrl_Mask;
+ 784              		.loc 1 1082 0
+ 785 0374 102090E5 		ldr	r2, [r0, #16]
+1084:libstr91x/src/91x_dma.c **** 
+1085:libstr91x/src/91x_dma.c **** 
+1086:libstr91x/src/91x_dma.c ****     /* Select the DMA Destination peripheral request*/
+1087:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= DES_Mask;
+1088:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_InitStruct->DMA_Channel_Des;
+ 786              		.loc 1 1088 0
+ 787 0378 284091E5 		ldr	r4, [r1, #40]
+1082:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= DMA_FlowCntrl_Mask;
+ 788              		.loc 1 1082 0
+ 789 037c 0ECBC2E3 		bic	ip, r2, #14336
+ 790 0380 10C080E5 		str	ip, [r0, #16]
+1083:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |=DMA_InitStruct->DMA_Channel_FlowCntrl;
+ 791              		.loc 1 1083 0
+ 792 0384 103090E5 		ldr	r3, [r0, #16]
+1089:libstr91x/src/91x_dma.c **** 
+1090:libstr91x/src/91x_dma.c ****     /* Set the source address */
+1091:libstr91x/src/91x_dma.c ****     DMA_Channelx->SRC = DMA_InitStruct-> DMA_Channel_SrcAdd ;
+ 793              		.loc 1 1091 0
+ 794 0388 00C091E5 		ldr	ip, [r1, #0]
+1083:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |=DMA_InitStruct->DMA_Channel_FlowCntrl;
+ 795              		.loc 1 1083 0
+ 796 038c 052083E1 		orr	r2, r3, r5
+ 797 0390 102080E5 		str	r2, [r0, #16]
+1087:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= DES_Mask;
+ 798              		.loc 1 1087 0
+ 799 0394 103090E5 		ldr	r3, [r0, #16]
+1092:libstr91x/src/91x_dma.c **** 
+1093:libstr91x/src/91x_dma.c **** 
+1094:libstr91x/src/91x_dma.c **** 	 /* Set the destination address */
+1095:libstr91x/src/91x_dma.c **** 
+1096:libstr91x/src/91x_dma.c ****     DMA_Channelx->DES = DMA_InitStruct->DMA_Channel_DesAdd ;
+ 800              		.loc 1 1096 0
+ 801 0398 042091E5 		ldr	r2, [r1, #4]
+1087:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF &= DES_Mask;
+ 802              		.loc 1 1087 0
+ 803 039c 0F5DC3E3 		bic	r5, r3, #960
+ 804 03a0 105080E5 		str	r5, [r0, #16]
+1088:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_InitStruct->DMA_Channel_Des;
+ 805              		.loc 1 1088 0
+ 806 03a4 105090E5 		ldr	r5, [r0, #16]
+1097:libstr91x/src/91x_dma.c **** 
+1098:libstr91x/src/91x_dma.c **** 
+1099:libstr91x/src/91x_dma.c **** 
+1100:libstr91x/src/91x_dma.c ****     /* Set the linked list Items address */
+1101:libstr91x/src/91x_dma.c ****     DMA_Channelx->LLI = DMA_InitStruct->DMA_Channel_LLstItm ;
+ 807              		.loc 1 1101 0
+ 808 03a8 083091E5 		ldr	r3, [r1, #8]
+1088:libstr91x/src/91x_dma.c ****     DMA_Channelx->CCNF |= DMA_InitStruct->DMA_Channel_Des;
+ 809              		.loc 1 1088 0
+ 810 03ac 044085E1 		orr	r4, r5, r4
+ 811 03b0 104080E5 		str	r4, [r0, #16]
+1091:libstr91x/src/91x_dma.c ****     DMA_Channelx->SRC = DMA_InitStruct-> DMA_Channel_SrcAdd ;
+ 812              		.loc 1 1091 0
+ 813 03b4 00C080E5 		str	ip, [r0, #0]
+1096:libstr91x/src/91x_dma.c ****     DMA_Channelx->DES = DMA_InitStruct->DMA_Channel_DesAdd ;
+ 814              		.loc 1 1096 0
+ 815 03b8 042080E5 		str	r2, [r0, #4]
+ 816              		.loc 1 1101 0
+ 817 03bc 083080E5 		str	r3, [r0, #8]
+1102:libstr91x/src/91x_dma.c **** 
+1103:libstr91x/src/91x_dma.c **** 
+1104:libstr91x/src/91x_dma.c ****     /* Set The Destination width */
+1105:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Width_DES_MASK;
+ 818              		.loc 1 1105 0
+ 819 03c0 0CC090E5 		ldr	ip, [r0, #12]
+1106:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_InitStruct->DMA_Channel_DesWidth;
+ 820              		.loc 1 1106 0
+ 821 03c4 0C3091E5 		ldr	r3, [r1, #12]
+1105:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Width_DES_MASK;
+ 822              		.loc 1 1105 0
+ 823 03c8 0E26CCE3 		bic	r2, ip, #14680064
+ 824 03cc 0C2080E5 		str	r2, [r0, #12]
+ 825              		.loc 1 1106 0
+ 826 03d0 0CC090E5 		ldr	ip, [r0, #12]
+1107:libstr91x/src/91x_dma.c **** 
+1108:libstr91x/src/91x_dma.c **** 
+1109:libstr91x/src/91x_dma.c ****     /* Set The Source width  */
+1110:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Width_SRC_MASK;
+1111:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_InitStruct->DMA_Channel_SrcWidth;
+ 827              		.loc 1 1111 0
+ 828 03d4 102091E5 		ldr	r2, [r1, #16]
+1106:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_InitStruct->DMA_Channel_DesWidth;
+ 829              		.loc 1 1106 0
+ 830 03d8 03308CE1 		orr	r3, ip, r3
+ 831 03dc 0C3080E5 		str	r3, [r0, #12]
+1110:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Width_SRC_MASK;
+ 832              		.loc 1 1110 0
+ 833 03e0 0CC090E5 		ldr	ip, [r0, #12]
+1112:libstr91x/src/91x_dma.c **** 
+1113:libstr91x/src/91x_dma.c ****     /* Set The Burst Size for the Destination */
+1114:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Bst_DES_MASK;
+1115:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_InitStruct->DMA_Channel_DesBstSize;
+ 834              		.loc 1 1115 0
+ 835 03e4 143091E5 		ldr	r3, [r1, #20]
+1110:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Width_SRC_MASK;
+ 836              		.loc 1 1110 0
+ 837 03e8 07C7CCE3 		bic	ip, ip, #1835008
+ 838 03ec 0CC080E5 		str	ip, [r0, #12]
+1111:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_InitStruct->DMA_Channel_SrcWidth;
+ 839              		.loc 1 1111 0
+ 840 03f0 0CC090E5 		ldr	ip, [r0, #12]
+ 841 03f4 02208CE1 		orr	r2, ip, r2
+ 842 03f8 0C2080E5 		str	r2, [r0, #12]
+1114:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_Bst_DES_MASK;
+ 843              		.loc 1 1114 0
+ 844 03fc 0CC090E5 		ldr	ip, [r0, #12]
+ 845 0400 0E29CCE3 		bic	r2, ip, #229376
+ 846 0404 0C2080E5 		str	r2, [r0, #12]
+ 847              		.loc 1 1115 0
+ 848 0408 0CC090E5 		ldr	ip, [r0, #12]
+ 849 040c 03208CE1 		orr	r2, ip, r3
+ 850 0410 0C2080E5 		str	r2, [r0, #12]
+1116:libstr91x/src/91x_dma.c **** 
+1117:libstr91x/src/91x_dma.c ****    /* Set The Burst Size for the Source */
+1118:libstr91x/src/91x_dma.c ****    DMA_Channelx->CC &= DMA_Bst_SRC_MASK;
+ 851              		.loc 1 1118 0
+ 852 0414 0C3090E5 		ldr	r3, [r0, #12]
+1119:libstr91x/src/91x_dma.c ****    DMA_Channelx->CC |=DMA_InitStruct->DMA_Channel_SrcBstSize;
+ 853              		.loc 1 1119 0
+ 854 0418 182091E5 		ldr	r2, [r1, #24]
+1118:libstr91x/src/91x_dma.c ****    DMA_Channelx->CC &= DMA_Bst_SRC_MASK;
+ 855              		.loc 1 1118 0
+ 856 041c 07CAC3E3 		bic	ip, r3, #28672
+ 857 0420 0CC080E5 		str	ip, [r0, #12]
+ 858              		.loc 1 1119 0
+ 859 0424 0C3090E5 		ldr	r3, [r0, #12]
+1120:libstr91x/src/91x_dma.c **** 
+1121:libstr91x/src/91x_dma.c **** 
+1122:libstr91x/src/91x_dma.c ****     /* Initialize The Transfer Size for the Source */
+1123:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_TrsfSisze_Mask;
+1124:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC |= DMA_InitStruct->DMA_Channel_TrsfSize;
+ 860              		.loc 1 1124 0
+ 861 0428 1C1091E5 		ldr	r1, [r1, #28]
+ 862              	.LVL55:
+1119:libstr91x/src/91x_dma.c ****    DMA_Channelx->CC |=DMA_InitStruct->DMA_Channel_SrcBstSize;
+ 863              		.loc 1 1119 0
+ 864 042c 02C083E1 		orr	ip, r3, r2
+ 865 0430 0CC080E5 		str	ip, [r0, #12]
+1123:libstr91x/src/91x_dma.c ****     DMA_Channelx->CC &= DMA_TrsfSisze_Mask;
+ 866              		.loc 1 1123 0
+ 867 0434 0C2090E5 		ldr	r2, [r0, #12]
+ 868 0438 FF3EC2E3 		bic	r3, r2, #4080
+ 869 043c 0FC0C3E3 		bic	ip, r3, #15
+ 870 0440 0CC080E5 		str	ip, [r0, #12]
+ 871              		.loc 1 1124 0
+ 872 0444 0C2090E5 		ldr	r2, [r0, #12]
+ 873 0448 013082E1 		orr	r3, r2, r1
+ 874 044c 0C3080E5 		str	r3, [r0, #12]
+1125:libstr91x/src/91x_dma.c **** 
+1126:libstr91x/src/91x_dma.c **** 
+1127:libstr91x/src/91x_dma.c **** }
+ 875              		.loc 1 1127 0
+ 876 0450 3000BDE8 		ldmfd	sp!, {r4, r5}
+ 877 0454 1EFF2FE1 		bx	lr
+ 878              		.cfi_endproc
+ 879              	.LFE26:
+ 881              		.align	2
+ 882              		.global	DMA_LLI_CCR_Init
+ 884              	DMA_LLI_CCR_Init:
+ 885              	.LFB27:
+1128:libstr91x/src/91x_dma.c **** 
+1129:libstr91x/src/91x_dma.c **** 
+1130:libstr91x/src/91x_dma.c **** /********************************************************************************
+1131:libstr91x/src/91x_dma.c **** * Function Name  : DMA_LLI_CCR_Init
+1132:libstr91x/src/91x_dma.c **** * Description    : Return linked list's control word  according to the specified 
+1133:libstr91x/src/91x_dma.c **** *                  parameters in the LLI_CCR_InitStruct .
+1134:libstr91x/src/91x_dma.c **** *
+1135:libstr91x/src/91x_dma.c **** * Input          : -LLI_CCR_InitStruct: pointer to a LLI_CCR_InitTypeDef structure
+1136:libstr91x/src/91x_dma.c **** *		 ( Structure Config to be load in DMA Registers). .
+1137:libstr91x/src/91x_dma.c **** *
+1138:libstr91x/src/91x_dma.c **** * Output         :  None.
+1139:libstr91x/src/91x_dma.c **** *
+1140:libstr91x/src/91x_dma.c **** * Return         : Control word
+1141:libstr91x/src/91x_dma.c **** *******************************************************************************/
+1142:libstr91x/src/91x_dma.c **** 
+1143:libstr91x/src/91x_dma.c **** 
+1144:libstr91x/src/91x_dma.c **** u32 DMA_LLI_CCR_Init(LLI_CCR_InitTypeDef * LLI_CCR_InitStruct)
+1145:libstr91x/src/91x_dma.c **** 
+1146:libstr91x/src/91x_dma.c **** {
+ 886              		.loc 1 1146 0
+ 887              		.cfi_startproc
+ 888              		@ args = 0, pretend = 0, frame = 0
+ 889              		@ frame_needed = 0, uses_anonymous_args = 0
+ 890              		@ link register save eliminated.
+ 891              	.LVL56:
+1147:libstr91x/src/91x_dma.c ****     u32 CC=0;
+1148:libstr91x/src/91x_dma.c ****    /* Set The Destination width */
+1149:libstr91x/src/91x_dma.c ****     CC &= DMA_Width_DES_MASK;
+1150:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_DesWidth;
+1151:libstr91x/src/91x_dma.c **** 
+1152:libstr91x/src/91x_dma.c ****     /* Set The Source width  */
+1153:libstr91x/src/91x_dma.c ****     CC &= DMA_Width_SRC_MASK;
+ 892              		.loc 1 1153 0
+ 893 0458 102090E5 		ldr	r2, [r0, #16]
+1154:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_SrcWidth;
+ 894              		.loc 1 1154 0
+ 895 045c 0C3090E5 		ldr	r3, [r0, #12]
+1153:libstr91x/src/91x_dma.c ****     CC &= DMA_Width_SRC_MASK;
+ 896              		.loc 1 1153 0
+ 897 0460 07C7C2E3 		bic	ip, r2, #1835008
+ 898              	.LVL57:
+ 899              		.loc 1 1154 0
+ 900 0464 03108CE1 		orr	r1, ip, r3
+ 901              	.LVL58:
+1155:libstr91x/src/91x_dma.c **** 
+1156:libstr91x/src/91x_dma.c ****     /* Set The Burst Size for the Destination */
+1157:libstr91x/src/91x_dma.c ****     CC &= DMA_Bst_DES_MASK;
+1158:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_DesBstSize;
+ 902              		.loc 1 1158 0
+ 903 0468 083090E5 		ldr	r3, [r0, #8]
+1157:libstr91x/src/91x_dma.c ****     CC &= DMA_Bst_DES_MASK;
+ 904              		.loc 1 1157 0
+ 905 046c 0E29C1E3 		bic	r2, r1, #229376
+ 906              	.LVL59:
+ 907              		.loc 1 1158 0
+ 908 0470 03C082E1 		orr	ip, r2, r3
+ 909              	.LVL60:
+1159:libstr91x/src/91x_dma.c **** 
+1160:libstr91x/src/91x_dma.c ****    /* Set The Burst Size for the Source */
+1161:libstr91x/src/91x_dma.c ****     CC &= DMA_Bst_SRC_MASK;
+1162:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_SrcBstSize;
+ 910              		.loc 1 1162 0
+ 911 0474 041090E5 		ldr	r1, [r0, #4]
+1161:libstr91x/src/91x_dma.c ****     CC &= DMA_Bst_SRC_MASK;
+ 912              		.loc 1 1161 0
+ 913 0478 072ACCE3 		bic	r2, ip, #28672
+ 914              	.LVL61:
+ 915              		.loc 1 1162 0
+ 916 047c 013082E1 		orr	r3, r2, r1
+ 917              	.LVL62:
+1163:libstr91x/src/91x_dma.c **** 
+1164:libstr91x/src/91x_dma.c ****     /* Initialize The Transfer Size for the Source */
+1165:libstr91x/src/91x_dma.c ****     CC &= DMA_TrsfSisze_Mask;
+ 918              		.loc 1 1165 0
+ 919 0480 FFCEC3E3 		bic	ip, r3, #4080
+1166:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_TrsfSize;
+ 920              		.loc 1 1166 0
+ 921 0484 001090E5 		ldr	r1, [r0, #0]
+1165:libstr91x/src/91x_dma.c ****     CC &= DMA_TrsfSisze_Mask;
+ 922              		.loc 1 1165 0
+ 923 0488 0F20CCE3 		bic	r2, ip, #15
+ 924              	.LVL63:
+ 925              		.loc 1 1166 0
+ 926 048c 013082E1 		orr	r3, r2, r1
+ 927              	.LVL64:
+1167:libstr91x/src/91x_dma.c ****     
+1168:libstr91x/src/91x_dma.c ****     /* Enable or disable source increment*/
+1169:libstr91x/src/91x_dma.c ****     CC &= DMA_SrcIncrement_MASK	;
+1170:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_SrcIncrement;
+ 928              		.loc 1 1170 0
+ 929 0490 14C090E5 		ldr	ip, [r0, #20]
+1169:libstr91x/src/91x_dma.c ****     CC &= DMA_SrcIncrement_MASK	;
+ 930              		.loc 1 1169 0
+ 931 0494 0113C3E3 		bic	r1, r3, #67108864
+ 932              	.LVL65:
+ 933              		.loc 1 1170 0
+ 934 0498 0C2081E1 		orr	r2, r1, ip
+ 935              	.LVL66:
+1171:libstr91x/src/91x_dma.c ****     
+1172:libstr91x/src/91x_dma.c ****     /* Enable or disable destination increment*/
+1173:libstr91x/src/91x_dma.c ****     CC &= DMA_DesIncrement_MASK ;
+1174:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_DesIncrement;
+ 936              		.loc 1 1174 0
+ 937 049c 183090E5 		ldr	r3, [r0, #24]
+1173:libstr91x/src/91x_dma.c ****     CC &= DMA_DesIncrement_MASK ;
+ 938              		.loc 1 1173 0
+ 939 04a0 02C3C2E3 		bic	ip, r2, #134217728
+ 940              	.LVL67:
+ 941              		.loc 1 1174 0
+ 942 04a4 03108CE1 		orr	r1, ip, r3
+ 943              	.LVL68:
+1175:libstr91x/src/91x_dma.c ****     
+1176:libstr91x/src/91x_dma.c ****     /* Enable or disable cacheable access*/
+1177:libstr91x/src/91x_dma.c ****     CC &= DMA_CacheableAccess_MASK;
+1178:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_PROT0;
+ 944              		.loc 1 1178 0
+ 945 04a8 1C3090E5 		ldr	r3, [r0, #28]
+1177:libstr91x/src/91x_dma.c ****     CC &= DMA_CacheableAccess_MASK;
+ 946              		.loc 1 1177 0
+ 947 04ac 0122C1E3 		bic	r2, r1, #268435456
+ 948              	.LVL69:
+ 949              		.loc 1 1178 0
+ 950 04b0 03C082E1 		orr	ip, r2, r3
+ 951              	.LVL70:
+1179:libstr91x/src/91x_dma.c ****     
+1180:libstr91x/src/91x_dma.c ****     /* Enable or disable bufferable access*/
+1181:libstr91x/src/91x_dma.c ****     CC &= DMA_BufferableAccess_MASK;
+1182:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_PROT1;
+ 952              		.loc 1 1182 0
+ 953 04b4 201090E5 		ldr	r1, [r0, #32]
+1181:libstr91x/src/91x_dma.c ****     CC &= DMA_BufferableAccess_MASK;
+ 954              		.loc 1 1181 0
+ 955 04b8 0222CCE3 		bic	r2, ip, #536870912
+ 956              	.LVL71:
+ 957              		.loc 1 1182 0
+ 958 04bc 013082E1 		orr	r3, r2, r1
+ 959              	.LVL72:
+1183:libstr91x/src/91x_dma.c ****     
+1184:libstr91x/src/91x_dma.c ****     /* Enable or disablePrivileged mode*/
+1185:libstr91x/src/91x_dma.c ****     CC &=  DMA_PrivilegedAccess_MASK;
+1186:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_PROT2;
+ 960              		.loc 1 1186 0
+ 961 04c0 24C090E5 		ldr	ip, [r0, #36]
+1185:libstr91x/src/91x_dma.c ****     CC &=  DMA_PrivilegedAccess_MASK;
+ 962              		.loc 1 1185 0
+ 963 04c4 0111C3E3 		bic	r1, r3, #1073741824
+ 964              	.LVL73:
+ 965              		.loc 1 1186 0
+ 966 04c8 0C2081E1 		orr	r2, r1, ip
+ 967              	.LVL74:
+1187:libstr91x/src/91x_dma.c ****     
+1188:libstr91x/src/91x_dma.c ****     /* Enable or disable Terminal count interrupt*/
+1189:libstr91x/src/91x_dma.c ****     CC &=  DMA_TCInterrupt_MASK ;
+1190:libstr91x/src/91x_dma.c ****     CC |= LLI_CCR_InitStruct->LLI_TCInterrupt;
+ 968              		.loc 1 1190 0
+ 969 04cc 283090E5 		ldr	r3, [r0, #40]
+1189:libstr91x/src/91x_dma.c ****     CC &=  DMA_TCInterrupt_MASK ;
+ 970              		.loc 1 1189 0
+ 971 04d0 0201C2E3 		bic	r0, r2, #-2147483648
+ 972              	.LVL75:
+1191:libstr91x/src/91x_dma.c ****     return CC;
+1192:libstr91x/src/91x_dma.c **** }
+ 973              		.loc 1 1192 0
+ 974 04d4 030080E1 		orr	r0, r0, r3
+ 975 04d8 1EFF2FE1 		bx	lr
+ 976              		.cfi_endproc
+ 977              	.LFE27:
+ 979              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_dma.c
+     /tmp/ccpbty6U.s:21     .text:00000000 $a
+     /tmp/ccpbty6U.s:24     .text:00000000 DMA_ITMaskConfig
+     /tmp/ccpbty6U.s:50     .text:00000018 DMA_ITConfig
+     /tmp/ccpbty6U.s:74     .text:00000030 DMA_SyncConfig
+     /tmp/ccpbty6U.s:100    .text:0000004c DMA_SetSReq
+     /tmp/ccpbty6U.s:121    .text:00000060 DMA_SetLSReq
+     /tmp/ccpbty6U.s:142    .text:00000074 DMA_SetBReq
+     /tmp/ccpbty6U.s:163    .text:00000088 DMA_SetLBReq
+     /tmp/ccpbty6U.s:184    .text:0000009c DMA_GetSReq
+     /tmp/ccpbty6U.s:208    .text:000000b4 DMA_GetLSReq
+     /tmp/ccpbty6U.s:232    .text:000000cc DMA_GetBReq
+     /tmp/ccpbty6U.s:256    .text:000000e4 DMA_GetLBReq
+     /tmp/ccpbty6U.s:280    .text:000000fc DMA_ChannelHalt
+     /tmp/ccpbty6U.s:304    .text:00000114 DMA_ChannelLockTrsf
+     /tmp/ccpbty6U.s:328    .text:0000012c DMA_ChannelCache
+     /tmp/ccpbty6U.s:352    .text:00000144 DMA_ChannelBuffering
+     /tmp/ccpbty6U.s:376    .text:0000015c DMA_ChannelProt0Mode
+     /tmp/ccpbty6U.s:400    .text:00000174 DMA_ChannelSRCIncConfig
+     /tmp/ccpbty6U.s:424    .text:0000018c DMA_ChannelDESIncConfig
+     /tmp/ccpbty6U.s:448    .text:000001a4 DMA_GetChannelStatus
+     /tmp/ccpbty6U.s:473    .text:000001c0 DMA_GetITStatus
+     /tmp/ccpbty6U.s:488    .text:000001d0 $d
+     /tmp/ccpbty6U.s:495    .text:000001e4 $a
+     /tmp/ccpbty6U.s:580    .text:00000278 DMA_ClearIT
+     /tmp/ccpbty6U.s:618    .text:000002b4 DMA_Cmd
+     /tmp/ccpbty6U.s:643    .text:000002d0 DMA_ChannelCmd
+     /tmp/ccpbty6U.s:667    .text:000002e8 DMA_GetChannelActiveStatus
+     /tmp/ccpbty6U.s:690    .text:000002fc DMA_DeInit
+     /tmp/ccpbty6U.s:718    .text:0000031c DMA_StructInit
+     /tmp/ccpbty6U.s:757    .text:00000350 DMA_Init
+     /tmp/ccpbty6U.s:884    .text:00000458 DMA_LLI_CCR_Init
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_AHBPeriphReset

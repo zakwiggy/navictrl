@@ -1,0 +1,642 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_wdg.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	WDG_StructInit
+  24              	WDG_StructInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_wdg.c"
+   1:libstr91x/src/91x_wdg.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_wdg.c **** * File Name          : 91x_wdg.c
+   3:libstr91x/src/91x_wdg.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_wdg.c **** * Version            : V2.1
+   5:libstr91x/src/91x_wdg.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_wdg.c **** * Description        : This file provides all the WDG firmware functions.
+   7:libstr91x/src/91x_wdg.c **** ********************************************************************************
+   8:libstr91x/src/91x_wdg.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_wdg.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_wdg.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_wdg.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_wdg.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_wdg.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+  15:libstr91x/src/91x_wdg.c **** 
+  16:libstr91x/src/91x_wdg.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_wdg.c **** #include "91x_wdg.h"
+  18:libstr91x/src/91x_wdg.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_wdg.c **** /* Private typedef -----------------------------------------------------------*/
+  20:libstr91x/src/91x_wdg.c **** /* Private define ------------------------------------------------------------*/
+  21:libstr91x/src/91x_wdg.c **** 
+  22:libstr91x/src/91x_wdg.c **** 
+  23:libstr91x/src/91x_wdg.c **** /* WDG End of Count interrupt Flag */
+  24:libstr91x/src/91x_wdg.c **** #define WDG_FLAG_EC  0x0001
+  25:libstr91x/src/91x_wdg.c **** 
+  26:libstr91x/src/91x_wdg.c **** 
+  27:libstr91x/src/91x_wdg.c **** /* WDG End of Count interrupt request */
+  28:libstr91x/src/91x_wdg.c **** #define WDG_IT_EC    0x0001
+  29:libstr91x/src/91x_wdg.c **** 
+  30:libstr91x/src/91x_wdg.c **** 
+  31:libstr91x/src/91x_wdg.c **** 
+  32:libstr91x/src/91x_wdg.c **** /* WDG Start/Stop counter */
+  33:libstr91x/src/91x_wdg.c **** #define WDG_Counter_Start  0x0002
+  34:libstr91x/src/91x_wdg.c **** #define WDG_Counter_Stop   0xFFFD
+  35:libstr91x/src/91x_wdg.c **** 
+  36:libstr91x/src/91x_wdg.c **** 
+  37:libstr91x/src/91x_wdg.c **** /* Private macro -------------------------------------------------------------*/
+  38:libstr91x/src/91x_wdg.c **** /* Private variables ---------------------------------------------------------*/
+  39:libstr91x/src/91x_wdg.c **** /* Registers reset value */
+  40:libstr91x/src/91x_wdg.c **** /* Private function prototypes -----------------------------------------------*/
+  41:libstr91x/src/91x_wdg.c **** /* Private functions ---------------------------------------------------------*/
+  42:libstr91x/src/91x_wdg.c **** 
+  43:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+  44:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_StructInit
+  45:libstr91x/src/91x_wdg.c **** * Description    : Fills the WDG_InitTypeDef structure member with its reset
+  46:libstr91x/src/91x_wdg.c **** *                  value.
+  47:libstr91x/src/91x_wdg.c **** * Input          : WDG_InitStruct : pointer to a WDG_InitTypeDef structure
+  48:libstr91x/src/91x_wdg.c **** *                  which will be initialized.
+  49:libstr91x/src/91x_wdg.c **** * Output         : None
+  50:libstr91x/src/91x_wdg.c **** * Return         : None
+  51:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+  52:libstr91x/src/91x_wdg.c **** void WDG_StructInit(WDG_InitTypeDef *WDG_InitStruct)
+  53:libstr91x/src/91x_wdg.c **** {
+  27              		.loc 1 53 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  54:libstr91x/src/91x_wdg.c **** 
+  55:libstr91x/src/91x_wdg.c ****   /* Select the source clock */
+  56:libstr91x/src/91x_wdg.c ****   WDG_InitStruct-> WDG_ClockSource = WDG_ClockSource_Apb;
+  33              		.loc 1 56 0
+  34 0000 0420E0E3 		mvn	r2, #4	@ movhi
+  57:libstr91x/src/91x_wdg.c **** 
+  58:libstr91x/src/91x_wdg.c ****    /* Initialize Prescaler */
+  59:libstr91x/src/91x_wdg.c ****   WDG_InitStruct->WDG_Prescaler =0xFF;
+  35              		.loc 1 59 0
+  36 0004 FF10A0E3 		mov	r1, #255	@ movhi
+  60:libstr91x/src/91x_wdg.c **** 
+  61:libstr91x/src/91x_wdg.c ****   /* Initialize Preload */
+  62:libstr91x/src/91x_wdg.c ****   WDG_InitStruct->WDG_Preload =0xFFFF;
+  37              		.loc 1 62 0
+  38 0008 0030E0E3 		mvn	r3, #0	@ movhi
+  56:libstr91x/src/91x_wdg.c ****   WDG_InitStruct-> WDG_ClockSource = WDG_ClockSource_Apb;
+  39              		.loc 1 56 0
+  40 000c B020C0E1 		strh	r2, [r0, #0]	@ movhi
+  59:libstr91x/src/91x_wdg.c ****   WDG_InitStruct->WDG_Prescaler =0xFF;
+  41              		.loc 1 59 0
+  42 0010 B210C0E1 		strh	r1, [r0, #2]	@ movhi
+  43              		.loc 1 62 0
+  44 0014 B430C0E1 		strh	r3, [r0, #4]	@ movhi
+  63:libstr91x/src/91x_wdg.c **** 
+  64:libstr91x/src/91x_wdg.c **** 
+  65:libstr91x/src/91x_wdg.c **** }
+  45              		.loc 1 65 0
+  46 0018 1EFF2FE1 		bx	lr
+  47              		.cfi_endproc
+  48              	.LFE0:
+  50              		.align	2
+  51              		.global	WDG_Init
+  53              	WDG_Init:
+  54              	.LFB1:
+  66:libstr91x/src/91x_wdg.c **** 
+  67:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+  68:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_Init
+  69:libstr91x/src/91x_wdg.c **** * Description    : Initializes WDG  peripheral according to the specified
+  70:libstr91x/src/91x_wdg.c **** *                  parameters in the WDG_InitStruct.
+  71:libstr91x/src/91x_wdg.c **** * Input          : WDG_InitStruct: pointer to a WDG_InitTypeDef structure that
+  72:libstr91x/src/91x_wdg.c **** *                  contains the configuration information for the WDG peripheral.
+  73:libstr91x/src/91x_wdg.c **** * Output         : None
+  74:libstr91x/src/91x_wdg.c **** * Return         : None
+  75:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+  76:libstr91x/src/91x_wdg.c **** void WDG_Init(WDG_InitTypeDef* WDG_InitStruct)
+  77:libstr91x/src/91x_wdg.c **** {
+  55              		.loc 1 77 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              	.LVL1:
+  78:libstr91x/src/91x_wdg.c **** 
+  79:libstr91x/src/91x_wdg.c **** 
+  80:libstr91x/src/91x_wdg.c ****  if(WDG_InitStruct->WDG_ClockSource == WDG_ClockSource_Apb)
+  61              		.loc 1 80 0
+  62 001c B0C0D0E1 		ldrh	ip, [r0, #0]
+  63 0020 38209FE5 		ldr	r2, .L5
+  81:libstr91x/src/91x_wdg.c ****   {
+  82:libstr91x/src/91x_wdg.c ****     /* Select The APB clock as clock source */
+  83:libstr91x/src/91x_wdg.c ****     WDG->CR &= WDG_ClockSource_Apb;
+  84:libstr91x/src/91x_wdg.c ****   }
+  85:libstr91x/src/91x_wdg.c **** 
+  86:libstr91x/src/91x_wdg.c ****   else
+  87:libstr91x/src/91x_wdg.c ****   {
+  88:libstr91x/src/91x_wdg.c ****     /* Select the RTC clock as source */
+  89:libstr91x/src/91x_wdg.c ****     WDG->CR |= WDG_ClockSource_Rtc ;
+  90:libstr91x/src/91x_wdg.c ****   }
+  91:libstr91x/src/91x_wdg.c **** 
+  92:libstr91x/src/91x_wdg.c ****   /* Configure WDG Prescaler register value */
+  93:libstr91x/src/91x_wdg.c ****   WDG->PR = WDG_InitStruct->WDG_Prescaler;
+  64              		.loc 1 93 0
+  65 0024 38309FE5 		ldr	r3, .L5+4
+  80:libstr91x/src/91x_wdg.c ****  if(WDG_InitStruct->WDG_ClockSource == WDG_ClockSource_Apb)
+  66              		.loc 1 80 0
+  67 0028 02005CE1 		cmp	ip, r2
+  89:libstr91x/src/91x_wdg.c ****     WDG->CR |= WDG_ClockSource_Rtc ;
+  68              		.loc 1 89 0
+  69 002c 30209F15 		ldrne	r2, .L5+4
+  83:libstr91x/src/91x_wdg.c ****     WDG->CR &= WDG_ClockSource_Apb;
+  70              		.loc 1 83 0
+  71 0030 2CC09F05 		ldreq	ip, .L5+4
+  89:libstr91x/src/91x_wdg.c ****     WDG->CR |= WDG_ClockSource_Rtc ;
+  72              		.loc 1 89 0
+  73 0034 B0C0D211 		ldrneh	ip, [r2, #0]
+  83:libstr91x/src/91x_wdg.c ****     WDG->CR &= WDG_ClockSource_Apb;
+  74              		.loc 1 83 0
+  75 0038 B010DC01 		ldreqh	r1, [ip, #0]
+  89:libstr91x/src/91x_wdg.c ****     WDG->CR |= WDG_ClockSource_Rtc ;
+  76              		.loc 1 89 0
+  77 003c 04C08C13 		orrne	ip, ip, #4
+  83:libstr91x/src/91x_wdg.c ****     WDG->CR &= WDG_ClockSource_Apb;
+  78              		.loc 1 83 0
+  79 0040 02200100 		andeq	r2, r1, r2
+  80 0044 B020CC01 		streqh	r2, [ip, #0]	@ movhi
+  89:libstr91x/src/91x_wdg.c ****     WDG->CR |= WDG_ClockSource_Rtc ;
+  81              		.loc 1 89 0
+  82 0048 B0C0C211 		strneh	ip, [r2, #0]	@ movhi
+  83              		.loc 1 93 0
+  84 004c B210D0E1 		ldrh	r1, [r0, #2]
+  85 0050 B410C3E1 		strh	r1, [r3, #4]	@ movhi
+  94:libstr91x/src/91x_wdg.c **** 
+  95:libstr91x/src/91x_wdg.c ****   /* Configure WDG Pre-load register value */
+  96:libstr91x/src/91x_wdg.c ****   WDG->VR = WDG_InitStruct->WDG_Preload ;
+  86              		.loc 1 96 0
+  87 0054 B420D0E1 		ldrh	r2, [r0, #4]
+  88 0058 B820C3E1 		strh	r2, [r3, #8]	@ movhi
+  97:libstr91x/src/91x_wdg.c **** 
+  98:libstr91x/src/91x_wdg.c **** }
+  89              		.loc 1 98 0
+  90 005c 1EFF2FE1 		bx	lr
+  91              	.L6:
+  92              		.align	2
+  93              	.L5:
+  94 0060 FBFF0000 		.word	65531
+  95 0064 00B0005C 		.word	1543548928
+  96              		.cfi_endproc
+  97              	.LFE1:
+  99              		.align	2
+ 100              		.global	WDG_TimerModeCmd
+ 102              	WDG_TimerModeCmd:
+ 103              	.LFB2:
+  99:libstr91x/src/91x_wdg.c **** 
+ 100:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 101:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_TimerModeCmd
+ 102:libstr91x/src/91x_wdg.c **** * Description    : Enables or disables the WDG timer mode
+ 103:libstr91x/src/91x_wdg.c **** * Input          : NewState: new state of the WDG peripheral (Newstate can be
+ 104:libstr91x/src/91x_wdg.c **** *                  ENABLE or DISABLE)
+ 105:libstr91x/src/91x_wdg.c **** * Output         : None
+ 106:libstr91x/src/91x_wdg.c **** * Return         : None
+ 107:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 108:libstr91x/src/91x_wdg.c **** void WDG_TimerModeCmd(FunctionalState NewState)
+ 109:libstr91x/src/91x_wdg.c **** {
+ 104              		.loc 1 109 0
+ 105              		.cfi_startproc
+ 106              		@ args = 0, pretend = 0, frame = 0
+ 107              		@ frame_needed = 0, uses_anonymous_args = 0
+ 108              		@ link register save eliminated.
+ 109              	.LVL2:
+ 110:libstr91x/src/91x_wdg.c ****     if(NewState == ENABLE)
+ 110              		.loc 1 110 0
+ 111 0068 010050E3 		cmp	r0, #1
+ 111:libstr91x/src/91x_wdg.c ****     {
+ 112:libstr91x/src/91x_wdg.c ****       /* Start timer by setting SC bit in Control register */
+ 113:libstr91x/src/91x_wdg.c ****       WDG->CR |= WDG_Counter_Start;
+ 112              		.loc 1 113 0
+ 113 006c 20309F05 		ldreq	r3, .L10
+ 114:libstr91x/src/91x_wdg.c ****     }
+ 115:libstr91x/src/91x_wdg.c ****     else
+ 116:libstr91x/src/91x_wdg.c ****     {
+ 117:libstr91x/src/91x_wdg.c ****       /* Stop timer by clearning SC bit in Control register */
+ 118:libstr91x/src/91x_wdg.c ****       WDG->CR &= WDG_Counter_Stop;
+ 114              		.loc 1 118 0
+ 115 0070 1C209F15 		ldrne	r2, .L10
+ 113:libstr91x/src/91x_wdg.c ****       WDG->CR |= WDG_Counter_Start;
+ 116              		.loc 1 113 0
+ 117 0074 B020D301 		ldreqh	r2, [r3, #0]
+ 118              		.loc 1 118 0
+ 119 0078 18309F15 		ldrne	r3, .L10+4
+ 120 007c B010D211 		ldrneh	r1, [r2, #0]
+ 113:libstr91x/src/91x_wdg.c ****       WDG->CR |= WDG_Counter_Start;
+ 121              		.loc 1 113 0
+ 122 0080 02208203 		orreq	r2, r2, #2
+ 123              		.loc 1 118 0
+ 124 0084 03300110 		andne	r3, r1, r3
+ 113:libstr91x/src/91x_wdg.c ****       WDG->CR |= WDG_Counter_Start;
+ 125              		.loc 1 113 0
+ 126 0088 B020C301 		streqh	r2, [r3, #0]	@ movhi
+ 127              		.loc 1 118 0
+ 128 008c B030C211 		strneh	r3, [r2, #0]	@ movhi
+ 129 0090 1EFF2FE1 		bx	lr
+ 130              	.L11:
+ 131              		.align	2
+ 132              	.L10:
+ 133 0094 00B0005C 		.word	1543548928
+ 134 0098 FDFF0000 		.word	65533
+ 135              		.cfi_endproc
+ 136              	.LFE2:
+ 138              		.align	2
+ 139              		.global	WDG_StartWatchdogMode
+ 141              	WDG_StartWatchdogMode:
+ 142              	.LFB3:
+ 119:libstr91x/src/91x_wdg.c ****     }
+ 120:libstr91x/src/91x_wdg.c **** }
+ 121:libstr91x/src/91x_wdg.c **** 
+ 122:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 123:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_StartWatchdogMode
+ 124:libstr91x/src/91x_wdg.c **** * Description    : Starts the watchdog mode
+ 125:libstr91x/src/91x_wdg.c **** * Input          : None
+ 126:libstr91x/src/91x_wdg.c **** * Output         : None
+ 127:libstr91x/src/91x_wdg.c **** * Return         : None
+ 128:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 129:libstr91x/src/91x_wdg.c **** void WDG_StartWatchdogMode(void)
+ 130:libstr91x/src/91x_wdg.c **** {
+ 143              		.loc 1 130 0
+ 144              		.cfi_startproc
+ 145              		@ args = 0, pretend = 0, frame = 0
+ 146              		@ frame_needed = 0, uses_anonymous_args = 0
+ 147              		@ link register save eliminated.
+ 131:libstr91x/src/91x_wdg.c ****    /*reload watchdog*/ 
+ 132:libstr91x/src/91x_wdg.c ****    WDG->KR = WDG_KeyValue1;
+ 148              		.loc 1 132 0
+ 149 009c 1C309FE5 		ldr	r3, .L13
+ 150 00a0 1CC09FE5 		ldr	ip, .L13+4
+ 133:libstr91x/src/91x_wdg.c ****    WDG->KR = WDG_KeyValue2;
+ 151              		.loc 1 133 0
+ 152 00a4 1C109FE5 		ldr	r1, .L13+8
+ 132:libstr91x/src/91x_wdg.c ****    WDG->KR = WDG_KeyValue1;
+ 153              		.loc 1 132 0
+ 154 00a8 B8C1C3E1 		strh	ip, [r3, #24]	@ movhi
+ 155              		.loc 1 133 0
+ 156 00ac B811C3E1 		strh	r1, [r3, #24]	@ movhi
+ 134:libstr91x/src/91x_wdg.c ****   
+ 135:libstr91x/src/91x_wdg.c ****    /*start watchdog*/
+ 136:libstr91x/src/91x_wdg.c ****    WDG->CR |= WDG_Mode_Wdg;
+ 157              		.loc 1 136 0
+ 158 00b0 B000D3E1 		ldrh	r0, [r3, #0]
+ 159 00b4 012080E3 		orr	r2, r0, #1
+ 160 00b8 B020C3E1 		strh	r2, [r3, #0]	@ movhi
+ 137:libstr91x/src/91x_wdg.c **** }
+ 161              		.loc 1 137 0
+ 162 00bc 1EFF2FE1 		bx	lr
+ 163              	.L14:
+ 164              		.align	2
+ 165              	.L13:
+ 166 00c0 00B0005C 		.word	1543548928
+ 167 00c4 5AA5FFFF 		.word	-23206
+ 168 00c8 A55A0000 		.word	23205
+ 169              		.cfi_endproc
+ 170              	.LFE3:
+ 172              		.align	2
+ 173              		.global	WDG_ITConfig
+ 175              	WDG_ITConfig:
+ 176              	.LFB4:
+ 138:libstr91x/src/91x_wdg.c **** 
+ 139:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 140:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_ITConfig
+ 141:libstr91x/src/91x_wdg.c **** * Description    : Enables or disables the WDG End of Count(EC) interrupt.
+ 142:libstr91x/src/91x_wdg.c **** * Input          : Newstate:  new state of the End of Count(EC) WDG interrupt.
+ 143:libstr91x/src/91x_wdg.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 144:libstr91x/src/91x_wdg.c **** * Output         : None
+ 145:libstr91x/src/91x_wdg.c **** * Return         : None
+ 146:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 147:libstr91x/src/91x_wdg.c **** void WDG_ITConfig(FunctionalState NewState)
+ 148:libstr91x/src/91x_wdg.c **** {
+ 177              		.loc 1 148 0
+ 178              		.cfi_startproc
+ 179              		@ args = 0, pretend = 0, frame = 0
+ 180              		@ frame_needed = 0, uses_anonymous_args = 0
+ 181              		@ link register save eliminated.
+ 182              	.LVL3:
+ 149:libstr91x/src/91x_wdg.c ****   if(NewState == ENABLE)
+ 183              		.loc 1 149 0
+ 184 00cc 010050E3 		cmp	r0, #1
+ 150:libstr91x/src/91x_wdg.c ****   {
+ 151:libstr91x/src/91x_wdg.c ****     /* Enable the End of Count interrupt */
+ 152:libstr91x/src/91x_wdg.c ****     WDG->MR |= WDG_IT_EC;
+ 185              		.loc 1 152 0
+ 186 00d0 20309F05 		ldreq	r3, .L18
+ 153:libstr91x/src/91x_wdg.c ****   }
+ 154:libstr91x/src/91x_wdg.c ****   else
+ 155:libstr91x/src/91x_wdg.c ****   {
+ 156:libstr91x/src/91x_wdg.c ****     /* Disable the End of Count interrupt */
+ 157:libstr91x/src/91x_wdg.c ****     WDG->MR &= ~WDG_IT_EC;
+ 187              		.loc 1 157 0
+ 188 00d4 1C209F15 		ldrne	r2, .L18
+ 152:libstr91x/src/91x_wdg.c ****     WDG->MR |= WDG_IT_EC;
+ 189              		.loc 1 152 0
+ 190 00d8 B421D301 		ldreqh	r2, [r3, #20]
+ 191              		.loc 1 157 0
+ 192 00dc 18309F15 		ldrne	r3, .L18+4
+ 193 00e0 B411D211 		ldrneh	r1, [r2, #20]
+ 152:libstr91x/src/91x_wdg.c ****     WDG->MR |= WDG_IT_EC;
+ 194              		.loc 1 152 0
+ 195 00e4 01208203 		orreq	r2, r2, #1
+ 196              		.loc 1 157 0
+ 197 00e8 03300110 		andne	r3, r1, r3
+ 152:libstr91x/src/91x_wdg.c ****     WDG->MR |= WDG_IT_EC;
+ 198              		.loc 1 152 0
+ 199 00ec B421C301 		streqh	r2, [r3, #20]	@ movhi
+ 200              		.loc 1 157 0
+ 201 00f0 B431C211 		strneh	r3, [r2, #20]	@ movhi
+ 202 00f4 1EFF2FE1 		bx	lr
+ 203              	.L19:
+ 204              		.align	2
+ 205              	.L18:
+ 206 00f8 00B0005C 		.word	1543548928
+ 207 00fc FEFF0000 		.word	65534
+ 208              		.cfi_endproc
+ 209              	.LFE4:
+ 211              		.align	2
+ 212              		.global	WDG_GetCounter
+ 214              	WDG_GetCounter:
+ 215              	.LFB5:
+ 158:libstr91x/src/91x_wdg.c ****   }
+ 159:libstr91x/src/91x_wdg.c **** }
+ 160:libstr91x/src/91x_wdg.c **** 
+ 161:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 162:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_GetCounter
+ 163:libstr91x/src/91x_wdg.c **** * Description    : Gets the WDG’s current counter value.
+ 164:libstr91x/src/91x_wdg.c **** * Input          : None
+ 165:libstr91x/src/91x_wdg.c **** * Output         : None
+ 166:libstr91x/src/91x_wdg.c **** * Return         : The WDG current counter value
+ 167:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 168:libstr91x/src/91x_wdg.c **** u16 WDG_GetCounter(void)
+ 169:libstr91x/src/91x_wdg.c **** {
+ 216              		.loc 1 169 0
+ 217              		.cfi_startproc
+ 218              		@ args = 0, pretend = 0, frame = 0
+ 219              		@ frame_needed = 0, uses_anonymous_args = 0
+ 220              		@ link register save eliminated.
+ 170:libstr91x/src/91x_wdg.c ****    return WDG->CNT;
+ 221              		.loc 1 170 0
+ 222 0100 04309FE5 		ldr	r3, .L21
+ 223 0104 BC00D3E1 		ldrh	r0, [r3, #12]
+ 171:libstr91x/src/91x_wdg.c **** }
+ 224              		.loc 1 171 0
+ 225 0108 1EFF2FE1 		bx	lr
+ 226              	.L22:
+ 227              		.align	2
+ 228              	.L21:
+ 229 010c 00B0005C 		.word	1543548928
+ 230              		.cfi_endproc
+ 231              	.LFE5:
+ 233              		.align	2
+ 234              		.global	WDG_GetITStatus
+ 236              	WDG_GetITStatus:
+ 237              	.LFB6:
+ 172:libstr91x/src/91x_wdg.c **** 
+ 173:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 174:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_GetITStatus
+ 175:libstr91x/src/91x_wdg.c **** * Description    : Checks whether the WDG End of Count(EC) interrupt is occured or not.
+ 176:libstr91x/src/91x_wdg.c **** * Input          : None
+ 177:libstr91x/src/91x_wdg.c **** * Output         : None
+ 178:libstr91x/src/91x_wdg.c **** * Return         : The new state of WDG_IT (SET or RESET).
+ 179:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 180:libstr91x/src/91x_wdg.c **** ITStatus WDG_GetITStatus(void)
+ 181:libstr91x/src/91x_wdg.c **** {
+ 238              		.loc 1 181 0
+ 239              		.cfi_startproc
+ 240              		@ args = 0, pretend = 0, frame = 0
+ 241              		@ frame_needed = 0, uses_anonymous_args = 0
+ 242              		@ link register save eliminated.
+ 182:libstr91x/src/91x_wdg.c ****   if(((WDG->SR & WDG_IT_EC) != RESET )&&((WDG->MR & WDG_IT_EC) != RESET ))
+ 243              		.loc 1 182 0
+ 244 0110 10309FE5 		ldr	r3, .L26
+ 245 0114 B001D3E1 		ldrh	r0, [r3, #16]
+ 246 0118 010010E2 		ands	r0, r0, #1
+ 247 011c B401D311 		ldrneh	r0, [r3, #20]
+ 183:libstr91x/src/91x_wdg.c ****   {
+ 184:libstr91x/src/91x_wdg.c ****     return SET;
+ 248              		.loc 1 184 0
+ 249 0120 01000012 		andne	r0, r0, #1
+ 185:libstr91x/src/91x_wdg.c ****   }
+ 186:libstr91x/src/91x_wdg.c ****   else
+ 187:libstr91x/src/91x_wdg.c ****   {
+ 188:libstr91x/src/91x_wdg.c ****     return RESET;
+ 189:libstr91x/src/91x_wdg.c ****   }
+ 190:libstr91x/src/91x_wdg.c **** }
+ 250              		.loc 1 190 0
+ 251 0124 1EFF2FE1 		bx	lr
+ 252              	.L27:
+ 253              		.align	2
+ 254              	.L26:
+ 255 0128 00B0005C 		.word	1543548928
+ 256              		.cfi_endproc
+ 257              	.LFE6:
+ 259              		.align	2
+ 260              		.global	WDG_ClearITPendingBit
+ 262              	WDG_ClearITPendingBit:
+ 263              	.LFB7:
+ 191:libstr91x/src/91x_wdg.c **** 
+ 192:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 193:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_ClearITPendingBit
+ 194:libstr91x/src/91x_wdg.c **** * Description    : Clears the WDG's End of Count(EC) interrupt pending bit.
+ 195:libstr91x/src/91x_wdg.c **** * Input          : None
+ 196:libstr91x/src/91x_wdg.c **** * Output         : None
+ 197:libstr91x/src/91x_wdg.c **** * Return         : None
+ 198:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 199:libstr91x/src/91x_wdg.c **** void WDG_ClearITPendingBit(void)
+ 200:libstr91x/src/91x_wdg.c **** {
+ 264              		.loc 1 200 0
+ 265              		.cfi_startproc
+ 266              		@ args = 0, pretend = 0, frame = 0
+ 267              		@ frame_needed = 0, uses_anonymous_args = 0
+ 268              		@ link register save eliminated.
+ 201:libstr91x/src/91x_wdg.c ****  /* Clear the EC pending bit */
+ 202:libstr91x/src/91x_wdg.c ****   WDG->SR &= ~WDG_IT_EC;
+ 269              		.loc 1 202 0
+ 270 012c 10209FE5 		ldr	r2, .L29
+ 271 0130 10009FE5 		ldr	r0, .L29+4
+ 272 0134 B011D2E1 		ldrh	r1, [r2, #16]
+ 273 0138 003001E0 		and	r3, r1, r0
+ 274 013c B031C2E1 		strh	r3, [r2, #16]	@ movhi
+ 203:libstr91x/src/91x_wdg.c **** 
+ 204:libstr91x/src/91x_wdg.c **** }
+ 275              		.loc 1 204 0
+ 276 0140 1EFF2FE1 		bx	lr
+ 277              	.L30:
+ 278              		.align	2
+ 279              	.L29:
+ 280 0144 00B0005C 		.word	1543548928
+ 281 0148 FEFF0000 		.word	65534
+ 282              		.cfi_endproc
+ 283              	.LFE7:
+ 285              		.align	2
+ 286              		.global	WDG_ClearFlag
+ 288              	WDG_ClearFlag:
+ 289              	.LFB8:
+ 205:libstr91x/src/91x_wdg.c **** 
+ 206:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 207:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_ClearFlag
+ 208:libstr91x/src/91x_wdg.c **** * Description    : Clears the WDG's End of Count(EC) Flag.
+ 209:libstr91x/src/91x_wdg.c **** * Input          : None
+ 210:libstr91x/src/91x_wdg.c **** * Output         : None
+ 211:libstr91x/src/91x_wdg.c **** * Return         : None
+ 212:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 213:libstr91x/src/91x_wdg.c **** void WDG_ClearFlag(void)
+ 214:libstr91x/src/91x_wdg.c **** {
+ 290              		.loc 1 214 0
+ 291              		.cfi_startproc
+ 292              		@ args = 0, pretend = 0, frame = 0
+ 293              		@ frame_needed = 0, uses_anonymous_args = 0
+ 294              		@ link register save eliminated.
+ 215:libstr91x/src/91x_wdg.c ****  /* Clear the EC Flag */
+ 216:libstr91x/src/91x_wdg.c **** 
+ 217:libstr91x/src/91x_wdg.c ****   WDG->SR &= ~WDG_FLAG_EC;
+ 295              		.loc 1 217 0
+ 296 014c 10209FE5 		ldr	r2, .L32
+ 297 0150 10009FE5 		ldr	r0, .L32+4
+ 298 0154 B011D2E1 		ldrh	r1, [r2, #16]
+ 299 0158 003001E0 		and	r3, r1, r0
+ 300 015c B031C2E1 		strh	r3, [r2, #16]	@ movhi
+ 218:libstr91x/src/91x_wdg.c **** }
+ 301              		.loc 1 218 0
+ 302 0160 1EFF2FE1 		bx	lr
+ 303              	.L33:
+ 304              		.align	2
+ 305              	.L32:
+ 306 0164 00B0005C 		.word	1543548928
+ 307 0168 FEFF0000 		.word	65534
+ 308              		.cfi_endproc
+ 309              	.LFE8:
+ 311              		.align	2
+ 312              		.global	WDG_GetFlagStatus
+ 314              	WDG_GetFlagStatus:
+ 315              	.LFB9:
+ 219:libstr91x/src/91x_wdg.c **** 
+ 220:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 221:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_GetFlagStatus
+ 222:libstr91x/src/91x_wdg.c **** * Description    : Checks whether the WDG End of Count(EC) flag is set or not.
+ 223:libstr91x/src/91x_wdg.c **** * Input          : None
+ 224:libstr91x/src/91x_wdg.c **** * Output         : None
+ 225:libstr91x/src/91x_wdg.c **** * Return         : The new state of the WDG_FLAG (SET or RESET).
+ 226:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 227:libstr91x/src/91x_wdg.c **** FlagStatus WDG_GetFlagStatus(void)
+ 228:libstr91x/src/91x_wdg.c **** {
+ 316              		.loc 1 228 0
+ 317              		.cfi_startproc
+ 318              		@ args = 0, pretend = 0, frame = 0
+ 319              		@ frame_needed = 0, uses_anonymous_args = 0
+ 320              		@ link register save eliminated.
+ 229:libstr91x/src/91x_wdg.c ****   if((WDG->SR & WDG_FLAG_EC) != RESET )
+ 321              		.loc 1 229 0
+ 322 016c 08309FE5 		ldr	r3, .L35
+ 323 0170 B001D3E1 		ldrh	r0, [r3, #16]
+ 230:libstr91x/src/91x_wdg.c ****   {
+ 231:libstr91x/src/91x_wdg.c ****     return SET;
+ 232:libstr91x/src/91x_wdg.c ****   }
+ 233:libstr91x/src/91x_wdg.c ****   else
+ 234:libstr91x/src/91x_wdg.c ****   {
+ 235:libstr91x/src/91x_wdg.c ****     return RESET;
+ 236:libstr91x/src/91x_wdg.c ****   }
+ 237:libstr91x/src/91x_wdg.c **** }
+ 324              		.loc 1 237 0
+ 325 0174 010000E2 		and	r0, r0, #1
+ 326 0178 1EFF2FE1 		bx	lr
+ 327              	.L36:
+ 328              		.align	2
+ 329              	.L35:
+ 330 017c 00B0005C 		.word	1543548928
+ 331              		.cfi_endproc
+ 332              	.LFE9:
+ 334              		.align	2
+ 335              		.global	WDG_Reload
+ 337              	WDG_Reload:
+ 338              	.LFB10:
+ 238:libstr91x/src/91x_wdg.c **** 
+ 239:libstr91x/src/91x_wdg.c **** /*******************************************************************************
+ 240:libstr91x/src/91x_wdg.c **** * Function Name  : WDG_Reload
+ 241:libstr91x/src/91x_wdg.c **** * Description    : reloads the watchdog counter in watchdog mode
+ 242:libstr91x/src/91x_wdg.c **** * Input          : None
+ 243:libstr91x/src/91x_wdg.c **** * Output         : None
+ 244:libstr91x/src/91x_wdg.c **** * Return         : none
+ 245:libstr91x/src/91x_wdg.c **** *******************************************************************************/
+ 246:libstr91x/src/91x_wdg.c **** void WDG_Reload(void)
+ 247:libstr91x/src/91x_wdg.c **** {
+ 339              		.loc 1 247 0
+ 340              		.cfi_startproc
+ 341              		@ args = 0, pretend = 0, frame = 0
+ 342              		@ frame_needed = 0, uses_anonymous_args = 0
+ 343              		@ link register save eliminated.
+ 248:libstr91x/src/91x_wdg.c ****   WDG->KR = WDG_KeyValue1;
+ 344              		.loc 1 248 0
+ 345 0180 10309FE5 		ldr	r3, .L38
+ 346 0184 10009FE5 		ldr	r0, .L38+4
+ 249:libstr91x/src/91x_wdg.c ****   WDG->KR = WDG_KeyValue2;
+ 347              		.loc 1 249 0
+ 348 0188 10209FE5 		ldr	r2, .L38+8
+ 248:libstr91x/src/91x_wdg.c ****   WDG->KR = WDG_KeyValue1;
+ 349              		.loc 1 248 0
+ 350 018c B801C3E1 		strh	r0, [r3, #24]	@ movhi
+ 351              		.loc 1 249 0
+ 352 0190 B821C3E1 		strh	r2, [r3, #24]	@ movhi
+ 250:libstr91x/src/91x_wdg.c **** }
+ 353              		.loc 1 250 0
+ 354 0194 1EFF2FE1 		bx	lr
+ 355              	.L39:
+ 356              		.align	2
+ 357              	.L38:
+ 358 0198 00B0005C 		.word	1543548928
+ 359 019c 5AA5FFFF 		.word	-23206
+ 360 01a0 A55A0000 		.word	23205
+ 361              		.cfi_endproc
+ 362              	.LFE10:
+ 364              	.Letext0:
+ 365              		.file 2 "libstr91x/include/91x_type.h"
+ 366              		.file 3 "libstr91x/include/91x_map.h"
+ 367              		.file 4 "libstr91x/include/91x_wdg.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_wdg.c
+     /tmp/ccdfujZR.s:21     .text:00000000 $a
+     /tmp/ccdfujZR.s:24     .text:00000000 WDG_StructInit
+     /tmp/ccdfujZR.s:53     .text:0000001c WDG_Init
+     /tmp/ccdfujZR.s:94     .text:00000060 $d
+     /tmp/ccdfujZR.s:99     .text:00000068 $a
+     /tmp/ccdfujZR.s:102    .text:00000068 WDG_TimerModeCmd
+     /tmp/ccdfujZR.s:133    .text:00000094 $d
+     /tmp/ccdfujZR.s:138    .text:0000009c $a
+     /tmp/ccdfujZR.s:141    .text:0000009c WDG_StartWatchdogMode
+     /tmp/ccdfujZR.s:166    .text:000000c0 $d
+     /tmp/ccdfujZR.s:172    .text:000000cc $a
+     /tmp/ccdfujZR.s:175    .text:000000cc WDG_ITConfig
+     /tmp/ccdfujZR.s:206    .text:000000f8 $d
+     /tmp/ccdfujZR.s:211    .text:00000100 $a
+     /tmp/ccdfujZR.s:214    .text:00000100 WDG_GetCounter
+     /tmp/ccdfujZR.s:229    .text:0000010c $d
+     /tmp/ccdfujZR.s:233    .text:00000110 $a
+     /tmp/ccdfujZR.s:236    .text:00000110 WDG_GetITStatus
+     /tmp/ccdfujZR.s:255    .text:00000128 $d
+     /tmp/ccdfujZR.s:259    .text:0000012c $a
+     /tmp/ccdfujZR.s:262    .text:0000012c WDG_ClearITPendingBit
+     /tmp/ccdfujZR.s:280    .text:00000144 $d
+     /tmp/ccdfujZR.s:285    .text:0000014c $a
+     /tmp/ccdfujZR.s:288    .text:0000014c WDG_ClearFlag
+     /tmp/ccdfujZR.s:306    .text:00000164 $d
+     /tmp/ccdfujZR.s:311    .text:0000016c $a
+     /tmp/ccdfujZR.s:314    .text:0000016c WDG_GetFlagStatus
+     /tmp/ccdfujZR.s:330    .text:0000017c $d
+     /tmp/ccdfujZR.s:334    .text:00000180 $a
+     /tmp/ccdfujZR.s:337    .text:00000180 WDG_Reload
+     /tmp/ccdfujZR.s:358    .text:00000198 $d
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

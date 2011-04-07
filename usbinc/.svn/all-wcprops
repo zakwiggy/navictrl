@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usbinc
+END
+usb_prop.h
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usbinc/usb_prop.h
+END
+usb_conf.h
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usbinc/usb_conf.h
+END
+usb_pwr.h
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usbinc/usb_pwr.h
+END
+usb_desc.h
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/mikrosvn/NaviCtrl/!svn/ver/305/tags/V0.24b/usbinc/usb_desc.h
+END

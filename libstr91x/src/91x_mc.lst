@@ -1,0 +1,2790 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_mc.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	MC_DeInit
+  24              	MC_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_mc.c"
+   1:libstr91x/src/91x_mc.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_mc.c **** * File Name          : 91x_mc.c
+   3:libstr91x/src/91x_mc.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_mc.c **** * Version            : V2.1
+   5:libstr91x/src/91x_mc.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_mc.c **** * Description        : This file provides all the MC firmware functions.
+   7:libstr91x/src/91x_mc.c **** ********************************************************************************
+   8:libstr91x/src/91x_mc.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS WITH
+   9:libstr91x/src/91x_mc.c **** * CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME. AS
+  10:libstr91x/src/91x_mc.c **** * A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT, INDIRECT
+  11:libstr91x/src/91x_mc.c **** * OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE CONTENT
+  12:libstr91x/src/91x_mc.c **** * OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING INFORMATION
+  13:libstr91x/src/91x_mc.c **** * CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_mc.c **** *******************************************************************************/
+  15:libstr91x/src/91x_mc.c **** 
+  16:libstr91x/src/91x_mc.c **** 
+  17:libstr91x/src/91x_mc.c **** /* Standard include ----------------------------------------------------------*/
+  18:libstr91x/src/91x_mc.c **** #include "91x_mc.h"
+  19:libstr91x/src/91x_mc.c **** #include "91x_scu.h"
+  20:libstr91x/src/91x_mc.c **** /* Private typedef -----------------------------------------------------------*/
+  21:libstr91x/src/91x_mc.c **** /* Private define ------------------------------------------------------------*/
+  22:libstr91x/src/91x_mc.c **** /* Private macro -------------------------------------------------------------*/
+  23:libstr91x/src/91x_mc.c **** /* Private variables ---------------------------------------------------------*/
+  24:libstr91x/src/91x_mc.c **** 
+  25:libstr91x/src/91x_mc.c **** #define MC_ODCS_Set    0x0001
+  26:libstr91x/src/91x_mc.c **** #define MC_ODCS_Reset  0x00FE
+  27:libstr91x/src/91x_mc.c **** 
+  28:libstr91x/src/91x_mc.c **** #define MC_CMS_Set    0x0004
+  29:libstr91x/src/91x_mc.c **** #define MC_CMS_Reset  0x00FB
+  30:libstr91x/src/91x_mc.c **** 
+  31:libstr91x/src/91x_mc.c **** #define MC_CPC_Set  0x0008
+  32:libstr91x/src/91x_mc.c **** #define MC_CTC_Set  0x0010
+  33:libstr91x/src/91x_mc.c **** 
+  34:libstr91x/src/91x_mc.c **** #define MC_PCE_Set   0x0020
+  35:libstr91x/src/91x_mc.c **** #define MC_PCE_Reset 0xFFDF
+  36:libstr91x/src/91x_mc.c **** 
+  37:libstr91x/src/91x_mc.c **** #define MC_TCE_Set   0x0040
+  38:libstr91x/src/91x_mc.c **** #define MC_TCE_Reset 0x00BF
+  39:libstr91x/src/91x_mc.c **** 
+  40:libstr91x/src/91x_mc.c **** #define MC_DTE_Set   0x0080
+  41:libstr91x/src/91x_mc.c **** #define MC_DTE_Reset 0x007F
+  42:libstr91x/src/91x_mc.c **** 
+  43:libstr91x/src/91x_mc.c **** #define MC_TCB_Set    0x0004
+  44:libstr91x/src/91x_mc.c **** #define MC_TCB_Reset  0x00FB
+  45:libstr91x/src/91x_mc.c **** 
+  46:libstr91x/src/91x_mc.c **** #define MC_STC_Set  0x0008
+  47:libstr91x/src/91x_mc.c **** 
+  48:libstr91x/src/91x_mc.c **** #define MC_TES_Set    0x0010
+  49:libstr91x/src/91x_mc.c **** #define MC_TES_Reset  0x00EF
+  50:libstr91x/src/91x_mc.c **** 
+  51:libstr91x/src/91x_mc.c **** #define MC_CCPT_Set    0x0020
+  52:libstr91x/src/91x_mc.c **** #define MC_CCPT_Reset  0x005F
+  53:libstr91x/src/91x_mc.c **** 
+  54:libstr91x/src/91x_mc.c **** #define MC_DISEST_Set    0x0040
+  55:libstr91x/src/91x_mc.c **** #define MC_DISEST_Reset  0x003F
+  56:libstr91x/src/91x_mc.c **** 
+  57:libstr91x/src/91x_mc.c **** #define MC_DTS_Set    0x0001
+  58:libstr91x/src/91x_mc.c **** #define MC_DTS_Reset  0x00FE
+  59:libstr91x/src/91x_mc.c **** 
+  60:libstr91x/src/91x_mc.c **** #define MC_SDT_Set    0x0002
+  61:libstr91x/src/91x_mc.c **** 
+  62:libstr91x/src/91x_mc.c **** #define MC_C0SE_Set    0x0004
+  63:libstr91x/src/91x_mc.c **** #define MC_C0SE_Reset  0x00FB
+  64:libstr91x/src/91x_mc.c **** 
+  65:libstr91x/src/91x_mc.c **** #define MC_CUSE_Set    0x0008
+  66:libstr91x/src/91x_mc.c **** #define MC_CUSE_Reset  0x00F7 
+  67:libstr91x/src/91x_mc.c **** 
+  68:libstr91x/src/91x_mc.c **** #define MC_CVSE_Set    0x0010
+  69:libstr91x/src/91x_mc.c **** #define MC_CVSE_Reset  0x00EF
+  70:libstr91x/src/91x_mc.c **** 
+  71:libstr91x/src/91x_mc.c **** #define MC_CWSE_Set   0x0020
+  72:libstr91x/src/91x_mc.c **** #define MC_CWSE_Reset 0x00D0
+  73:libstr91x/src/91x_mc.c **** 
+  74:libstr91x/src/91x_mc.c **** #define MC_RSE_Set    0x0040
+  75:libstr91x/src/91x_mc.c **** #define MC_RSE_Reset  0x00BF
+  76:libstr91x/src/91x_mc.c **** 
+  77:libstr91x/src/91x_mc.c **** #define MC_GPI_Set    0x0080
+  78:libstr91x/src/91x_mc.c **** #define MC_GPI_Reset  0x007F
+  79:libstr91x/src/91x_mc.c **** 
+  80:libstr91x/src/91x_mc.c **** #define MC_PUH_Set    0x0020
+  81:libstr91x/src/91x_mc.c **** #define MC_PUH_Reset  0x005F
+  82:libstr91x/src/91x_mc.c **** #define MC_PUL_Set    0x0010
+  83:libstr91x/src/91x_mc.c **** #define MC_PUL_Reset  0x006F
+  84:libstr91x/src/91x_mc.c **** 
+  85:libstr91x/src/91x_mc.c **** #define MC_PVH_Set    0x0008
+  86:libstr91x/src/91x_mc.c **** #define MC_PVH_Reset  0x0077
+  87:libstr91x/src/91x_mc.c **** #define MC_PVL_Set    0x0004
+  88:libstr91x/src/91x_mc.c **** #define MC_PVL_Reset  0x007B
+  89:libstr91x/src/91x_mc.c **** 
+  90:libstr91x/src/91x_mc.c **** #define MC_PWH_Set    0x0002
+  91:libstr91x/src/91x_mc.c **** #define MC_PWH_Reset  0x007D
+  92:libstr91x/src/91x_mc.c **** #define MC_PWL_Set    0x0001
+  93:libstr91x/src/91x_mc.c **** #define MC_PWL_Reset  0x007E
+  94:libstr91x/src/91x_mc.c **** 
+  95:libstr91x/src/91x_mc.c **** #define MC_ODS_Set    0x0040
+  96:libstr91x/src/91x_mc.c **** #define MC_ODS_Reset  0xFF3F
+  97:libstr91x/src/91x_mc.c **** 
+  98:libstr91x/src/91x_mc.c **** #define MC_ESC_Clear  0x4321
+  99:libstr91x/src/91x_mc.c **** 
+ 100:libstr91x/src/91x_mc.c **** #define MC_PCR1_TIN_MASK 0xFFFC
+ 101:libstr91x/src/91x_mc.c **** #define MC_OPR_Mask      0x0040 
+ 102:libstr91x/src/91x_mc.c **** #define MC_UDCS_Mask     0x0002
+ 103:libstr91x/src/91x_mc.c **** 
+ 104:libstr91x/src/91x_mc.c **** 
+ 105:libstr91x/src/91x_mc.c **** 
+ 106:libstr91x/src/91x_mc.c **** 
+ 107:libstr91x/src/91x_mc.c **** /* Private function prototypes -----------------------------------------------*/
+ 108:libstr91x/src/91x_mc.c **** /* Private functions ---------------------------------------------------------*/
+ 109:libstr91x/src/91x_mc.c **** 
+ 110:libstr91x/src/91x_mc.c **** /******************************************************************************
+ 111:libstr91x/src/91x_mc.c **** * Function Name  : MC_DeInit
+ 112:libstr91x/src/91x_mc.c **** * Description    : Deinitializes MC peripheral registers to their default reset
+ 113:libstr91x/src/91x_mc.c **** *                  values.
+ 114:libstr91x/src/91x_mc.c **** * Input          : None
+ 115:libstr91x/src/91x_mc.c **** * Output         : None
+ 116:libstr91x/src/91x_mc.c **** * Return         : None
+ 117:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 118:libstr91x/src/91x_mc.c **** void MC_DeInit(void)
+ 119:libstr91x/src/91x_mc.c **** {      
+  27              		.loc 1 119 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 10402DE9 		stmfd	sp!, {r4, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+ 120:libstr91x/src/91x_mc.c ****   /* MC peripheral is under Reset */
+ 121:libstr91x/src/91x_mc.c ****   SCU_APBPeriphReset(__MC, ENABLE);
+  34              		.loc 1 121 0
+  35 0004 0400A0E3 		mov	r0, #4
+  36 0008 0110A0E3 		mov	r1, #1
+  37              		.cfi_offset 14, -4
+  38              		.cfi_offset 4, -8
+  39 000c FEFFFFEB 		bl	SCU_APBPeriphReset
+ 122:libstr91x/src/91x_mc.c **** 
+ 123:libstr91x/src/91x_mc.c ****   /* MC peripheral Reset off */
+ 124:libstr91x/src/91x_mc.c ****   SCU_APBPeriphReset(__MC, DISABLE);           
+  40              		.loc 1 124 0
+  41 0010 0400A0E3 		mov	r0, #4
+  42 0014 0010A0E3 		mov	r1, #0
+ 125:libstr91x/src/91x_mc.c **** }
+  43              		.loc 1 125 0
+  44 0018 1040BDE8 		ldmfd	sp!, {r4, lr}
+ 124:libstr91x/src/91x_mc.c ****   SCU_APBPeriphReset(__MC, DISABLE);           
+  45              		.loc 1 124 0
+  46 001c FEFFFFEA 		b	SCU_APBPeriphReset
+  47              		.cfi_endproc
+  48              	.LFE0:
+  50              		.align	2
+  51              		.global	MC_Init
+  53              	MC_Init:
+  54              	.LFB1:
+ 126:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 127:libstr91x/src/91x_mc.c **** * Function Name  : MC_Init
+ 128:libstr91x/src/91x_mc.c **** * Description    : Initializes the MC peripheral according to the specified
+ 129:libstr91x/src/91x_mc.c **** *                  parameters in the MC_InitStruct .
+ 130:libstr91x/src/91x_mc.c **** * Input          : IMC_InitStruct: pointer to a MC_InitTypeDef structure that
+ 131:libstr91x/src/91x_mc.c **** *                  contains the configuration information for the MC peripheral.
+ 132:libstr91x/src/91x_mc.c **** * Output         : None
+ 133:libstr91x/src/91x_mc.c **** * Return         : None
+ 134:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 135:libstr91x/src/91x_mc.c **** void MC_Init(MC_InitTypeDef* MC_InitStruct)
+ 136:libstr91x/src/91x_mc.c **** {
+  55              		.loc 1 136 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              	.LVL0:
+ 137:libstr91x/src/91x_mc.c ****   /* Select the operating Mode */
+ 138:libstr91x/src/91x_mc.c ****   if(MC_InitStruct->MC_OperatingMode == MC_SoftwareOperating_Mode)
+ 139:libstr91x/src/91x_mc.c ****    {
+ 140:libstr91x/src/91x_mc.c ****      /* Select the Data transfer Mode */
+ 141:libstr91x/src/91x_mc.c ****      MC->PCR2 |= MC_DTS_Set;
+  61              		.loc 1 141 0
+  62 0020 04C39FE5 		ldr	ip, .L45
+ 138:libstr91x/src/91x_mc.c ****   if(MC_InitStruct->MC_OperatingMode == MC_SoftwareOperating_Mode)
+  63              		.loc 1 138 0
+  64 0024 B030D0E1 		ldrh	r3, [r0, #0]
+  65              		.loc 1 141 0
+  66 0028 B013DCE1 		ldrh	r1, [ip, #48]
+ 138:libstr91x/src/91x_mc.c ****   if(MC_InitStruct->MC_OperatingMode == MC_SoftwareOperating_Mode)
+  67              		.loc 1 138 0
+  68 002c 020053E3 		cmp	r3, #2
+  69              		.loc 1 141 0
+  70 0030 01108103 		orreq	r1, r1, #1
+ 142:libstr91x/src/91x_mc.c **** 
+ 143:libstr91x/src/91x_mc.c ****      /* Enable the registers Software Data Transfer */
+ 144:libstr91x/src/91x_mc.c ****      MC->PCR2 |= MC_C0SE_Set | MC_CUSE_Set | MC_CVSE_Set | MC_CWSE_Set 
+ 145:libstr91x/src/91x_mc.c ****                  |MC_RSE_Set;
+ 146:libstr91x/src/91x_mc.c ****      
+ 147:libstr91x/src/91x_mc.c ****    }
+ 148:libstr91x/src/91x_mc.c ****    else
+ 149:libstr91x/src/91x_mc.c ****    {
+ 150:libstr91x/src/91x_mc.c ****      /* Select the Data transfer Mode */
+ 151:libstr91x/src/91x_mc.c ****      MC->PCR2 &= MC_DTS_Reset;   
+  71              		.loc 1 151 0
+  72 0034 FE100112 		andne	r1, r1, #254
+ 141:libstr91x/src/91x_mc.c ****      MC->PCR2 |= MC_DTS_Set;
+  73              		.loc 1 141 0
+  74 0038 B013CC01 		streqh	r1, [ip, #48]	@ movhi
+  75              		.loc 1 151 0
+  76 003c B013CC11 		strneh	r1, [ip, #48]	@ movhi
+ 144:libstr91x/src/91x_mc.c ****      MC->PCR2 |= MC_C0SE_Set | MC_CUSE_Set | MC_CVSE_Set | MC_CWSE_Set 
+  77              		.loc 1 144 0
+  78 0040 B013DC01 		ldreqh	r1, [ip, #48]
+ 152:libstr91x/src/91x_mc.c **** 
+ 153:libstr91x/src/91x_mc.c ****      /* Disable the registers Software Data Transfer */
+ 154:libstr91x/src/91x_mc.c ****      MC->PCR2 &= MC_C0SE_Reset | MC_CUSE_Reset | MC_CVSE_Reset | MC_CWSE_Reset 
+  79              		.loc 1 154 0
+  80 0044 B013DC11 		ldrneh	r1, [ip, #48]
+ 144:libstr91x/src/91x_mc.c ****      MC->PCR2 |= MC_C0SE_Set | MC_CUSE_Set | MC_CVSE_Set | MC_CWSE_Set 
+  81              		.loc 1 144 0
+  82 0048 7C108103 		orreq	r1, r1, #124
+  83              		.loc 1 154 0
+  84 004c FF100112 		andne	r1, r1, #255
+  85 0050 B013CCE1 		strh	r1, [ip, #48]	@ movhi
+ 155:libstr91x/src/91x_mc.c ****                  |MC_RSE_Reset;
+ 156:libstr91x/src/91x_mc.c ****     }
+ 157:libstr91x/src/91x_mc.c **** 
+ 158:libstr91x/src/91x_mc.c ****    /* Select the MC PWM counter Mode */
+ 159:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_PWMMode == MC_PWMZeroCentered_Mode)
+ 160:libstr91x/src/91x_mc.c ****    {
+ 161:libstr91x/src/91x_mc.c ****      MC->PCR0 |= MC_CMS_Set;
+  86              		.loc 1 161 0
+  87 0054 D0329FE5 		ldr	r3, .L45
+ 159:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_PWMMode == MC_PWMZeroCentered_Mode)
+  88              		.loc 1 159 0
+  89 0058 BA20D0E1 		ldrh	r2, [r0, #10]
+  90              		.loc 1 161 0
+  91 005c B8C2D3E1 		ldrh	ip, [r3, #40]
+ 159:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_PWMMode == MC_PWMZeroCentered_Mode)
+  92              		.loc 1 159 0
+  93 0060 020052E3 		cmp	r2, #2
+  94              		.loc 1 161 0
+  95 0064 04C08C03 		orreq	ip, ip, #4
+ 162:libstr91x/src/91x_mc.c ****    }
+ 163:libstr91x/src/91x_mc.c ****    else
+ 164:libstr91x/src/91x_mc.c ****    {
+ 165:libstr91x/src/91x_mc.c ****      MC->PCR0 &= MC_CMS_Reset;
+  96              		.loc 1 165 0
+  97 0068 FBC00C12 		andne	ip, ip, #251
+  98 006c B8C2C3E1 		strh	ip, [r3, #40]	@ movhi
+ 166:libstr91x/src/91x_mc.c ****    }
+ 167:libstr91x/src/91x_mc.c **** 
+ 168:libstr91x/src/91x_mc.c ****    /* Set the MC PWM counter Prescaler */
+ 169:libstr91x/src/91x_mc.c ****    MC->CPRS = MC_InitStruct->MC_Prescaler;
+  99              		.loc 1 169 0
+ 100 0070 0610D0E5 		ldrb	r1, [r0, #6]	@ zero_extendqisi2
+ 101 0074 B0C29FE5 		ldr	ip, .L45
+ 102 0078 B011CCE1 		strh	r1, [ip, #16]	@ movhi
+ 170:libstr91x/src/91x_mc.c **** 
+ 171:libstr91x/src/91x_mc.c ****    /* Set the MC PWM Period */
+ 172:libstr91x/src/91x_mc.c ****    MC->CMP0 = MC_InitStruct->MC_Period;
+ 103              		.loc 1 172 0
+ 104 007c B021D0E1 		ldrh	r2, [r0, #16]
+ 105 0080 B422CCE1 		strh	r2, [ip, #36]	@ movhi
+ 173:libstr91x/src/91x_mc.c **** 
+ 174:libstr91x/src/91x_mc.c ****    /* Set the MC PWM Repetition counter */
+ 175:libstr91x/src/91x_mc.c ****    MC->REP = MC_InitStruct->MC_RepetitionCounter;
+ 106              		.loc 1 175 0
+ 107 0084 2C30D0E5 		ldrb	r3, [r0, #44]	@ zero_extendqisi2
+ 108 0088 B431CCE1 		strh	r3, [ip, #20]	@ movhi
+ 176:libstr91x/src/91x_mc.c **** 
+ 177:libstr91x/src/91x_mc.c ****    /* Set the Tacho Compare value */
+ 178:libstr91x/src/91x_mc.c ****    MC->TCMP = MC_InitStruct->MC_TachoPeriod;
+ 109              		.loc 1 178 0
+ 110 008c B211D0E1 		ldrh	r1, [r0, #18]
+ 111 0090 B410CCE1 		strh	r1, [ip, #4]	@ movhi
+ 179:libstr91x/src/91x_mc.c **** 
+ 180:libstr91x/src/91x_mc.c ****    /* Set the Tacho Prescaler value */
+ 181:libstr91x/src/91x_mc.c ****    MC->TPRS = MC_InitStruct->MC_TachoPrescaler;
+ 112              		.loc 1 181 0
+ 113 0094 B820D0E1 		ldrh	r2, [r0, #8]
+ 114 0098 BC20CCE1 		strh	r2, [ip, #12]	@ movhi
+ 182:libstr91x/src/91x_mc.c **** 
+ 183:libstr91x/src/91x_mc.c ****    /* Set the MC Tacho Input Polarity */
+ 184:libstr91x/src/91x_mc.c ****    MC->PCR1 = (MC->PCR1 & MC_PCR1_TIN_MASK) | MC_InitStruct->MC_TachoPolarity;
+ 115              		.loc 1 184 0
+ 116 009c BC32DCE1 		ldrh	r3, [ip, #44]
+ 117 00a0 B812D0E1 		ldrh	r1, [r0, #40]
+ 118 00a4 0320C3E3 		bic	r2, r3, #3
+ 119 00a8 013082E1 		orr	r3, r2, r1
+ 120 00ac BC32CCE1 		strh	r3, [ip, #44]	@ movhi
+ 185:libstr91x/src/91x_mc.c **** 
+ 186:libstr91x/src/91x_mc.c ****    /* Set the MC PWM Forced State */
+ 187:libstr91x/src/91x_mc.c ****    MC->OPR |= MC_ODS_Set;
+ 121              		.loc 1 187 0
+ 122 00b0 B813DCE1 		ldrh	r1, [ip, #56]
+ 123 00b4 402081E3 		orr	r2, r1, #64
+ 124 00b8 B823CCE1 		strh	r2, [ip, #56]	@ movhi
+ 188:libstr91x/src/91x_mc.c ****    MC->OPR = (MC->OPR & MC_OPR_Mask) | MC_InitStruct->MC_ForcedPWMState; 
+ 125              		.loc 1 188 0
+ 126 00bc B833DCE1 		ldrh	r3, [ip, #56]
+ 127 00c0 0710D0E5 		ldrb	r1, [r0, #7]	@ zero_extendqisi2
+ 128 00c4 402003E2 		and	r2, r3, #64
+ 129 00c8 013082E1 		orr	r3, r2, r1
+ 130 00cc B833CCE1 		strh	r3, [ip, #56]	@ movhi
+ 189:libstr91x/src/91x_mc.c ****    
+ 190:libstr91x/src/91x_mc.c ****    /* Select the Tacho Mode */
+ 191:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoMode == MC_TachoOneShot_Mode)
+ 131              		.loc 1 191 0
+ 132 00d0 B220D0E1 		ldrh	r2, [r0, #2]
+ 192:libstr91x/src/91x_mc.c ****    {
+ 193:libstr91x/src/91x_mc.c ****      MC->PCR1 |= MC_TCB_Set;
+ 133              		.loc 1 193 0
+ 134 00d4 BC12DCE1 		ldrh	r1, [ip, #44]
+ 191:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoMode == MC_TachoOneShot_Mode)
+ 135              		.loc 1 191 0
+ 136 00d8 010052E3 		cmp	r2, #1
+ 137              		.loc 1 193 0
+ 138 00dc 04108103 		orreq	r1, r1, #4
+ 194:libstr91x/src/91x_mc.c ****    }
+ 195:libstr91x/src/91x_mc.c ****    else
+ 196:libstr91x/src/91x_mc.c ****    {
+ 197:libstr91x/src/91x_mc.c ****      MC->PCR1 &= MC_TCB_Reset;
+ 139              		.loc 1 197 0
+ 140 00e0 FB100112 		andne	r1, r1, #251
+ 141 00e4 BC12CCE1 		strh	r1, [ip, #44]	@ movhi
+ 198:libstr91x/src/91x_mc.c ****    }
+ 199:libstr91x/src/91x_mc.c **** 
+ 200:libstr91x/src/91x_mc.c ****    /* Select the Tacho Event Mode */
+ 201:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoEvent_Mode == MC_TachoEvent_Software_Mode)
+ 202:libstr91x/src/91x_mc.c ****    {
+ 203:libstr91x/src/91x_mc.c ****      MC->PCR1 |= MC_TES_Set;
+ 142              		.loc 1 203 0
+ 143 00e8 3CC29FE5 		ldr	ip, .L45
+ 201:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoEvent_Mode == MC_TachoEvent_Software_Mode)
+ 144              		.loc 1 201 0
+ 145 00ec B430D0E1 		ldrh	r3, [r0, #4]
+ 146              		.loc 1 203 0
+ 147 00f0 BC22DCE1 		ldrh	r2, [ip, #44]
+ 201:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoEvent_Mode == MC_TachoEvent_Software_Mode)
+ 148              		.loc 1 201 0
+ 149 00f4 020053E3 		cmp	r3, #2
+ 150              		.loc 1 203 0
+ 151 00f8 10208203 		orreq	r2, r2, #16
+ 204:libstr91x/src/91x_mc.c ****    }
+ 205:libstr91x/src/91x_mc.c ****    else
+ 206:libstr91x/src/91x_mc.c ****    {
+ 207:libstr91x/src/91x_mc.c ****      MC->PCR1 &= MC_TES_Reset;
+ 152              		.loc 1 207 0
+ 153 00fc EF200212 		andne	r2, r2, #239
+ 154 0100 BC22CCE1 		strh	r2, [ip, #44]	@ movhi
+ 208:libstr91x/src/91x_mc.c ****    }
+ 209:libstr91x/src/91x_mc.c **** 
+ 210:libstr91x/src/91x_mc.c ****    /* Enable or disable the emergency input */
+ 211:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_Emergency == MC_Emergency_Enable)
+ 212:libstr91x/src/91x_mc.c ****    {
+ 213:libstr91x/src/91x_mc.c ****      MC->PCR1 &= MC_DISEST_Reset;
+ 155              		.loc 1 213 0
+ 156 0104 20329FE5 		ldr	r3, .L45
+ 211:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_Emergency == MC_Emergency_Enable)
+ 157              		.loc 1 211 0
+ 158 0108 BE10D0E1 		ldrh	r1, [r0, #14]
+ 214:libstr91x/src/91x_mc.c ****    }
+ 215:libstr91x/src/91x_mc.c ****    else
+ 216:libstr91x/src/91x_mc.c ****    {
+ 217:libstr91x/src/91x_mc.c ****      MC->PCR1 |= MC_DISEST_Set;
+ 218:libstr91x/src/91x_mc.c ****    }
+ 219:libstr91x/src/91x_mc.c **** 
+ 220:libstr91x/src/91x_mc.c **** /* Select the complementary Mode */
+ 221:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_Complementary == MC_Complementary_Enable)
+ 222:libstr91x/src/91x_mc.c ****    {
+ 223:libstr91x/src/91x_mc.c ****      MC->DTG = MC_InitStruct->MC_DeadTime;
+ 159              		.loc 1 223 0
+ 160 010c 18229FE5 		ldr	r2, .L45
+ 211:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_Emergency == MC_Emergency_Enable)
+ 161              		.loc 1 211 0
+ 162 0110 010051E3 		cmp	r1, #1
+ 213:libstr91x/src/91x_mc.c ****      MC->PCR1 &= MC_DISEST_Reset;
+ 163              		.loc 1 213 0
+ 164 0114 BC12D3E1 		ldrh	r1, [r3, #44]
+ 165 0118 3F100102 		andeq	r1, r1, #63
+ 217:libstr91x/src/91x_mc.c ****      MC->PCR1 |= MC_DISEST_Set;
+ 166              		.loc 1 217 0
+ 167 011c 40108113 		orrne	r1, r1, #64
+ 168 0120 BC12C3E1 		strh	r1, [r3, #44]	@ movhi
+ 221:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_Complementary == MC_Complementary_Enable)
+ 169              		.loc 1 221 0
+ 170 0124 BCC0D0E1 		ldrh	ip, [r0, #12]
+ 171 0128 01005CE3 		cmp	ip, #1
+ 172              		.loc 1 223 0
+ 173 012c BA12D001 		ldreqh	r1, [r0, #42]
+ 224:libstr91x/src/91x_mc.c ****      MC->PCR0 |= MC_ODCS_Set;
+ 225:libstr91x/src/91x_mc.c ****    }
+ 226:libstr91x/src/91x_mc.c ****    else
+ 227:libstr91x/src/91x_mc.c ****    {
+ 228:libstr91x/src/91x_mc.c ****      MC->PCR0 &= MC_ODCS_Reset;
+ 174              		.loc 1 228 0
+ 175 0130 B812D211 		ldrneh	r1, [r2, #40]
+ 223:libstr91x/src/91x_mc.c ****      MC->DTG = MC_InitStruct->MC_DeadTime;
+ 176              		.loc 1 223 0
+ 177 0134 B014C201 		streqh	r1, [r2, #64]	@ movhi
+ 224:libstr91x/src/91x_mc.c ****      MC->PCR0 |= MC_ODCS_Set;
+ 178              		.loc 1 224 0
+ 179 0138 B812D201 		ldreqh	r1, [r2, #40]
+ 180              		.loc 1 228 0
+ 181 013c FE100112 		andne	r1, r1, #254
+ 224:libstr91x/src/91x_mc.c ****      MC->PCR0 |= MC_ODCS_Set;
+ 182              		.loc 1 224 0
+ 183 0140 01108103 		orreq	r1, r1, #1
+ 184              		.loc 1 228 0
+ 185 0144 B812C2E1 		strh	r1, [r2, #40]	@ movhi
+ 229:libstr91x/src/91x_mc.c ****    }
+ 230:libstr91x/src/91x_mc.c **** 
+ 231:libstr91x/src/91x_mc.c ****    /* Tacho Mode selection */
+ 232:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoMode == MC_TachoOneShot_Mode)
+ 233:libstr91x/src/91x_mc.c ****    {
+ 234:libstr91x/src/91x_mc.c ****      MC->PCR1 |= MC_TCB_Set;
+ 186              		.loc 1 234 0
+ 187 0148 DCC19FE5 		ldr	ip, .L45
+ 232:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoMode == MC_TachoOneShot_Mode)
+ 188              		.loc 1 232 0
+ 189 014c B230D0E1 		ldrh	r3, [r0, #2]
+ 190              		.loc 1 234 0
+ 191 0150 BC22DCE1 		ldrh	r2, [ip, #44]
+ 232:libstr91x/src/91x_mc.c ****    if(MC_InitStruct->MC_TachoMode == MC_TachoOneShot_Mode)
+ 192              		.loc 1 232 0
+ 193 0154 010053E3 		cmp	r3, #1
+ 194              		.loc 1 234 0
+ 195 0158 04208203 		orreq	r2, r2, #4
+ 235:libstr91x/src/91x_mc.c ****    }
+ 236:libstr91x/src/91x_mc.c ****    else
+ 237:libstr91x/src/91x_mc.c ****    {
+ 238:libstr91x/src/91x_mc.c ****      MC->PCR1 &= MC_TCB_Reset;
+ 196              		.loc 1 238 0
+ 197 015c FB200212 		andne	r2, r2, #251
+ 198 0160 BC22CCE1 		strh	r2, [ip, #44]	@ movhi
+ 239:libstr91x/src/91x_mc.c ****    }
+ 240:libstr91x/src/91x_mc.c **** 
+ 241:libstr91x/src/91x_mc.c ****    switch(MC_InitStruct->MC_Channel)
+ 199              		.loc 1 241 0
+ 200 0164 B411D0E1 		ldrh	r1, [r0, #20]
+ 201 0168 013041E2 		sub	r3, r1, #1
+ 202 016c 030053E3 		cmp	r3, #3
+ 203 0170 03F19F97 		ldrls	pc, [pc, r3, asl #2]
+ 204 0174 330000EA 		b	.L2
+ 205              	.L22:
+ 206 0178 D4020000 		.word	.L18
+ 207 017c 90020000 		.word	.L19
+ 208 0180 4C020000 		.word	.L20
+ 209 0184 88010000 		.word	.L21
+ 210              	.L21:
+ 242:libstr91x/src/91x_mc.c ****    {
+ 243:libstr91x/src/91x_mc.c ****      /* Channel U configuration */
+ 244:libstr91x/src/91x_mc.c ****      case MC_Channel_U:
+ 245:libstr91x/src/91x_mc.c ****      {   
+ 246:libstr91x/src/91x_mc.c ****        MC->CMPU = MC_InitStruct->MC_PulseU;
+ 247:libstr91x/src/91x_mc.c **** 
+ 248:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUL == MC_Polarity_Inverted)
+ 249:libstr91x/src/91x_mc.c ****        {
+ 250:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUL_Set;
+ 251:libstr91x/src/91x_mc.c ****        }
+ 252:libstr91x/src/91x_mc.c ****        else
+ 253:libstr91x/src/91x_mc.c ****        {
+ 254:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PUL_Reset;
+ 255:libstr91x/src/91x_mc.c ****        }
+ 256:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUH == MC_Polarity_Inverted)
+ 257:libstr91x/src/91x_mc.c ****        {
+ 258:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUH_Set;
+ 259:libstr91x/src/91x_mc.c ****        }
+ 260:libstr91x/src/91x_mc.c ****        else
+ 261:libstr91x/src/91x_mc.c ****        {
+ 262:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PUH_Reset;
+ 263:libstr91x/src/91x_mc.c ****        }
+ 264:libstr91x/src/91x_mc.c ****        break;
+ 265:libstr91x/src/91x_mc.c ****      }
+ 266:libstr91x/src/91x_mc.c **** 
+ 267:libstr91x/src/91x_mc.c ****      /* Channel V configuration */
+ 268:libstr91x/src/91x_mc.c ****      case MC_Channel_V:
+ 269:libstr91x/src/91x_mc.c ****      {
+ 270:libstr91x/src/91x_mc.c ****        MC->CMPV = MC_InitStruct->MC_PulseV;
+ 271:libstr91x/src/91x_mc.c **** 
+ 272:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVL == MC_Polarity_Inverted)
+ 273:libstr91x/src/91x_mc.c ****        {
+ 274:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVL_Set;
+ 275:libstr91x/src/91x_mc.c ****        }
+ 276:libstr91x/src/91x_mc.c ****        else
+ 277:libstr91x/src/91x_mc.c ****        {
+ 278:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PVL_Reset;
+ 279:libstr91x/src/91x_mc.c ****        }
+ 280:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVH == MC_Polarity_Inverted)
+ 281:libstr91x/src/91x_mc.c ****        {
+ 282:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVH_Set;
+ 283:libstr91x/src/91x_mc.c ****        }
+ 284:libstr91x/src/91x_mc.c ****        else
+ 285:libstr91x/src/91x_mc.c ****        {
+ 286:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PVH_Reset;
+ 287:libstr91x/src/91x_mc.c ****        }
+ 288:libstr91x/src/91x_mc.c ****        break;
+ 289:libstr91x/src/91x_mc.c ****      }
+ 290:libstr91x/src/91x_mc.c **** 
+ 291:libstr91x/src/91x_mc.c ****      /* Channel W configuration */
+ 292:libstr91x/src/91x_mc.c ****      case MC_Channel_W:
+ 293:libstr91x/src/91x_mc.c ****      {
+ 294:libstr91x/src/91x_mc.c ****        MC->CMPW = MC_InitStruct->MC_PulseW;
+ 295:libstr91x/src/91x_mc.c ****        
+ 296:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWL == MC_Polarity_Inverted)
+ 297:libstr91x/src/91x_mc.c ****        {
+ 298:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWL_Set;
+ 299:libstr91x/src/91x_mc.c ****        }
+ 300:libstr91x/src/91x_mc.c ****        else
+ 301:libstr91x/src/91x_mc.c ****        {
+ 302:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PWL_Reset;
+ 303:libstr91x/src/91x_mc.c ****        }
+ 304:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWH == MC_Polarity_Inverted)
+ 305:libstr91x/src/91x_mc.c ****        {
+ 306:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWH_Set;
+ 307:libstr91x/src/91x_mc.c ****        }
+ 308:libstr91x/src/91x_mc.c ****        else
+ 309:libstr91x/src/91x_mc.c ****        {
+ 310:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PWH_Reset;
+ 311:libstr91x/src/91x_mc.c ****        }
+ 312:libstr91x/src/91x_mc.c ****        break;
+ 313:libstr91x/src/91x_mc.c ****      }
+ 314:libstr91x/src/91x_mc.c ****      /* All Channel Configuration */
+ 315:libstr91x/src/91x_mc.c ****      case MC_Channel_ALL:
+ 316:libstr91x/src/91x_mc.c ****      {
+ 317:libstr91x/src/91x_mc.c ****        MC->CMPU = MC_InitStruct->MC_PulseU;
+ 211              		.loc 1 317 0
+ 212 0188 B621D0E1 		ldrh	r2, [r0, #22]
+ 213 018c 98319FE5 		ldr	r3, .L45
+ 214 0190 B022C3E1 		strh	r2, [r3, #32]	@ movhi
+ 318:libstr91x/src/91x_mc.c ****        MC->CMPV = MC_InitStruct->MC_PulseV;
+ 215              		.loc 1 318 0
+ 216 0194 B811D0E1 		ldrh	r1, [r0, #24]
+ 217 0198 BC11C3E1 		strh	r1, [r3, #28]	@ movhi
+ 319:libstr91x/src/91x_mc.c ****        MC->CMPW = MC_InitStruct->MC_PulseW;
+ 218              		.loc 1 319 0
+ 219 019c BAC1D0E1 		ldrh	ip, [r0, #26]
+ 220 01a0 B8C1C3E1 		strh	ip, [r3, #24]	@ movhi
+ 320:libstr91x/src/91x_mc.c ****        
+ 321:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUL == MC_Polarity_Inverted)
+ 221              		.loc 1 321 0
+ 222 01a4 BC21D0E1 		ldrh	r2, [r0, #28]
+ 322:libstr91x/src/91x_mc.c ****        {
+ 323:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUL_Set;
+ 223              		.loc 1 323 0
+ 224 01a8 B413D3E1 		ldrh	r1, [r3, #52]
+ 321:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUL == MC_Polarity_Inverted)
+ 225              		.loc 1 321 0
+ 226 01ac 010052E3 		cmp	r2, #1
+ 227              		.loc 1 323 0
+ 228 01b0 10108103 		orreq	r1, r1, #16
+ 324:libstr91x/src/91x_mc.c ****        }
+ 325:libstr91x/src/91x_mc.c ****        else
+ 326:libstr91x/src/91x_mc.c ****        {
+ 327:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PUL_Reset;
+ 229              		.loc 1 327 0
+ 230 01b4 6F100112 		andne	r1, r1, #111
+ 231 01b8 B413C3E1 		strh	r1, [r3, #52]	@ movhi
+ 328:libstr91x/src/91x_mc.c ****        }
+ 329:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUH == MC_Polarity_Inverted)
+ 330:libstr91x/src/91x_mc.c ****        {
+ 331:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUH_Set;
+ 232              		.loc 1 331 0
+ 233 01bc 68319FE5 		ldr	r3, .L45
+ 329:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUH == MC_Polarity_Inverted)
+ 234              		.loc 1 329 0
+ 235 01c0 BEC1D0E1 		ldrh	ip, [r0, #30]
+ 236              		.loc 1 331 0
+ 237 01c4 B423D3E1 		ldrh	r2, [r3, #52]
+ 329:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUH == MC_Polarity_Inverted)
+ 238              		.loc 1 329 0
+ 239 01c8 01005CE3 		cmp	ip, #1
+ 240              		.loc 1 331 0
+ 241 01cc 20208203 		orreq	r2, r2, #32
+ 332:libstr91x/src/91x_mc.c ****        }
+ 333:libstr91x/src/91x_mc.c ****        else
+ 334:libstr91x/src/91x_mc.c ****        {
+ 335:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PUH_Reset;
+ 242              		.loc 1 335 0
+ 243 01d0 5F200212 		andne	r2, r2, #95
+ 244 01d4 B423C3E1 		strh	r2, [r3, #52]	@ movhi
+ 336:libstr91x/src/91x_mc.c ****        }
+ 337:libstr91x/src/91x_mc.c **** 
+ 338:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVL == MC_Polarity_Inverted)
+ 339:libstr91x/src/91x_mc.c ****        {
+ 340:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVL_Set;
+ 245              		.loc 1 340 0
+ 246 01d8 4CC19FE5 		ldr	ip, .L45
+ 338:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVL == MC_Polarity_Inverted)
+ 247              		.loc 1 338 0
+ 248 01dc B012D0E1 		ldrh	r1, [r0, #32]
+ 249              		.loc 1 340 0
+ 250 01e0 B423DCE1 		ldrh	r2, [ip, #52]
+ 338:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVL == MC_Polarity_Inverted)
+ 251              		.loc 1 338 0
+ 252 01e4 010051E3 		cmp	r1, #1
+ 253              		.loc 1 340 0
+ 254 01e8 04208203 		orreq	r2, r2, #4
+ 341:libstr91x/src/91x_mc.c ****        }
+ 342:libstr91x/src/91x_mc.c ****        else
+ 343:libstr91x/src/91x_mc.c ****        {
+ 344:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PVL_Reset;
+ 255              		.loc 1 344 0
+ 256 01ec 7B200212 		andne	r2, r2, #123
+ 257 01f0 B423CCE1 		strh	r2, [ip, #52]	@ movhi
+ 345:libstr91x/src/91x_mc.c ****        }
+ 346:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVH == MC_Polarity_Inverted)
+ 347:libstr91x/src/91x_mc.c ****        {
+ 348:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVH_Set;
+ 258              		.loc 1 348 0
+ 259 01f4 30119FE5 		ldr	r1, .L45
+ 346:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVH == MC_Polarity_Inverted)
+ 260              		.loc 1 346 0
+ 261 01f8 B232D0E1 		ldrh	r3, [r0, #34]
+ 262              		.loc 1 348 0
+ 263 01fc B4C3D1E1 		ldrh	ip, [r1, #52]
+ 346:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVH == MC_Polarity_Inverted)
+ 264              		.loc 1 346 0
+ 265 0200 010053E3 		cmp	r3, #1
+ 266              		.loc 1 348 0
+ 267 0204 08C08C03 		orreq	ip, ip, #8
+ 349:libstr91x/src/91x_mc.c ****        }
+ 350:libstr91x/src/91x_mc.c ****        else
+ 351:libstr91x/src/91x_mc.c ****        {
+ 352:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PVH_Reset;
+ 268              		.loc 1 352 0
+ 269 0208 77C00C12 		andne	ip, ip, #119
+ 270 020c B4C3C1E1 		strh	ip, [r1, #52]	@ movhi
+ 353:libstr91x/src/91x_mc.c ****        }
+ 354:libstr91x/src/91x_mc.c **** 
+ 355:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWL == MC_Polarity_Inverted)
+ 356:libstr91x/src/91x_mc.c ****        {
+ 357:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWL_Set;
+ 271              		.loc 1 357 0
+ 272 0210 14319FE5 		ldr	r3, .L45
+ 355:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWL == MC_Polarity_Inverted)
+ 273              		.loc 1 355 0
+ 274 0214 B422D0E1 		ldrh	r2, [r0, #36]
+ 275              		.loc 1 357 0
+ 276 0218 B413D3E1 		ldrh	r1, [r3, #52]
+ 355:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWL == MC_Polarity_Inverted)
+ 277              		.loc 1 355 0
+ 278 021c 010052E3 		cmp	r2, #1
+ 279              		.loc 1 357 0
+ 280 0220 01108103 		orreq	r1, r1, #1
+ 358:libstr91x/src/91x_mc.c ****        }
+ 359:libstr91x/src/91x_mc.c ****        else
+ 360:libstr91x/src/91x_mc.c ****        {
+ 361:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PWL_Reset;
+ 281              		.loc 1 361 0
+ 282 0224 7E100112 		andne	r1, r1, #126
+ 283 0228 B413C3E1 		strh	r1, [r3, #52]	@ movhi
+ 362:libstr91x/src/91x_mc.c ****        }
+ 363:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWH == MC_Polarity_Inverted)
+ 284              		.loc 1 363 0
+ 285 022c B6C2D0E1 		ldrh	ip, [r0, #38]
+ 286 0230 01005CE3 		cmp	ip, #1
+ 287 0234 3700000A 		beq	.L43
+ 364:libstr91x/src/91x_mc.c ****        {
+ 365:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWH_Set;
+ 366:libstr91x/src/91x_mc.c ****        }
+ 367:libstr91x/src/91x_mc.c ****        else
+ 368:libstr91x/src/91x_mc.c ****        {
+ 369:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PWH_Reset;
+ 288              		.loc 1 369 0
+ 289 0238 EC009FE5 		ldr	r0, .L45
+ 290              	.LVL1:
+ 291 023c B423D0E1 		ldrh	r2, [r0, #52]
+ 292 0240 7D1002E2 		and	r1, r2, #125
+ 293 0244 B413C0E1 		strh	r1, [r0, #52]	@ movhi
+ 294              	.L2:
+ 295 0248 1EFF2FE1 		bx	lr
+ 296              	.LVL2:
+ 297              	.L20:
+ 294:libstr91x/src/91x_mc.c ****        MC->CMPW = MC_InitStruct->MC_PulseW;
+ 298              		.loc 1 294 0
+ 299 024c BA31D0E1 		ldrh	r3, [r0, #26]
+ 300 0250 D4109FE5 		ldr	r1, .L45
+ 301 0254 B831C1E1 		strh	r3, [r1, #24]	@ movhi
+ 296:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWL == MC_Polarity_Inverted)
+ 302              		.loc 1 296 0
+ 303 0258 B4C2D0E1 		ldrh	ip, [r0, #36]
+ 298:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWL_Set;
+ 304              		.loc 1 298 0
+ 305 025c B423D1E1 		ldrh	r2, [r1, #52]
+ 296:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWL == MC_Polarity_Inverted)
+ 306              		.loc 1 296 0
+ 307 0260 01005CE3 		cmp	ip, #1
+ 298:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWL_Set;
+ 308              		.loc 1 298 0
+ 309 0264 01208203 		orreq	r2, r2, #1
+ 302:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PWL_Reset;
+ 310              		.loc 1 302 0
+ 311 0268 7E200212 		andne	r2, r2, #126
+ 312 026c B423C1E1 		strh	r2, [r1, #52]	@ movhi
+ 304:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityWH == MC_Polarity_Inverted)
+ 313              		.loc 1 304 0
+ 314 0270 B602D0E1 		ldrh	r0, [r0, #38]
+ 315              	.LVL3:
+ 316 0274 010050E3 		cmp	r0, #1
+ 317 0278 2600000A 		beq	.L43
+ 310:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PWH_Reset;
+ 318              		.loc 1 310 0
+ 319 027c A8109FE5 		ldr	r1, .L45
+ 320 0280 B423D1E1 		ldrh	r2, [r1, #52]
+ 321 0284 7D0002E2 		and	r0, r2, #125
+ 322 0288 B403C1E1 		strh	r0, [r1, #52]	@ movhi
+ 323 028c 1EFF2FE1 		bx	lr
+ 324              	.LVL4:
+ 325              	.L19:
+ 270:libstr91x/src/91x_mc.c ****        MC->CMPV = MC_InitStruct->MC_PulseV;
+ 326              		.loc 1 270 0
+ 327 0290 B831D0E1 		ldrh	r3, [r0, #24]
+ 328 0294 90109FE5 		ldr	r1, .L45
+ 329 0298 BC31C1E1 		strh	r3, [r1, #28]	@ movhi
+ 272:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVL == MC_Polarity_Inverted)
+ 330              		.loc 1 272 0
+ 331 029c B0C2D0E1 		ldrh	ip, [r0, #32]
+ 274:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVL_Set;
+ 332              		.loc 1 274 0
+ 333 02a0 B423D1E1 		ldrh	r2, [r1, #52]
+ 272:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVL == MC_Polarity_Inverted)
+ 334              		.loc 1 272 0
+ 335 02a4 01005CE3 		cmp	ip, #1
+ 274:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVL_Set;
+ 336              		.loc 1 274 0
+ 337 02a8 04208203 		orreq	r2, r2, #4
+ 278:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PVL_Reset;
+ 338              		.loc 1 278 0
+ 339 02ac 7B200212 		andne	r2, r2, #123
+ 340 02b0 B423C1E1 		strh	r2, [r1, #52]	@ movhi
+ 282:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVH_Set;
+ 341              		.loc 1 282 0
+ 342 02b4 70C09FE5 		ldr	ip, .L45
+ 280:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVH == MC_Polarity_Inverted)
+ 343              		.loc 1 280 0
+ 344 02b8 B232D0E1 		ldrh	r3, [r0, #34]
+ 282:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVH_Set;
+ 345              		.loc 1 282 0
+ 346 02bc B403DCE1 		ldrh	r0, [ip, #52]
+ 347              	.LVL5:
+ 280:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityVH == MC_Polarity_Inverted)
+ 348              		.loc 1 280 0
+ 349 02c0 010053E3 		cmp	r3, #1
+ 282:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PVH_Set;
+ 350              		.loc 1 282 0
+ 351 02c4 08008003 		orreq	r0, r0, #8
+ 286:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PVH_Reset;
+ 352              		.loc 1 286 0
+ 353 02c8 77000012 		andne	r0, r0, #119
+ 354 02cc B403CCE1 		strh	r0, [ip, #52]	@ movhi
+ 355 02d0 1EFF2FE1 		bx	lr
+ 356              	.LVL6:
+ 357              	.L18:
+ 246:libstr91x/src/91x_mc.c ****        MC->CMPU = MC_InitStruct->MC_PulseU;
+ 358              		.loc 1 246 0
+ 359 02d4 B611D0E1 		ldrh	r1, [r0, #22]
+ 360 02d8 4C309FE5 		ldr	r3, .L45
+ 361 02dc B012C3E1 		strh	r1, [r3, #32]	@ movhi
+ 248:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUL == MC_Polarity_Inverted)
+ 362              		.loc 1 248 0
+ 363 02e0 BC21D0E1 		ldrh	r2, [r0, #28]
+ 250:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUL_Set;
+ 364              		.loc 1 250 0
+ 365 02e4 B4C3D3E1 		ldrh	ip, [r3, #52]
+ 248:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUL == MC_Polarity_Inverted)
+ 366              		.loc 1 248 0
+ 367 02e8 010052E3 		cmp	r2, #1
+ 250:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUL_Set;
+ 368              		.loc 1 250 0
+ 369 02ec 10C08C03 		orreq	ip, ip, #16
+ 254:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PUL_Reset;
+ 370              		.loc 1 254 0
+ 371 02f0 6FC00C12 		andne	ip, ip, #111
+ 372 02f4 B4C3C3E1 		strh	ip, [r3, #52]	@ movhi
+ 258:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUH_Set;
+ 373              		.loc 1 258 0
+ 374 02f8 2C209FE5 		ldr	r2, .L45
+ 256:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUH == MC_Polarity_Inverted)
+ 375              		.loc 1 256 0
+ 376 02fc BE11D0E1 		ldrh	r1, [r0, #30]
+ 258:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUH_Set;
+ 377              		.loc 1 258 0
+ 378 0300 B403D2E1 		ldrh	r0, [r2, #52]
+ 379              	.LVL7:
+ 256:libstr91x/src/91x_mc.c ****        if(MC_InitStruct->MC_PolarityUH == MC_Polarity_Inverted)
+ 380              		.loc 1 256 0
+ 381 0304 010051E3 		cmp	r1, #1
+ 258:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PUH_Set;
+ 382              		.loc 1 258 0
+ 383 0308 20008003 		orreq	r0, r0, #32
+ 262:libstr91x/src/91x_mc.c ****          MC->PSR &= MC_PUH_Reset;
+ 384              		.loc 1 262 0
+ 385 030c 5F000012 		andne	r0, r0, #95
+ 386 0310 B403C2E1 		strh	r0, [r2, #52]	@ movhi
+ 387 0314 1EFF2FE1 		bx	lr
+ 388              	.L43:
+ 365:libstr91x/src/91x_mc.c ****        	 MC->PSR |= MC_PWH_Set;
+ 389              		.loc 1 365 0
+ 390 0318 0C309FE5 		ldr	r3, .L45
+ 391 031c B4C3D3E1 		ldrh	ip, [r3, #52]
+ 392 0320 02008CE3 		orr	r0, ip, #2
+ 393 0324 B403C3E1 		strh	r0, [r3, #52]	@ movhi
+ 394 0328 1EFF2FE1 		bx	lr
+ 395              	.L46:
+ 396              		.align	2
+ 397              	.L45:
+ 398 032c 0030005C 		.word	1543516160
+ 399              		.cfi_endproc
+ 400              	.LFE1:
+ 402              		.align	2
+ 403              		.global	MC_StructInit
+ 405              	MC_StructInit:
+ 406              	.LFB2:
+ 370:libstr91x/src/91x_mc.c ****        }
+ 371:libstr91x/src/91x_mc.c ****      }
+ 372:libstr91x/src/91x_mc.c ****      default:
+ 373:libstr91x/src/91x_mc.c ****      break;
+ 374:libstr91x/src/91x_mc.c ****    }
+ 375:libstr91x/src/91x_mc.c **** }
+ 376:libstr91x/src/91x_mc.c **** 
+ 377:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 378:libstr91x/src/91x_mc.c **** * Function Name  : MC_StructInit
+ 379:libstr91x/src/91x_mc.c **** * Description    : Fills each MC_InitStruct member with its default value.
+ 380:libstr91x/src/91x_mc.c **** * Input          : MC_InitStruct : pointer to a MC_InitTypeDef structure which
+ 381:libstr91x/src/91x_mc.c **** *                  will be initialized.
+ 382:libstr91x/src/91x_mc.c **** * Output         : None                        
+ 383:libstr91x/src/91x_mc.c **** * Return         : None.
+ 384:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 385:libstr91x/src/91x_mc.c **** void MC_StructInit(MC_InitTypeDef* MC_InitStruct)
+ 386:libstr91x/src/91x_mc.c **** {
+ 407              		.loc 1 386 0
+ 408              		.cfi_startproc
+ 409              		@ args = 0, pretend = 0, frame = 0
+ 410              		@ frame_needed = 0, uses_anonymous_args = 0
+ 411              		@ link register save eliminated.
+ 412              	.LVL8:
+ 387:libstr91x/src/91x_mc.c **** 
+ 388:libstr91x/src/91x_mc.c ****   u16 temp;
+ 389:libstr91x/src/91x_mc.c ****   temp=MC->ECR;
+ 413              		.loc 1 389 0
+ 414 0330 9C209FE5 		ldr	r2, .L50
+ 390:libstr91x/src/91x_mc.c ****   temp &= MC_PWM_Counter  ;
+ 391:libstr91x/src/91x_mc.c ****   
+ 392:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_OperatingMode = MC_HardwareOperating_Mode;
+ 415              		.loc 1 392 0
+ 416 0334 0110A0E3 		mov	r1, #1	@ movhi
+ 389:libstr91x/src/91x_mc.c ****   temp=MC->ECR;
+ 417              		.loc 1 389 0
+ 418 0338 B8C4D2E1 		ldrh	ip, [r2, #72]
+ 419              	.LVL9:
+ 420              		.loc 1 392 0
+ 421 033c B010C0E1 		strh	r1, [r0, #0]	@ movhi
+ 393:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoMode = MC_TachoContinuous_Mode;
+ 394:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoEvent_Mode = MC_TachoEvent_Hardware_Mode;
+ 395:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Prescaler = 0x00;
+ 396:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPrescaler = 0x0000;
+ 397:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PWMMode = MC_PWMClassical_Mode;
+ 398:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Complementary = MC_Complementary_Enable;
+ 399:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Emergency = MC_Emergency_Disable;
+ 400:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_ForcedPWMState = 0x003F;
+ 401:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Period = 0x0000;
+ 402:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPeriod = 0x00FF;
+ 403:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Channel = MC_Channel_ALL;
+ 404:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PulseU = 0x0000;
+ 405:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PulseV = 0x0000;
+ 406:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PulseW = 0x0000;
+ 407:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityUL = MC_Polarity_NonInverted;
+ 408:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityUH = MC_Polarity_NonInverted;
+ 409:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityVL = MC_Polarity_NonInverted;
+ 410:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityVH = MC_Polarity_NonInverted;
+ 411:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityWL = MC_Polarity_NonInverted;
+ 412:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityWH = MC_Polarity_NonInverted;
+ 413:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPolarity = MC_TachoEventEdge_RisingFalling;
+ 414:libstr91x/src/91x_mc.c ****  
+ 415:libstr91x/src/91x_mc.c ****   if(temp==0)
+ 422              		.loc 1 415 0
+ 423 0340 20001CE3 		tst	ip, #32
+ 393:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoMode = MC_TachoContinuous_Mode;
+ 424              		.loc 1 393 0
+ 425 0344 02C0A0E3 		mov	ip, #2	@ movhi
+ 426              	.LVL10:
+ 427 0348 B2C0C0E1 		strh	ip, [r0, #2]	@ movhi
+ 399:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Emergency = MC_Emergency_Disable;
+ 428              		.loc 1 399 0
+ 429 034c 02C0A0E3 		mov	ip, #2	@ movhi
+ 394:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoEvent_Mode = MC_TachoEvent_Hardware_Mode;
+ 430              		.loc 1 394 0
+ 431 0350 0110A0E3 		mov	r1, #1	@ movhi
+ 399:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Emergency = MC_Emergency_Disable;
+ 432              		.loc 1 399 0
+ 433 0354 BEC0C0E1 		strh	ip, [r0, #14]	@ movhi
+ 403:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Channel = MC_Channel_ALL;
+ 434              		.loc 1 403 0
+ 435 0358 04C0A0E3 		mov	ip, #4	@ movhi
+ 395:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Prescaler = 0x00;
+ 436              		.loc 1 395 0
+ 437 035c 0030A0E3 		mov	r3, #0
+ 394:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoEvent_Mode = MC_TachoEvent_Hardware_Mode;
+ 438              		.loc 1 394 0
+ 439 0360 B410C0E1 		strh	r1, [r0, #4]	@ movhi
+ 397:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PWMMode = MC_PWMClassical_Mode;
+ 440              		.loc 1 397 0
+ 441 0364 BA10C0E1 		strh	r1, [r0, #10]	@ movhi
+ 398:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Complementary = MC_Complementary_Enable;
+ 442              		.loc 1 398 0
+ 443 0368 BC10C0E1 		strh	r1, [r0, #12]	@ movhi
+ 403:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Channel = MC_Channel_ALL;
+ 444              		.loc 1 403 0
+ 445 036c B4C1C0E1 		strh	ip, [r0, #20]	@ movhi
+ 402:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPeriod = 0x00FF;
+ 446              		.loc 1 402 0
+ 447 0370 FF10A0E3 		mov	r1, #255	@ movhi
+ 407:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityUL = MC_Polarity_NonInverted;
+ 448              		.loc 1 407 0
+ 449 0374 02C0A0E3 		mov	ip, #2	@ movhi
+ 400:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_ForcedPWMState = 0x003F;
+ 450              		.loc 1 400 0
+ 451 0378 3F20A0E3 		mov	r2, #63
+ 395:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Prescaler = 0x00;
+ 452              		.loc 1 395 0
+ 453 037c 0630C0E5 		strb	r3, [r0, #6]
+ 396:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPrescaler = 0x0000;
+ 454              		.loc 1 396 0
+ 455 0380 B830C0E1 		strh	r3, [r0, #8]	@ movhi
+ 401:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_Period = 0x0000;
+ 456              		.loc 1 401 0
+ 457 0384 B031C0E1 		strh	r3, [r0, #16]	@ movhi
+ 402:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPeriod = 0x00FF;
+ 458              		.loc 1 402 0
+ 459 0388 B211C0E1 		strh	r1, [r0, #18]	@ movhi
+ 404:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PulseU = 0x0000;
+ 460              		.loc 1 404 0
+ 461 038c B631C0E1 		strh	r3, [r0, #22]	@ movhi
+ 405:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PulseV = 0x0000;
+ 462              		.loc 1 405 0
+ 463 0390 B831C0E1 		strh	r3, [r0, #24]	@ movhi
+ 406:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PulseW = 0x0000;
+ 464              		.loc 1 406 0
+ 465 0394 BA31C0E1 		strh	r3, [r0, #26]	@ movhi
+ 407:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityUL = MC_Polarity_NonInverted;
+ 466              		.loc 1 407 0
+ 467 0398 BCC1C0E1 		strh	ip, [r0, #28]	@ movhi
+ 408:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityUH = MC_Polarity_NonInverted;
+ 468              		.loc 1 408 0
+ 469 039c BEC1C0E1 		strh	ip, [r0, #30]	@ movhi
+ 409:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityVL = MC_Polarity_NonInverted;
+ 470              		.loc 1 409 0
+ 471 03a0 B0C2C0E1 		strh	ip, [r0, #32]	@ movhi
+ 410:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityVH = MC_Polarity_NonInverted;
+ 472              		.loc 1 410 0
+ 473 03a4 B2C2C0E1 		strh	ip, [r0, #34]	@ movhi
+ 411:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityWL = MC_Polarity_NonInverted;
+ 474              		.loc 1 411 0
+ 475 03a8 B4C2C0E1 		strh	ip, [r0, #36]	@ movhi
+ 412:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_PolarityWH = MC_Polarity_NonInverted;
+ 476              		.loc 1 412 0
+ 477 03ac B6C2C0E1 		strh	ip, [r0, #38]	@ movhi
+ 413:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPolarity = MC_TachoEventEdge_RisingFalling;
+ 478              		.loc 1 413 0
+ 479 03b0 0310A0E3 		mov	r1, #3	@ movhi
+ 416:libstr91x/src/91x_mc.c ****   {
+ 417:libstr91x/src/91x_mc.c ****     MC_InitStruct->MC_DeadTime = 0x003F;
+ 418:libstr91x/src/91x_mc.c ****   }
+ 419:libstr91x/src/91x_mc.c ****   else
+ 420:libstr91x/src/91x_mc.c ****   {
+ 421:libstr91x/src/91x_mc.c ****     MC_InitStruct->MC_DeadTime = 0x03FF;
+ 480              		.loc 1 421 0
+ 481 03b4 3FCBE013 		mvnne	ip, #64512
+ 422:libstr91x/src/91x_mc.c ****   }
+ 423:libstr91x/src/91x_mc.c ****   
+ 424:libstr91x/src/91x_mc.c ****  MC_InitStruct->MC_RepetitionCounter = 0x0000;
+ 482              		.loc 1 424 0
+ 483 03b8 0030A0E3 		mov	r3, #0
+ 400:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_ForcedPWMState = 0x003F;
+ 484              		.loc 1 400 0
+ 485 03bc 0720C0E5 		strb	r2, [r0, #7]
+ 413:libstr91x/src/91x_mc.c ****   MC_InitStruct->MC_TachoPolarity = MC_TachoEventEdge_RisingFalling;
+ 486              		.loc 1 413 0
+ 487 03c0 B812C0E1 		strh	r1, [r0, #40]	@ movhi
+ 417:libstr91x/src/91x_mc.c ****     MC_InitStruct->MC_DeadTime = 0x003F;
+ 488              		.loc 1 417 0
+ 489 03c4 BA22C001 		streqh	r2, [r0, #42]	@ movhi
+ 421:libstr91x/src/91x_mc.c ****     MC_InitStruct->MC_DeadTime = 0x03FF;
+ 490              		.loc 1 421 0
+ 491 03c8 BAC2C011 		strneh	ip, [r0, #42]	@ movhi
+ 492              		.loc 1 424 0
+ 493 03cc 2C30C0E5 		strb	r3, [r0, #44]
+ 425:libstr91x/src/91x_mc.c **** }
+ 494              		.loc 1 425 0
+ 495 03d0 1EFF2FE1 		bx	lr
+ 496              	.L51:
+ 497              		.align	2
+ 498              	.L50:
+ 499 03d4 0030005C 		.word	1543516160
+ 500              		.cfi_endproc
+ 501              	.LFE2:
+ 503              		.align	2
+ 504              		.global	MC_Cmd
+ 506              	MC_Cmd:
+ 507              	.LFB3:
+ 426:libstr91x/src/91x_mc.c **** 
+ 427:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 428:libstr91x/src/91x_mc.c **** * Function Name  : MC_Cmd
+ 429:libstr91x/src/91x_mc.c **** * Description    : Enables or disables the MC peripheral.
+ 430:libstr91x/src/91x_mc.c **** * Input          : Newstate: new state of the MC peripheral.
+ 431:libstr91x/src/91x_mc.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 432:libstr91x/src/91x_mc.c **** * Output         : None
+ 433:libstr91x/src/91x_mc.c **** * Return         : None
+ 434:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 435:libstr91x/src/91x_mc.c **** void MC_Cmd(FunctionalState NewState)
+ 436:libstr91x/src/91x_mc.c **** {
+ 508              		.loc 1 436 0
+ 509              		.cfi_startproc
+ 510              		@ args = 0, pretend = 0, frame = 0
+ 511              		@ frame_needed = 0, uses_anonymous_args = 0
+ 512              		@ link register save eliminated.
+ 513              	.LVL11:
+ 437:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 514              		.loc 1 437 0
+ 515 03d8 010050E3 		cmp	r0, #1
+ 516 03dc 0B00000A 		beq	.L55
+ 438:libstr91x/src/91x_mc.c ****   {
+ 439:libstr91x/src/91x_mc.c ****   /* Enable the PWM counter */
+ 440:libstr91x/src/91x_mc.c ****     MC->PCR0 |= MC_PCE_Set;
+ 441:libstr91x/src/91x_mc.c ****   
+ 442:libstr91x/src/91x_mc.c ****   /* Enable the Tacho counter */
+ 443:libstr91x/src/91x_mc.c ****     MC->PCR0 |= MC_TCE_Set;
+ 444:libstr91x/src/91x_mc.c ****   
+ 445:libstr91x/src/91x_mc.c ****   /* Enable the Dead Time counter */
+ 446:libstr91x/src/91x_mc.c ****     MC->PCR0 |= MC_DTE_Set;
+ 447:libstr91x/src/91x_mc.c ****   }
+ 448:libstr91x/src/91x_mc.c ****   else
+ 449:libstr91x/src/91x_mc.c ****   {
+ 450:libstr91x/src/91x_mc.c ****   /* Disable the PWM counter */
+ 451:libstr91x/src/91x_mc.c ****     MC->PCR0 &= MC_PCE_Reset;
+ 517              		.loc 1 451 0
+ 518 03e0 54309FE5 		ldr	r3, .L56
+ 519 03e4 54C09FE5 		ldr	ip, .L56+4
+ 520 03e8 B822D3E1 		ldrh	r2, [r3, #40]
+ 521 03ec 0C1002E0 		and	r1, r2, ip
+ 522 03f0 B812C3E1 		strh	r1, [r3, #40]	@ movhi
+ 452:libstr91x/src/91x_mc.c ****     
+ 453:libstr91x/src/91x_mc.c ****   /* Disable the Tacho counter */
+ 454:libstr91x/src/91x_mc.c ****     MC->PCR0 &= MC_TCE_Reset;
+ 523              		.loc 1 454 0
+ 524 03f4 B802D3E1 		ldrh	r0, [r3, #40]
+ 525              	.LVL12:
+ 526 03f8 BF2000E2 		and	r2, r0, #191
+ 527 03fc B822C3E1 		strh	r2, [r3, #40]	@ movhi
+ 455:libstr91x/src/91x_mc.c ****     
+ 456:libstr91x/src/91x_mc.c ****   /* Disable the Dead counter */
+ 457:libstr91x/src/91x_mc.c ****     MC->PCR0 &= MC_DTE_Reset;
+ 528              		.loc 1 457 0
+ 529 0400 B8C2D3E1 		ldrh	ip, [r3, #40]
+ 530 0404 7F100CE2 		and	r1, ip, #127
+ 531 0408 B812C3E1 		strh	r1, [r3, #40]	@ movhi
+ 532 040c 1EFF2FE1 		bx	lr
+ 533              	.LVL13:
+ 534              	.L55:
+ 440:libstr91x/src/91x_mc.c ****     MC->PCR0 |= MC_PCE_Set;
+ 535              		.loc 1 440 0
+ 536 0410 24309FE5 		ldr	r3, .L56
+ 537 0414 B802D3E1 		ldrh	r0, [r3, #40]
+ 538              	.LVL14:
+ 539 0418 202080E3 		orr	r2, r0, #32
+ 540 041c B822C3E1 		strh	r2, [r3, #40]	@ movhi
+ 443:libstr91x/src/91x_mc.c ****     MC->PCR0 |= MC_TCE_Set;
+ 541              		.loc 1 443 0
+ 542 0420 B8C2D3E1 		ldrh	ip, [r3, #40]
+ 543 0424 40108CE3 		orr	r1, ip, #64
+ 544 0428 B812C3E1 		strh	r1, [r3, #40]	@ movhi
+ 446:libstr91x/src/91x_mc.c ****     MC->PCR0 |= MC_DTE_Set;
+ 545              		.loc 1 446 0
+ 546 042c B802D3E1 		ldrh	r0, [r3, #40]
+ 547 0430 802080E3 		orr	r2, r0, #128
+ 548 0434 B822C3E1 		strh	r2, [r3, #40]	@ movhi
+ 549 0438 1EFF2FE1 		bx	lr
+ 550              	.L57:
+ 551              		.align	2
+ 552              	.L56:
+ 553 043c 0030005C 		.word	1543516160
+ 554 0440 DFFF0000 		.word	65503
+ 555              		.cfi_endproc
+ 556              	.LFE3:
+ 558              		.align	2
+ 559              		.global	MC_ClearPWMCounter
+ 561              	MC_ClearPWMCounter:
+ 562              	.LFB4:
+ 458:libstr91x/src/91x_mc.c ****   }
+ 459:libstr91x/src/91x_mc.c **** }
+ 460:libstr91x/src/91x_mc.c **** 
+ 461:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 462:libstr91x/src/91x_mc.c **** * Function Name  : MC_ClearPWMCounter
+ 463:libstr91x/src/91x_mc.c **** * Description    : Clears the MC PWM counter.
+ 464:libstr91x/src/91x_mc.c **** * Input          : None
+ 465:libstr91x/src/91x_mc.c **** * Output         : None
+ 466:libstr91x/src/91x_mc.c **** * Return         : None
+ 467:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 468:libstr91x/src/91x_mc.c **** void MC_ClearPWMCounter(void)
+ 469:libstr91x/src/91x_mc.c **** {
+ 563              		.loc 1 469 0
+ 564              		.cfi_startproc
+ 565              		@ args = 0, pretend = 0, frame = 0
+ 566              		@ frame_needed = 0, uses_anonymous_args = 0
+ 567              		@ link register save eliminated.
+ 470:libstr91x/src/91x_mc.c **** /* Clear the PWM counter */
+ 471:libstr91x/src/91x_mc.c ****   MC->PCR0 |= MC_CPC_Set;
+ 568              		.loc 1 471 0
+ 569 0444 0C309FE5 		ldr	r3, .L59
+ 570 0448 B802D3E1 		ldrh	r0, [r3, #40]
+ 571 044c 082080E3 		orr	r2, r0, #8
+ 572 0450 B822C3E1 		strh	r2, [r3, #40]	@ movhi
+ 472:libstr91x/src/91x_mc.c **** }
+ 573              		.loc 1 472 0
+ 574 0454 1EFF2FE1 		bx	lr
+ 575              	.L60:
+ 576              		.align	2
+ 577              	.L59:
+ 578 0458 0030005C 		.word	1543516160
+ 579              		.cfi_endproc
+ 580              	.LFE4:
+ 582              		.align	2
+ 583              		.global	MC_ClearTachoCounter
+ 585              	MC_ClearTachoCounter:
+ 586              	.LFB5:
+ 473:libstr91x/src/91x_mc.c **** 
+ 474:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 475:libstr91x/src/91x_mc.c **** * Function Name  : MC_ClearTachoCounter
+ 476:libstr91x/src/91x_mc.c **** * Description    : Clears the MC Tacho counter.
+ 477:libstr91x/src/91x_mc.c **** * Input          : None
+ 478:libstr91x/src/91x_mc.c **** * Output         : None
+ 479:libstr91x/src/91x_mc.c **** * Return         : None
+ 480:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 481:libstr91x/src/91x_mc.c **** void MC_ClearTachoCounter(void)
+ 482:libstr91x/src/91x_mc.c **** {
+ 587              		.loc 1 482 0
+ 588              		.cfi_startproc
+ 589              		@ args = 0, pretend = 0, frame = 0
+ 590              		@ frame_needed = 0, uses_anonymous_args = 0
+ 591              		@ link register save eliminated.
+ 483:libstr91x/src/91x_mc.c **** /* Clear the Tacho counter */
+ 484:libstr91x/src/91x_mc.c ****   MC->PCR0 |= MC_CTC_Set;
+ 592              		.loc 1 484 0
+ 593 045c 0C309FE5 		ldr	r3, .L62
+ 594 0460 B802D3E1 		ldrh	r0, [r3, #40]
+ 595 0464 102080E3 		orr	r2, r0, #16
+ 596 0468 B822C3E1 		strh	r2, [r3, #40]	@ movhi
+ 485:libstr91x/src/91x_mc.c **** }
+ 597              		.loc 1 485 0
+ 598 046c 1EFF2FE1 		bx	lr
+ 599              	.L63:
+ 600              		.align	2
+ 601              	.L62:
+ 602 0470 0030005C 		.word	1543516160
+ 603              		.cfi_endproc
+ 604              	.LFE5:
+ 606              		.align	2
+ 607              		.global	MC_CtrlPWMOutputs
+ 609              	MC_CtrlPWMOutputs:
+ 610              	.LFB6:
+ 486:libstr91x/src/91x_mc.c **** 
+ 487:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 488:libstr91x/src/91x_mc.c **** * Function Name  : MC_CtrlPWMOutputs
+ 489:libstr91x/src/91x_mc.c **** * Description    : Enables or disables MC peripheral Main Outputs.
+ 490:libstr91x/src/91x_mc.c **** * Input          : Newstate: new state of the MC peripheral Main Outputs.
+ 491:libstr91x/src/91x_mc.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 492:libstr91x/src/91x_mc.c **** * Output         : None
+ 493:libstr91x/src/91x_mc.c **** * Return         : None
+ 494:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 495:libstr91x/src/91x_mc.c **** void MC_CtrlPWMOutputs(FunctionalState Newstate)
+ 496:libstr91x/src/91x_mc.c **** {
+ 611              		.loc 1 496 0
+ 612              		.cfi_startproc
+ 613              		@ args = 0, pretend = 0, frame = 0
+ 614              		@ frame_needed = 0, uses_anonymous_args = 0
+ 615              		@ link register save eliminated.
+ 616              	.LVL15:
+ 497:libstr91x/src/91x_mc.c ****   if(Newstate == ENABLE)
+ 617              		.loc 1 497 0
+ 618 0474 010050E3 		cmp	r0, #1
+ 498:libstr91x/src/91x_mc.c ****   {
+ 499:libstr91x/src/91x_mc.c ****   /* Enable the dead time generator data */
+ 500:libstr91x/src/91x_mc.c ****     MC->OPR &= MC_ODS_Reset;
+ 619              		.loc 1 500 0
+ 620 0478 20209F05 		ldreq	r2, .L67
+ 501:libstr91x/src/91x_mc.c ****   }
+ 502:libstr91x/src/91x_mc.c ****   else
+ 503:libstr91x/src/91x_mc.c ****   {
+ 504:libstr91x/src/91x_mc.c ****   /* Enable the default state data */
+ 505:libstr91x/src/91x_mc.c ****     MC->OPR |= MC_ODS_Set;
+ 621              		.loc 1 505 0
+ 622 047c 1C309F15 		ldrne	r3, .L67
+ 500:libstr91x/src/91x_mc.c ****     MC->OPR &= MC_ODS_Reset;
+ 623              		.loc 1 500 0
+ 624 0480 1C309F05 		ldreq	r3, .L67+4
+ 625 0484 B813D201 		ldreqh	r1, [r2, #56]
+ 626              		.loc 1 505 0
+ 627 0488 B823D311 		ldrneh	r2, [r3, #56]
+ 500:libstr91x/src/91x_mc.c ****     MC->OPR &= MC_ODS_Reset;
+ 628              		.loc 1 500 0
+ 629 048c 03300100 		andeq	r3, r1, r3
+ 630              		.loc 1 505 0
+ 631 0490 40208213 		orrne	r2, r2, #64
+ 500:libstr91x/src/91x_mc.c ****     MC->OPR &= MC_ODS_Reset;
+ 632              		.loc 1 500 0
+ 633 0494 B833C201 		streqh	r3, [r2, #56]	@ movhi
+ 634              		.loc 1 505 0
+ 635 0498 B823C311 		strneh	r2, [r3, #56]	@ movhi
+ 636 049c 1EFF2FE1 		bx	lr
+ 637              	.L68:
+ 638              		.align	2
+ 639              	.L67:
+ 640 04a0 0030005C 		.word	1543516160
+ 641 04a4 3FFF0000 		.word	65343
+ 642              		.cfi_endproc
+ 643              	.LFE6:
+ 645              		.align	2
+ 646              		.global	MC_ITConfig
+ 648              	MC_ITConfig:
+ 649              	.LFB7:
+ 506:libstr91x/src/91x_mc.c ****   }
+ 507:libstr91x/src/91x_mc.c **** }
+ 508:libstr91x/src/91x_mc.c **** 
+ 509:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 510:libstr91x/src/91x_mc.c **** * Function Name  : MC_ITConfig
+ 511:libstr91x/src/91x_mc.c **** * Description    : Enables or disables the MC interrupts.
+ 512:libstr91x/src/91x_mc.c **** * Input          : - MC_IT: specifies the MC interrupts sources to be enabled
+ 513:libstr91x/src/91x_mc.c **** *                    or disabled.
+ 514:libstr91x/src/91x_mc.c **** *                    This parameter can be any combination of the following values:
+ 515:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPW: Compare W Interrupt.
+ 516:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPV: Compare V Interrupt.
+ 517:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPU: Compare U Interrupt.
+ 518:libstr91x/src/91x_mc.c **** *                         - MC_IT_ZPC: Zero of PWM counter Interrupt.
+ 519:libstr91x/src/91x_mc.c **** *                         - MC_IT_ADT: Automatic Data Transfer Interrupt.
+ 520:libstr91x/src/91x_mc.c **** *                         - MC_IT_OTC: Overflow of Tacho counter Interrupt.
+ 521:libstr91x/src/91x_mc.c **** *                         - MC_IT_CPT: Capture of Tacho counter Interrupt.
+ 522:libstr91x/src/91x_mc.c **** *                         - MC_IT_CM0: Compare 0 Interrupt.
+ 523:libstr91x/src/91x_mc.c **** *                  - Newstate: new state of IMC interrupts.
+ 524:libstr91x/src/91x_mc.c **** *                    This parameter can be: ENABLE or DISABLE.
+ 525:libstr91x/src/91x_mc.c **** * Output         : None
+ 526:libstr91x/src/91x_mc.c **** * Return         : None
+ 527:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 528:libstr91x/src/91x_mc.c **** void MC_ITConfig(u16 MC_IT, FunctionalState NewState)
+ 529:libstr91x/src/91x_mc.c **** {
+ 650              		.loc 1 529 0
+ 651              		.cfi_startproc
+ 652              		@ args = 0, pretend = 0, frame = 0
+ 653              		@ frame_needed = 0, uses_anonymous_args = 0
+ 654              		@ link register save eliminated.
+ 655              	.LVL16:
+ 530:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 531:libstr91x/src/91x_mc.c ****   {
+ 532:libstr91x/src/91x_mc.c ****     /* Enable the specific interrupt source */
+ 533:libstr91x/src/91x_mc.c ****     MC->IMR |= MC_IT;
+ 656              		.loc 1 533 0
+ 657 04a8 2C309FE5 		ldr	r3, .L72
+ 530:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 658              		.loc 1 530 0
+ 659 04ac 010051E3 		cmp	r1, #1
+ 660              		.loc 1 533 0
+ 661 04b0 BC23D3E1 		ldrh	r2, [r3, #60]
+ 662 04b4 02008001 		orreq	r0, r0, r2
+ 663              	.LVL17:
+ 534:libstr91x/src/91x_mc.c **** 
+ 535:libstr91x/src/91x_mc.c ****     /* Enable the global peripheral interrupt sources */
+ 536:libstr91x/src/91x_mc.c ****     MC->PCR2 |= MC_GPI_Set;
+ 537:libstr91x/src/91x_mc.c ****   }
+ 538:libstr91x/src/91x_mc.c ****   else
+ 539:libstr91x/src/91x_mc.c ****   {   
+ 540:libstr91x/src/91x_mc.c ****     /* Disable the specific interrupt source */
+ 541:libstr91x/src/91x_mc.c ****     MC->IMR &= ~MC_IT;
+ 664              		.loc 1 541 0
+ 665 04b8 0000C211 		bicne	r0, r2, r0
+ 533:libstr91x/src/91x_mc.c ****     MC->IMR |= MC_IT;
+ 666              		.loc 1 533 0
+ 667 04bc BC03C301 		streqh	r0, [r3, #60]	@ movhi
+ 668              		.loc 1 541 0
+ 669 04c0 BC03C311 		strneh	r0, [r3, #60]	@ movhi
+ 536:libstr91x/src/91x_mc.c ****     MC->PCR2 |= MC_GPI_Set;
+ 670              		.loc 1 536 0
+ 671 04c4 B023D301 		ldreqh	r2, [r3, #48]
+ 542:libstr91x/src/91x_mc.c **** 
+ 543:libstr91x/src/91x_mc.c ****     /* Disable the global peripheral interrupt sources */
+ 544:libstr91x/src/91x_mc.c ****     MC->PCR2 &= MC_GPI_Reset;
+ 672              		.loc 1 544 0
+ 673 04c8 B023D311 		ldrneh	r2, [r3, #48]
+ 536:libstr91x/src/91x_mc.c ****     MC->PCR2 |= MC_GPI_Set;
+ 674              		.loc 1 536 0
+ 675 04cc 80208203 		orreq	r2, r2, #128
+ 676              		.loc 1 544 0
+ 677 04d0 7F200212 		andne	r2, r2, #127
+ 678 04d4 B023C3E1 		strh	r2, [r3, #48]	@ movhi
+ 679 04d8 1EFF2FE1 		bx	lr
+ 680              	.L73:
+ 681              		.align	2
+ 682              	.L72:
+ 683 04dc 0030005C 		.word	1543516160
+ 684              		.cfi_endproc
+ 685              	.LFE7:
+ 687              		.align	2
+ 688              		.global	MC_SetPrescaler
+ 690              	MC_SetPrescaler:
+ 691              	.LFB8:
+ 545:libstr91x/src/91x_mc.c ****   }
+ 546:libstr91x/src/91x_mc.c **** }
+ 547:libstr91x/src/91x_mc.c **** 
+ 548:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 549:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetPrescaler
+ 550:libstr91x/src/91x_mc.c **** * Description    : Sets the MC prescaler value.
+ 551:libstr91x/src/91x_mc.c **** * Input          : MC_Prescaler: MC prescaler new value.
+ 552:libstr91x/src/91x_mc.c **** * Output         : None
+ 553:libstr91x/src/91x_mc.c **** * Return         : None
+ 554:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 555:libstr91x/src/91x_mc.c **** void MC_SetPrescaler(u8 MC_Prescaler)
+ 556:libstr91x/src/91x_mc.c **** {
+ 692              		.loc 1 556 0
+ 693              		.cfi_startproc
+ 694              		@ args = 0, pretend = 0, frame = 0
+ 695              		@ frame_needed = 0, uses_anonymous_args = 0
+ 696              		@ link register save eliminated.
+ 697              	.LVL18:
+ 557:libstr91x/src/91x_mc.c **** /* Set the Prescaler Register value */
+ 558:libstr91x/src/91x_mc.c ****   MC->CPRS = MC_Prescaler;
+ 698              		.loc 1 558 0
+ 699 04e0 04309FE5 		ldr	r3, .L75
+ 700 04e4 B001C3E1 		strh	r0, [r3, #16]	@ movhi
+ 559:libstr91x/src/91x_mc.c **** }
+ 701              		.loc 1 559 0
+ 702 04e8 1EFF2FE1 		bx	lr
+ 703              	.L76:
+ 704              		.align	2
+ 705              	.L75:
+ 706 04ec 0030005C 		.word	1543516160
+ 707              		.cfi_endproc
+ 708              	.LFE8:
+ 710              		.align	2
+ 711              		.global	MC_SetPeriod
+ 713              	MC_SetPeriod:
+ 714              	.LFB9:
+ 560:libstr91x/src/91x_mc.c **** 
+ 561:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 562:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetPeriod
+ 563:libstr91x/src/91x_mc.c **** * Description    : Sets the MC period value.
+ 564:libstr91x/src/91x_mc.c **** * Input          : MC_Period: MC period new value.
+ 565:libstr91x/src/91x_mc.c **** * Output         : None
+ 566:libstr91x/src/91x_mc.c **** * Return         : None
+ 567:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 568:libstr91x/src/91x_mc.c **** void MC_SetPeriod(u16 MC_Period)
+ 569:libstr91x/src/91x_mc.c **** {
+ 715              		.loc 1 569 0
+ 716              		.cfi_startproc
+ 717              		@ args = 0, pretend = 0, frame = 0
+ 718              		@ frame_needed = 0, uses_anonymous_args = 0
+ 719              		@ link register save eliminated.
+ 720              	.LVL19:
+ 570:libstr91x/src/91x_mc.c **** /* Set the Period Register value */
+ 571:libstr91x/src/91x_mc.c ****   MC->CMP0 = MC_Period;
+ 721              		.loc 1 571 0
+ 722 04f0 04309FE5 		ldr	r3, .L78
+ 723 04f4 B402C3E1 		strh	r0, [r3, #36]	@ movhi
+ 572:libstr91x/src/91x_mc.c **** }
+ 724              		.loc 1 572 0
+ 725 04f8 1EFF2FE1 		bx	lr
+ 726              	.L79:
+ 727              		.align	2
+ 728              	.L78:
+ 729 04fc 0030005C 		.word	1543516160
+ 730              		.cfi_endproc
+ 731              	.LFE9:
+ 733              		.align	2
+ 734              		.global	MC_SetPulseU
+ 736              	MC_SetPulseU:
+ 737              	.LFB10:
+ 573:libstr91x/src/91x_mc.c **** 
+ 574:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 575:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetPulseU
+ 576:libstr91x/src/91x_mc.c **** * Description    : Sets the MC pulse U value.
+ 577:libstr91x/src/91x_mc.c **** * Input          : MC_PulseU: MC pulse U new value.
+ 578:libstr91x/src/91x_mc.c **** * Output         : None
+ 579:libstr91x/src/91x_mc.c **** * Return         : None
+ 580:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 581:libstr91x/src/91x_mc.c **** void MC_SetPulseU(u16 MC_PulseU)
+ 582:libstr91x/src/91x_mc.c **** {
+ 738              		.loc 1 582 0
+ 739              		.cfi_startproc
+ 740              		@ args = 0, pretend = 0, frame = 0
+ 741              		@ frame_needed = 0, uses_anonymous_args = 0
+ 742              		@ link register save eliminated.
+ 743              	.LVL20:
+ 583:libstr91x/src/91x_mc.c **** /* Set the Pulse U Register value */
+ 584:libstr91x/src/91x_mc.c ****   MC->CMPU = MC_PulseU;
+ 744              		.loc 1 584 0
+ 745 0500 04309FE5 		ldr	r3, .L81
+ 746 0504 B002C3E1 		strh	r0, [r3, #32]	@ movhi
+ 585:libstr91x/src/91x_mc.c **** }
+ 747              		.loc 1 585 0
+ 748 0508 1EFF2FE1 		bx	lr
+ 749              	.L82:
+ 750              		.align	2
+ 751              	.L81:
+ 752 050c 0030005C 		.word	1543516160
+ 753              		.cfi_endproc
+ 754              	.LFE10:
+ 756              		.align	2
+ 757              		.global	MC_SetPulseV
+ 759              	MC_SetPulseV:
+ 760              	.LFB11:
+ 586:libstr91x/src/91x_mc.c **** 
+ 587:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 588:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetPulseV
+ 589:libstr91x/src/91x_mc.c **** * Description    : Sets the MC pulse V value.
+ 590:libstr91x/src/91x_mc.c **** * Input          : MC_PulseV: MC pulse V new value.
+ 591:libstr91x/src/91x_mc.c **** * Output         : None
+ 592:libstr91x/src/91x_mc.c **** * Return         : None
+ 593:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 594:libstr91x/src/91x_mc.c **** void MC_SetPulseV(u16 MC_PulseV)
+ 595:libstr91x/src/91x_mc.c **** {
+ 761              		.loc 1 595 0
+ 762              		.cfi_startproc
+ 763              		@ args = 0, pretend = 0, frame = 0
+ 764              		@ frame_needed = 0, uses_anonymous_args = 0
+ 765              		@ link register save eliminated.
+ 766              	.LVL21:
+ 596:libstr91x/src/91x_mc.c **** /* Set the Pulse V Register value */
+ 597:libstr91x/src/91x_mc.c ****    MC->CMPV = MC_PulseV;
+ 767              		.loc 1 597 0
+ 768 0510 04309FE5 		ldr	r3, .L84
+ 769 0514 BC01C3E1 		strh	r0, [r3, #28]	@ movhi
+ 598:libstr91x/src/91x_mc.c **** }
+ 770              		.loc 1 598 0
+ 771 0518 1EFF2FE1 		bx	lr
+ 772              	.L85:
+ 773              		.align	2
+ 774              	.L84:
+ 775 051c 0030005C 		.word	1543516160
+ 776              		.cfi_endproc
+ 777              	.LFE11:
+ 779              		.align	2
+ 780              		.global	MC_SetPulseW
+ 782              	MC_SetPulseW:
+ 783              	.LFB12:
+ 599:libstr91x/src/91x_mc.c **** 
+ 600:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 601:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetPulseW
+ 602:libstr91x/src/91x_mc.c **** * Description    : Sets the MC pulse W value.
+ 603:libstr91x/src/91x_mc.c **** * Input          : MC_PulseW: MC pulse W new value.
+ 604:libstr91x/src/91x_mc.c **** * Output         : None
+ 605:libstr91x/src/91x_mc.c **** * Return         : None
+ 606:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 607:libstr91x/src/91x_mc.c **** void MC_SetPulseW(u16 MC_PulseW)
+ 608:libstr91x/src/91x_mc.c **** {
+ 784              		.loc 1 608 0
+ 785              		.cfi_startproc
+ 786              		@ args = 0, pretend = 0, frame = 0
+ 787              		@ frame_needed = 0, uses_anonymous_args = 0
+ 788              		@ link register save eliminated.
+ 789              	.LVL22:
+ 609:libstr91x/src/91x_mc.c **** /* Set the Pulse W Register value */
+ 610:libstr91x/src/91x_mc.c ****    MC->CMPW = MC_PulseW;
+ 790              		.loc 1 610 0
+ 791 0520 04309FE5 		ldr	r3, .L87
+ 792 0524 B801C3E1 		strh	r0, [r3, #24]	@ movhi
+ 611:libstr91x/src/91x_mc.c **** }
+ 793              		.loc 1 611 0
+ 794 0528 1EFF2FE1 		bx	lr
+ 795              	.L88:
+ 796              		.align	2
+ 797              	.L87:
+ 798 052c 0030005C 		.word	1543516160
+ 799              		.cfi_endproc
+ 800              	.LFE12:
+ 802              		.align	2
+ 803              		.global	MC_PWMModeConfig
+ 805              	MC_PWMModeConfig:
+ 806              	.LFB13:
+ 612:libstr91x/src/91x_mc.c **** 
+ 613:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 614:libstr91x/src/91x_mc.c **** * Function Name  : MC_PWMModeConfig
+ 615:libstr91x/src/91x_mc.c **** * Description    : Selects the MC PWM counter Mode.
+ 616:libstr91x/src/91x_mc.c **** * Input          : MC_PWMMode: MC PWM counter Mode.
+ 617:libstr91x/src/91x_mc.c **** * Output         : None
+ 618:libstr91x/src/91x_mc.c **** * Return         : None
+ 619:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 620:libstr91x/src/91x_mc.c **** void MC_PWMModeConfig(u16 MC_PWMMode)
+ 621:libstr91x/src/91x_mc.c **** {
+ 807              		.loc 1 621 0
+ 808              		.cfi_startproc
+ 809              		@ args = 0, pretend = 0, frame = 0
+ 810              		@ frame_needed = 0, uses_anonymous_args = 0
+ 811              		@ link register save eliminated.
+ 812              	.LVL23:
+ 622:libstr91x/src/91x_mc.c ****    /* Select the MC PWM counter Mode */
+ 623:libstr91x/src/91x_mc.c ****    if(MC_PWMMode == MC_PWMZeroCentered_Mode)
+ 624:libstr91x/src/91x_mc.c ****    {
+ 625:libstr91x/src/91x_mc.c ****      MC->PCR0 |= MC_CMS_Set;
+ 813              		.loc 1 625 0
+ 814 0530 14309FE5 		ldr	r3, .L92
+ 623:libstr91x/src/91x_mc.c ****    if(MC_PWMMode == MC_PWMZeroCentered_Mode)
+ 815              		.loc 1 623 0
+ 816 0534 020050E3 		cmp	r0, #2
+ 817              		.loc 1 625 0
+ 818 0538 B822D3E1 		ldrh	r2, [r3, #40]
+ 819 053c 04208203 		orreq	r2, r2, #4
+ 626:libstr91x/src/91x_mc.c ****    }
+ 627:libstr91x/src/91x_mc.c ****    else
+ 628:libstr91x/src/91x_mc.c ****    {
+ 629:libstr91x/src/91x_mc.c ****      MC->PCR0 &= MC_CMS_Reset;
+ 820              		.loc 1 629 0
+ 821 0540 FB200212 		andne	r2, r2, #251
+ 822 0544 B822C3E1 		strh	r2, [r3, #40]	@ movhi
+ 823 0548 1EFF2FE1 		bx	lr
+ 824              	.L93:
+ 825              		.align	2
+ 826              	.L92:
+ 827 054c 0030005C 		.word	1543516160
+ 828              		.cfi_endproc
+ 829              	.LFE13:
+ 831              		.align	2
+ 832              		.global	MC_SetDeadTime
+ 834              	MC_SetDeadTime:
+ 835              	.LFB14:
+ 630:libstr91x/src/91x_mc.c ****    }
+ 631:libstr91x/src/91x_mc.c **** }
+ 632:libstr91x/src/91x_mc.c **** 
+ 633:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 634:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetDeadTime
+ 635:libstr91x/src/91x_mc.c **** * Description    : Sets the MC dead time value.
+ 636:libstr91x/src/91x_mc.c **** * Input          : MC_DeadTime: MC dead time new value.
+ 637:libstr91x/src/91x_mc.c **** * Output         : None
+ 638:libstr91x/src/91x_mc.c **** * Return         : None
+ 639:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 640:libstr91x/src/91x_mc.c **** void MC_SetDeadTime(u16 MC_DeadTime)
+ 641:libstr91x/src/91x_mc.c **** {
+ 836              		.loc 1 641 0
+ 837              		.cfi_startproc
+ 838              		@ args = 0, pretend = 0, frame = 0
+ 839              		@ frame_needed = 0, uses_anonymous_args = 0
+ 840              		@ link register save eliminated.
+ 841              	.LVL24:
+ 642:libstr91x/src/91x_mc.c **** /* Set the dead time Register value */
+ 643:libstr91x/src/91x_mc.c ****   MC->DTG = MC_DeadTime;
+ 842              		.loc 1 643 0
+ 843 0550 04309FE5 		ldr	r3, .L95
+ 844 0554 B004C3E1 		strh	r0, [r3, #64]	@ movhi
+ 644:libstr91x/src/91x_mc.c **** }
+ 845              		.loc 1 644 0
+ 846 0558 1EFF2FE1 		bx	lr
+ 847              	.L96:
+ 848              		.align	2
+ 849              	.L95:
+ 850 055c 0030005C 		.word	1543516160
+ 851              		.cfi_endproc
+ 852              	.LFE14:
+ 854              		.align	2
+ 855              		.global	MC_SetTachoCompare
+ 857              	MC_SetTachoCompare:
+ 858              	.LFB15:
+ 645:libstr91x/src/91x_mc.c **** 
+ 646:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 647:libstr91x/src/91x_mc.c **** * Function Name  : MC_SetTachoCompare
+ 648:libstr91x/src/91x_mc.c **** * Description    : Sets the MC Tacho Compare Register value.
+ 649:libstr91x/src/91x_mc.c **** * Input          : MC_Compare: MC Tacho compare new value.
+ 650:libstr91x/src/91x_mc.c **** * Output         : None
+ 651:libstr91x/src/91x_mc.c **** * Return         : None
+ 652:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 653:libstr91x/src/91x_mc.c **** void MC_SetTachoCompare(u8 MC_Compare)
+ 654:libstr91x/src/91x_mc.c **** {
+ 859              		.loc 1 654 0
+ 860              		.cfi_startproc
+ 861              		@ args = 0, pretend = 0, frame = 0
+ 862              		@ frame_needed = 0, uses_anonymous_args = 0
+ 863              		@ link register save eliminated.
+ 864              	.LVL25:
+ 655:libstr91x/src/91x_mc.c ****  /* Sets the Tacho Compare Register value */
+ 656:libstr91x/src/91x_mc.c ****   MC->TCMP = MC_Compare;
+ 865              		.loc 1 656 0
+ 866 0560 04309FE5 		ldr	r3, .L98
+ 867 0564 B400C3E1 		strh	r0, [r3, #4]	@ movhi
+ 657:libstr91x/src/91x_mc.c **** }
+ 868              		.loc 1 657 0
+ 869 0568 1EFF2FE1 		bx	lr
+ 870              	.L99:
+ 871              		.align	2
+ 872              	.L98:
+ 873 056c 0030005C 		.word	1543516160
+ 874              		.cfi_endproc
+ 875              	.LFE15:
+ 877              		.align	2
+ 878              		.global	MC_EmergencyCmd
+ 880              	MC_EmergencyCmd:
+ 881              	.LFB16:
+ 658:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 659:libstr91x/src/91x_mc.c **** * Function Name  : MC_EmergencyCmd
+ 660:libstr91x/src/91x_mc.c **** * Description    : Enables or disables the MC emergency feauture.
+ 661:libstr91x/src/91x_mc.c **** * Input          : Newstate: new state of the MC peripheral Emergency.
+ 662:libstr91x/src/91x_mc.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 663:libstr91x/src/91x_mc.c **** * Output         : None
+ 664:libstr91x/src/91x_mc.c **** * Return         : None
+ 665:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 666:libstr91x/src/91x_mc.c **** void MC_EmergencyCmd(FunctionalState NewState)
+ 667:libstr91x/src/91x_mc.c **** {
+ 882              		.loc 1 667 0
+ 883              		.cfi_startproc
+ 884              		@ args = 0, pretend = 0, frame = 0
+ 885              		@ frame_needed = 0, uses_anonymous_args = 0
+ 886              		@ link register save eliminated.
+ 887              	.LVL26:
+ 668:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 669:libstr91x/src/91x_mc.c ****   {
+ 670:libstr91x/src/91x_mc.c ****    /* Reset the DISEST Bit in the PCR1 Register to enable the emergency stop input */
+ 671:libstr91x/src/91x_mc.c ****     MC->PCR1 &= MC_DISEST_Reset;
+ 888              		.loc 1 671 0
+ 889 0570 14309FE5 		ldr	r3, .L103
+ 668:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 890              		.loc 1 668 0
+ 891 0574 010050E3 		cmp	r0, #1
+ 892              		.loc 1 671 0
+ 893 0578 BC22D3E1 		ldrh	r2, [r3, #44]
+ 894 057c 3F200202 		andeq	r2, r2, #63
+ 672:libstr91x/src/91x_mc.c ****   }
+ 673:libstr91x/src/91x_mc.c ****   else
+ 674:libstr91x/src/91x_mc.c ****   {
+ 675:libstr91x/src/91x_mc.c ****   /* Set the DISEST Bit in the PCR1 Register to disable the emergency stop input */
+ 676:libstr91x/src/91x_mc.c ****     MC->PCR1 |= MC_DISEST_Reset;
+ 895              		.loc 1 676 0
+ 896 0580 3F208213 		orrne	r2, r2, #63
+ 897 0584 BC22C3E1 		strh	r2, [r3, #44]	@ movhi
+ 898 0588 1EFF2FE1 		bx	lr
+ 899              	.L104:
+ 900              		.align	2
+ 901              	.L103:
+ 902 058c 0030005C 		.word	1543516160
+ 903              		.cfi_endproc
+ 904              	.LFE16:
+ 906              		.align	2
+ 907              		.global	MC_EmergencyClear
+ 909              	MC_EmergencyClear:
+ 910              	.LFB17:
+ 677:libstr91x/src/91x_mc.c ****   }
+ 678:libstr91x/src/91x_mc.c **** }
+ 679:libstr91x/src/91x_mc.c **** 
+ 680:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 681:libstr91x/src/91x_mc.c **** * Function Name  : MC_EmergencyClear
+ 682:libstr91x/src/91x_mc.c **** * Description    : Clears the MC Emergency Register.
+ 683:libstr91x/src/91x_mc.c **** * Input          : None
+ 684:libstr91x/src/91x_mc.c **** * Output         : None
+ 685:libstr91x/src/91x_mc.c **** * Return         : None
+ 686:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 687:libstr91x/src/91x_mc.c **** void MC_EmergencyClear(void)
+ 688:libstr91x/src/91x_mc.c **** {
+ 911              		.loc 1 688 0
+ 912              		.cfi_startproc
+ 913              		@ args = 0, pretend = 0, frame = 0
+ 914              		@ frame_needed = 0, uses_anonymous_args = 0
+ 915              		@ link register save eliminated.
+ 689:libstr91x/src/91x_mc.c ****    MC->ECR |= 0x0100;
+ 916              		.loc 1 689 0
+ 917 0590 14309FE5 		ldr	r3, .L106
+ 690:libstr91x/src/91x_mc.c ****  
+ 691:libstr91x/src/91x_mc.c ****    /* Clear EST bit */
+ 692:libstr91x/src/91x_mc.c ****    MC->ESC = MC_ESC_Clear; 
+ 918              		.loc 1 692 0
+ 919 0594 14209FE5 		ldr	r2, .L106+4
+ 689:libstr91x/src/91x_mc.c ****    MC->ECR |= 0x0100;
+ 920              		.loc 1 689 0
+ 921 0598 B814D3E1 		ldrh	r1, [r3, #72]
+ 922 059c 010C81E3 		orr	r0, r1, #256
+ 923 05a0 B804C3E1 		strh	r0, [r3, #72]	@ movhi
+ 924              		.loc 1 692 0
+ 925 05a4 B424C3E1 		strh	r2, [r3, #68]	@ movhi
+ 693:libstr91x/src/91x_mc.c **** }
+ 926              		.loc 1 693 0
+ 927 05a8 1EFF2FE1 		bx	lr
+ 928              	.L107:
+ 929              		.align	2
+ 930              	.L106:
+ 931 05ac 0030005C 		.word	1543516160
+ 932 05b0 21430000 		.word	17185
+ 933              		.cfi_endproc
+ 934              	.LFE17:
+ 936              		.align	2
+ 937              		.global	MC_GetPeriod
+ 939              	MC_GetPeriod:
+ 940              	.LFB18:
+ 694:libstr91x/src/91x_mc.c **** 
+ 695:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 696:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetPeriod
+ 697:libstr91x/src/91x_mc.c **** * Description    : Gets the MC period value.
+ 698:libstr91x/src/91x_mc.c **** * Input          : None
+ 699:libstr91x/src/91x_mc.c **** * Output         : None
+ 700:libstr91x/src/91x_mc.c **** * Return         : MC period value.
+ 701:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 702:libstr91x/src/91x_mc.c **** u16 MC_GetPeriod(void)
+ 703:libstr91x/src/91x_mc.c **** {
+ 941              		.loc 1 703 0
+ 942              		.cfi_startproc
+ 943              		@ args = 0, pretend = 0, frame = 0
+ 944              		@ frame_needed = 0, uses_anonymous_args = 0
+ 945              		@ link register save eliminated.
+ 704:libstr91x/src/91x_mc.c **** /* Return the PWM signal period value */
+ 705:libstr91x/src/91x_mc.c ****   return MC->CMP0;
+ 946              		.loc 1 705 0
+ 947 05b4 04309FE5 		ldr	r3, .L109
+ 948 05b8 B402D3E1 		ldrh	r0, [r3, #36]
+ 706:libstr91x/src/91x_mc.c **** }
+ 949              		.loc 1 706 0
+ 950 05bc 1EFF2FE1 		bx	lr
+ 951              	.L110:
+ 952              		.align	2
+ 953              	.L109:
+ 954 05c0 0030005C 		.word	1543516160
+ 955              		.cfi_endproc
+ 956              	.LFE18:
+ 958              		.align	2
+ 959              		.global	MC_GetPulseU
+ 961              	MC_GetPulseU:
+ 962              	.LFB19:
+ 707:libstr91x/src/91x_mc.c **** 
+ 708:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 709:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetPulseU
+ 710:libstr91x/src/91x_mc.c **** * Description    : Gets the MC pulse U value.
+ 711:libstr91x/src/91x_mc.c **** * Input          : None
+ 712:libstr91x/src/91x_mc.c **** * Output         : None
+ 713:libstr91x/src/91x_mc.c **** * Return         : MC pulse U value.
+ 714:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 715:libstr91x/src/91x_mc.c **** u16 MC_GetPulseU(void)
+ 716:libstr91x/src/91x_mc.c **** {
+ 963              		.loc 1 716 0
+ 964              		.cfi_startproc
+ 965              		@ args = 0, pretend = 0, frame = 0
+ 966              		@ frame_needed = 0, uses_anonymous_args = 0
+ 967              		@ link register save eliminated.
+ 717:libstr91x/src/91x_mc.c **** /* Return the PWM pulse U Register value */
+ 718:libstr91x/src/91x_mc.c ****   return MC->CMPU;
+ 968              		.loc 1 718 0
+ 969 05c4 04309FE5 		ldr	r3, .L112
+ 970 05c8 B002D3E1 		ldrh	r0, [r3, #32]
+ 719:libstr91x/src/91x_mc.c **** }
+ 971              		.loc 1 719 0
+ 972 05cc 1EFF2FE1 		bx	lr
+ 973              	.L113:
+ 974              		.align	2
+ 975              	.L112:
+ 976 05d0 0030005C 		.word	1543516160
+ 977              		.cfi_endproc
+ 978              	.LFE19:
+ 980              		.align	2
+ 981              		.global	MC_GetPulseV
+ 983              	MC_GetPulseV:
+ 984              	.LFB20:
+ 720:libstr91x/src/91x_mc.c **** 
+ 721:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 722:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetPulseV
+ 723:libstr91x/src/91x_mc.c **** * Description    : Gets the MC pulse V value.
+ 724:libstr91x/src/91x_mc.c **** * Input          : None
+ 725:libstr91x/src/91x_mc.c **** * Output         : None
+ 726:libstr91x/src/91x_mc.c **** * Return         : MC pulse V value.
+ 727:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 728:libstr91x/src/91x_mc.c **** u16 MC_GetPulseV(void)
+ 729:libstr91x/src/91x_mc.c **** {
+ 985              		.loc 1 729 0
+ 986              		.cfi_startproc
+ 987              		@ args = 0, pretend = 0, frame = 0
+ 988              		@ frame_needed = 0, uses_anonymous_args = 0
+ 989              		@ link register save eliminated.
+ 730:libstr91x/src/91x_mc.c **** /* Return the PWM pulse V Register value */
+ 731:libstr91x/src/91x_mc.c ****   return MC->CMPV;
+ 990              		.loc 1 731 0
+ 991 05d4 04309FE5 		ldr	r3, .L115
+ 992 05d8 BC01D3E1 		ldrh	r0, [r3, #28]
+ 732:libstr91x/src/91x_mc.c **** }
+ 993              		.loc 1 732 0
+ 994 05dc 1EFF2FE1 		bx	lr
+ 995              	.L116:
+ 996              		.align	2
+ 997              	.L115:
+ 998 05e0 0030005C 		.word	1543516160
+ 999              		.cfi_endproc
+ 1000              	.LFE20:
+ 1002              		.align	2
+ 1003              		.global	MC_GetPulseW
+ 1005              	MC_GetPulseW:
+ 1006              	.LFB21:
+ 733:libstr91x/src/91x_mc.c **** 
+ 734:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 735:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetPulseW
+ 736:libstr91x/src/91x_mc.c **** * Description    : Gets the MC pulse W value.
+ 737:libstr91x/src/91x_mc.c **** * Input          : None
+ 738:libstr91x/src/91x_mc.c **** * Output         : None
+ 739:libstr91x/src/91x_mc.c **** * Return         : MC pulse W value.
+ 740:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 741:libstr91x/src/91x_mc.c **** u16 MC_GetPulseW(void)
+ 742:libstr91x/src/91x_mc.c **** {
+ 1007              		.loc 1 742 0
+ 1008              		.cfi_startproc
+ 1009              		@ args = 0, pretend = 0, frame = 0
+ 1010              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1011              		@ link register save eliminated.
+ 743:libstr91x/src/91x_mc.c **** /* Return the PWM pulse W Register value */
+ 744:libstr91x/src/91x_mc.c ****   return MC->CMPW;
+ 1012              		.loc 1 744 0
+ 1013 05e4 04309FE5 		ldr	r3, .L118
+ 1014 05e8 B801D3E1 		ldrh	r0, [r3, #24]
+ 745:libstr91x/src/91x_mc.c **** }
+ 1015              		.loc 1 745 0
+ 1016 05ec 1EFF2FE1 		bx	lr
+ 1017              	.L119:
+ 1018              		.align	2
+ 1019              	.L118:
+ 1020 05f0 0030005C 		.word	1543516160
+ 1021              		.cfi_endproc
+ 1022              	.LFE21:
+ 1024              		.align	2
+ 1025              		.global	MC_GetTachoCapture
+ 1027              	MC_GetTachoCapture:
+ 1028              	.LFB22:
+ 746:libstr91x/src/91x_mc.c **** 
+ 747:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 748:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetTachoCapture
+ 749:libstr91x/src/91x_mc.c **** * Description    : Gets the MC Tacho period value.
+ 750:libstr91x/src/91x_mc.c **** * Input          : None
+ 751:libstr91x/src/91x_mc.c **** * Output         : None
+ 752:libstr91x/src/91x_mc.c **** * Return         : MC Tacho capture value.
+ 753:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 754:libstr91x/src/91x_mc.c **** u16 MC_GetTachoCapture(void)
+ 755:libstr91x/src/91x_mc.c **** {
+ 1029              		.loc 1 755 0
+ 1030              		.cfi_startproc
+ 1031              		@ args = 0, pretend = 0, frame = 0
+ 1032              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1033              		@ link register save eliminated.
+ 756:libstr91x/src/91x_mc.c **** /* Return the Tacho Capture Register value */
+ 757:libstr91x/src/91x_mc.c ****   return MC->TCPT;
+ 1034              		.loc 1 757 0
+ 1035 05f4 04309FE5 		ldr	r3, .L121
+ 1036 05f8 B000D3E1 		ldrh	r0, [r3, #0]
+ 758:libstr91x/src/91x_mc.c **** }
+ 1037              		.loc 1 758 0
+ 1038 05fc 1EFF2FE1 		bx	lr
+ 1039              	.L122:
+ 1040              		.align	2
+ 1041              	.L121:
+ 1042 0600 0030005C 		.word	1543516160
+ 1043              		.cfi_endproc
+ 1044              	.LFE22:
+ 1046              		.align	2
+ 1047              		.global	MC_ClearOnTachoCapture
+ 1049              	MC_ClearOnTachoCapture:
+ 1050              	.LFB23:
+ 759:libstr91x/src/91x_mc.c **** 
+ 760:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 761:libstr91x/src/91x_mc.c **** * Function Name  : MC_ClearOnTachoCapture
+ 762:libstr91x/src/91x_mc.c **** * Description    : Enables or disables the the Clear on capture of tacho counter.
+ 763:libstr91x/src/91x_mc.c **** * Input          : Newstate: new state of the CCPT bit.
+ 764:libstr91x/src/91x_mc.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 765:libstr91x/src/91x_mc.c **** * Output         : None
+ 766:libstr91x/src/91x_mc.c **** * Return         : None
+ 767:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 768:libstr91x/src/91x_mc.c **** void MC_ClearOnTachoCapture(FunctionalState NewState)
+ 769:libstr91x/src/91x_mc.c **** {
+ 1051              		.loc 1 769 0
+ 1052              		.cfi_startproc
+ 1053              		@ args = 0, pretend = 0, frame = 0
+ 1054              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1055              		@ link register save eliminated.
+ 1056              	.LVL27:
+ 770:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 771:libstr91x/src/91x_mc.c ****   {
+ 772:libstr91x/src/91x_mc.c ****     /* Enable the Clear on capture of tacho counter */
+ 773:libstr91x/src/91x_mc.c ****     MC->PCR1 |= MC_CCPT_Set;
+ 1057              		.loc 1 773 0
+ 1058 0604 14309FE5 		ldr	r3, .L126
+ 770:libstr91x/src/91x_mc.c ****   if(NewState == ENABLE)
+ 1059              		.loc 1 770 0
+ 1060 0608 010050E3 		cmp	r0, #1
+ 1061              		.loc 1 773 0
+ 1062 060c BC22D3E1 		ldrh	r2, [r3, #44]
+ 1063 0610 20208203 		orreq	r2, r2, #32
+ 774:libstr91x/src/91x_mc.c ****   }
+ 775:libstr91x/src/91x_mc.c ****   else
+ 776:libstr91x/src/91x_mc.c ****   {   
+ 777:libstr91x/src/91x_mc.c ****     /* Disable the Clear on capture of tacho counter */
+ 778:libstr91x/src/91x_mc.c ****     MC->PCR1 &= MC_CCPT_Reset;
+ 1064              		.loc 1 778 0
+ 1065 0614 5F200212 		andne	r2, r2, #95
+ 1066 0618 BC22C3E1 		strh	r2, [r3, #44]	@ movhi
+ 1067 061c 1EFF2FE1 		bx	lr
+ 1068              	.L127:
+ 1069              		.align	2
+ 1070              	.L126:
+ 1071 0620 0030005C 		.word	1543516160
+ 1072              		.cfi_endproc
+ 1073              	.LFE23:
+ 1075              		.align	2
+ 1076              		.global	MC_ForceDataTransfer
+ 1078              	MC_ForceDataTransfer:
+ 1079              	.LFB24:
+ 779:libstr91x/src/91x_mc.c ****   }
+ 780:libstr91x/src/91x_mc.c **** }
+ 781:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 782:libstr91x/src/91x_mc.c **** * Function Name  : MC_ForceDataTransfer
+ 783:libstr91x/src/91x_mc.c **** * Description    : Sets the MC Outputs default states.
+ 784:libstr91x/src/91x_mc.c **** * Input          : MC_ForcedData: MC outputs new states.
+ 785:libstr91x/src/91x_mc.c **** * Output         : None
+ 786:libstr91x/src/91x_mc.c **** * Return         : None
+ 787:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 788:libstr91x/src/91x_mc.c **** void MC_ForceDataTransfer(u8 MC_ForcedData)
+ 789:libstr91x/src/91x_mc.c **** {
+ 1080              		.loc 1 789 0
+ 1081              		.cfi_startproc
+ 1082              		@ args = 0, pretend = 0, frame = 0
+ 1083              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1084              		@ link register save eliminated.
+ 1085              	.LVL28:
+ 790:libstr91x/src/91x_mc.c ****    /* Set the MC PWM Forced State */
+ 791:libstr91x/src/91x_mc.c ****    MC->OPR |= MC_ODS_Set;
+ 1086              		.loc 1 791 0
+ 1087 0624 1C309FE5 		ldr	r3, .L129
+ 1088 0628 B813D3E1 		ldrh	r1, [r3, #56]
+ 1089 062c 402081E3 		orr	r2, r1, #64
+ 1090 0630 B823C3E1 		strh	r2, [r3, #56]	@ movhi
+ 792:libstr91x/src/91x_mc.c ****    MC->OPR = (MC->OPR & MC_OPR_Mask) | MC_ForcedData;
+ 1091              		.loc 1 792 0
+ 1092 0634 B8C3D3E1 		ldrh	ip, [r3, #56]
+ 1093 0638 40100CE2 		and	r1, ip, #64
+ 1094 063c 012080E1 		orr	r2, r0, r1
+ 1095 0640 B823C3E1 		strh	r2, [r3, #56]	@ movhi
+ 793:libstr91x/src/91x_mc.c **** }
+ 1096              		.loc 1 793 0
+ 1097 0644 1EFF2FE1 		bx	lr
+ 1098              	.L130:
+ 1099              		.align	2
+ 1100              	.L129:
+ 1101 0648 0030005C 		.word	1543516160
+ 1102              		.cfi_endproc
+ 1103              	.LFE24:
+ 1105              		.align	2
+ 1106              		.global	MC_SoftwarePreloadConfig
+ 1108              	MC_SoftwarePreloadConfig:
+ 1109              	.LFB25:
+ 794:libstr91x/src/91x_mc.c **** 
+ 795:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 796:libstr91x/src/91x_mc.c **** * Function Name  : MC_PreloadConfig
+ 797:libstr91x/src/91x_mc.c **** * Description    : Enables the Software Data Transfer.
+ 798:libstr91x/src/91x_mc.c **** * Input          : None
+ 799:libstr91x/src/91x_mc.c **** * Output         : None
+ 800:libstr91x/src/91x_mc.c **** * Return         : None
+ 801:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 802:libstr91x/src/91x_mc.c **** void MC_SoftwarePreloadConfig(void)
+ 803:libstr91x/src/91x_mc.c **** {
+ 1110              		.loc 1 803 0
+ 1111              		.cfi_startproc
+ 1112              		@ args = 0, pretend = 0, frame = 0
+ 1113              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1114              		@ link register save eliminated.
+ 804:libstr91x/src/91x_mc.c ****   /* Set the SDT: Software Data Transfer bit */
+ 805:libstr91x/src/91x_mc.c ****   MC->PCR2 |= MC_SDT_Set;
+ 1115              		.loc 1 805 0
+ 1116 064c 0C309FE5 		ldr	r3, .L132
+ 1117 0650 B003D3E1 		ldrh	r0, [r3, #48]
+ 1118 0654 022080E3 		orr	r2, r0, #2
+ 1119 0658 B023C3E1 		strh	r2, [r3, #48]	@ movhi
+ 806:libstr91x/src/91x_mc.c **** }
+ 1120              		.loc 1 806 0
+ 1121 065c 1EFF2FE1 		bx	lr
+ 1122              	.L133:
+ 1123              		.align	2
+ 1124              	.L132:
+ 1125 0660 0030005C 		.word	1543516160
+ 1126              		.cfi_endproc
+ 1127              	.LFE25:
+ 1129              		.align	2
+ 1130              		.global	MC_SoftwareTachoCapture
+ 1132              	MC_SoftwareTachoCapture:
+ 1133              	.LFB26:
+ 807:libstr91x/src/91x_mc.c **** 
+ 808:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 809:libstr91x/src/91x_mc.c **** * Function Name  : MC_SoftwareTachoCapture
+ 810:libstr91x/src/91x_mc.c **** * Description    : Enables the Software Tacho Capture.
+ 811:libstr91x/src/91x_mc.c **** * Input          : None
+ 812:libstr91x/src/91x_mc.c **** * Output         : None
+ 813:libstr91x/src/91x_mc.c **** * Return         : None
+ 814:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 815:libstr91x/src/91x_mc.c **** void MC_SoftwareTachoCapture(void)
+ 816:libstr91x/src/91x_mc.c **** {
+ 1134              		.loc 1 816 0
+ 1135              		.cfi_startproc
+ 1136              		@ args = 0, pretend = 0, frame = 0
+ 1137              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1138              		@ link register save eliminated.
+ 817:libstr91x/src/91x_mc.c ****   /* Set the STC: Software Tacho Capture bit */
+ 818:libstr91x/src/91x_mc.c ****   MC->PCR1 |= MC_STC_Set;
+ 1139              		.loc 1 818 0
+ 1140 0664 0C309FE5 		ldr	r3, .L135
+ 1141 0668 BC02D3E1 		ldrh	r0, [r3, #44]
+ 1142 066c 082080E3 		orr	r2, r0, #8
+ 1143 0670 BC22C3E1 		strh	r2, [r3, #44]	@ movhi
+ 819:libstr91x/src/91x_mc.c **** }
+ 1144              		.loc 1 819 0
+ 1145 0674 1EFF2FE1 		bx	lr
+ 1146              	.L136:
+ 1147              		.align	2
+ 1148              	.L135:
+ 1149 0678 0030005C 		.word	1543516160
+ 1150              		.cfi_endproc
+ 1151              	.LFE26:
+ 1153              		.align	2
+ 1154              		.global	MC_GetCountingStatus
+ 1156              	MC_GetCountingStatus:
+ 1157              	.LFB27:
+ 820:libstr91x/src/91x_mc.c **** 
+ 821:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 822:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetCountingStatus
+ 823:libstr91x/src/91x_mc.c **** * Description    : Checks whether the PWM Counter is counting Up or Down.
+ 824:libstr91x/src/91x_mc.c **** * Input          : None
+ 825:libstr91x/src/91x_mc.c **** * Output         : None
+ 826:libstr91x/src/91x_mc.c **** * Return         : The new state of the PWM Counter(DOWN or UP).
+ 827:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 828:libstr91x/src/91x_mc.c **** CountingStatus MC_GetCountingStatus(void)
+ 829:libstr91x/src/91x_mc.c **** {
+ 1158              		.loc 1 829 0
+ 1159              		.cfi_startproc
+ 1160              		@ args = 0, pretend = 0, frame = 0
+ 1161              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1162              		@ link register save eliminated.
+ 830:libstr91x/src/91x_mc.c ****   if((MC->PCR0 & MC_UDCS_Mask) != DOWN)
+ 1163              		.loc 1 830 0
+ 1164 067c 10009FE5 		ldr	r0, .L138
+ 1165 0680 B832D0E1 		ldrh	r3, [r0, #40]
+ 831:libstr91x/src/91x_mc.c ****   {
+ 832:libstr91x/src/91x_mc.c ****     return UP;
+ 1166              		.loc 1 832 0
+ 1167 0684 020013E3 		tst	r3, #2
+ 833:libstr91x/src/91x_mc.c ****   }
+ 834:libstr91x/src/91x_mc.c ****   else
+ 835:libstr91x/src/91x_mc.c ****   {
+ 836:libstr91x/src/91x_mc.c ****     return DOWN;
+ 837:libstr91x/src/91x_mc.c ****   }
+ 838:libstr91x/src/91x_mc.c **** }
+ 1168              		.loc 1 838 0
+ 1169 0688 0000A003 		moveq	r0, #0
+ 1170 068c 0100A013 		movne	r0, #1
+ 1171 0690 1EFF2FE1 		bx	lr
+ 1172              	.L139:
+ 1173              		.align	2
+ 1174              	.L138:
+ 1175 0694 0030005C 		.word	1543516160
+ 1176              		.cfi_endproc
+ 1177              	.LFE27:
+ 1179              		.align	2
+ 1180              		.global	MC_GetFlagStatus
+ 1182              	MC_GetFlagStatus:
+ 1183              	.LFB28:
+ 839:libstr91x/src/91x_mc.c **** 
+ 840:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 841:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetFlagStatus
+ 842:libstr91x/src/91x_mc.c **** * Description    : Checks whether the specified MC flag is set or not.
+ 843:libstr91x/src/91x_mc.c **** * Input          : MC_FLAG: specifies the flag to check.
+ 844:libstr91x/src/91x_mc.c **** *                  This parameter can be one of the following values:
+ 845:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CMPW: Compare W Flag.
+ 846:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CMPV: Compare V Flag.
+ 847:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CMPU: Compare U Flag.
+ 848:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_ZPC: Zero of PWM counter Flag.
+ 849:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_ADT: Automatic Data Transfer Flag.
+ 850:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_OTC: Overflow of Tacho counter Flag.
+ 851:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CPT: Capture of Tacho counter Flag.
+ 852:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CM0: Compare 0 Flag.
+ 853:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_EST: Emergency Stop Flag.
+ 854:libstr91x/src/91x_mc.c **** * Output         : None
+ 855:libstr91x/src/91x_mc.c **** * Return         : The new state of the MC_FLAG(SET or RESET).
+ 856:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 857:libstr91x/src/91x_mc.c **** FlagStatus MC_GetFlagStatus(u16 MC_FLAG)
+ 858:libstr91x/src/91x_mc.c **** {
+ 1184              		.loc 1 858 0
+ 1185              		.cfi_startproc
+ 1186              		@ args = 0, pretend = 0, frame = 0
+ 1187              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1188              		@ link register save eliminated.
+ 1189              	.LVL29:
+ 859:libstr91x/src/91x_mc.c ****   if((MC->IPR & MC_FLAG) != RESET)
+ 1190              		.loc 1 859 0
+ 1191 0698 10109FE5 		ldr	r1, .L141
+ 1192 069c B830D1E1 		ldrh	r3, [r1, #8]
+ 860:libstr91x/src/91x_mc.c ****   {
+ 861:libstr91x/src/91x_mc.c ****     return SET;
+ 1193              		.loc 1 861 0
+ 1194 06a0 030010E1 		tst	r0, r3
+ 862:libstr91x/src/91x_mc.c ****   }
+ 863:libstr91x/src/91x_mc.c ****   else
+ 864:libstr91x/src/91x_mc.c ****   {
+ 865:libstr91x/src/91x_mc.c ****     return RESET;
+ 866:libstr91x/src/91x_mc.c ****   }
+ 867:libstr91x/src/91x_mc.c **** }
+ 1195              		.loc 1 867 0
+ 1196 06a4 0000A003 		moveq	r0, #0
+ 1197 06a8 0100A013 		movne	r0, #1
+ 1198              	.LVL30:
+ 1199 06ac 1EFF2FE1 		bx	lr
+ 1200              	.L142:
+ 1201              		.align	2
+ 1202              	.L141:
+ 1203 06b0 0030005C 		.word	1543516160
+ 1204              		.cfi_endproc
+ 1205              	.LFE28:
+ 1207              		.align	2
+ 1208              		.global	MC_ClearFlag
+ 1210              	MC_ClearFlag:
+ 1211              	.LFB29:
+ 868:libstr91x/src/91x_mc.c **** 
+ 869:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 870:libstr91x/src/91x_mc.c **** * Function Name  : MC_ClearFlag
+ 871:libstr91x/src/91x_mc.c **** * Description    : Clears the MC’s pending flags.
+ 872:libstr91x/src/91x_mc.c **** * Input          : MC_FLAG: specifies the flag to clear.
+ 873:libstr91x/src/91x_mc.c **** *                  This parameter can be any combination of the following values:
+ 874:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CMPW: Compare W Flag.
+ 875:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CMPV: Compare V Flag.
+ 876:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CMPU: Compare U Flag.
+ 877:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_ZPC: Zero of PWM counter Flag.
+ 878:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_ADT: Automatic Data Transfer Flag.
+ 879:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_OTC: Overflow of Tacho counter Flag.
+ 880:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CPT: Capture of Tacho counter Flag.
+ 881:libstr91x/src/91x_mc.c **** *                         - MC_FLAG_CM0: Compare 0 Flag.
+ 882:libstr91x/src/91x_mc.c **** * Output         : None
+ 883:libstr91x/src/91x_mc.c **** * Return         : None
+ 884:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 885:libstr91x/src/91x_mc.c **** void MC_ClearFlag(u16 MC_FLAG)
+ 886:libstr91x/src/91x_mc.c **** {
+ 1212              		.loc 1 886 0
+ 1213              		.cfi_startproc
+ 1214              		@ args = 0, pretend = 0, frame = 0
+ 1215              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1216              		@ link register save eliminated.
+ 1217              	.LVL31:
+ 887:libstr91x/src/91x_mc.c **** /* Clear the corresponding Flag */
+ 888:libstr91x/src/91x_mc.c ****   MC->IPR &= ~MC_FLAG;
+ 1218              		.loc 1 888 0
+ 1219 06b4 0C309FE5 		ldr	r3, .L144
+ 1220 06b8 B810D3E1 		ldrh	r1, [r3, #8]
+ 1221 06bc 0020C1E1 		bic	r2, r1, r0
+ 1222 06c0 B820C3E1 		strh	r2, [r3, #8]	@ movhi
+ 889:libstr91x/src/91x_mc.c **** }
+ 1223              		.loc 1 889 0
+ 1224 06c4 1EFF2FE1 		bx	lr
+ 1225              	.L145:
+ 1226              		.align	2
+ 1227              	.L144:
+ 1228 06c8 0030005C 		.word	1543516160
+ 1229              		.cfi_endproc
+ 1230              	.LFE29:
+ 1232              		.align	2
+ 1233              		.global	MC_GetITStatus
+ 1235              	MC_GetITStatus:
+ 1236              	.LFB30:
+ 890:libstr91x/src/91x_mc.c **** 
+ 891:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 892:libstr91x/src/91x_mc.c **** * Function Name  : MC_GetITStatus
+ 893:libstr91x/src/91x_mc.c **** * Description    : Checks whether the MC interrupt has occurred or not.
+ 894:libstr91x/src/91x_mc.c **** * Input          : MC_IT: specifies the MC interrupt source to check.
+ 895:libstr91x/src/91x_mc.c **** *                  This parameter can be one of the following values:
+ 896:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPW: Compare W Interrupt.
+ 897:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPV: Compare V Interrupt.
+ 898:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPU: Compare U Interrupt.
+ 899:libstr91x/src/91x_mc.c **** *                         - MC_IT_ZPC: Zero of PWM counter Interrupt.
+ 900:libstr91x/src/91x_mc.c **** *                         - MC_IT_ADT: Automatic Data Transfer Interrupt.
+ 901:libstr91x/src/91x_mc.c **** *                         - MC_IT_OTC: Overflow of Tacho counter Interrupt.
+ 902:libstr91x/src/91x_mc.c **** *                         - MC_IT_CPT: Capture of Tacho counter Interrupt.
+ 903:libstr91x/src/91x_mc.c **** *                         - MC_IT_CM0: Compare 0 Interrupt.
+ 904:libstr91x/src/91x_mc.c **** * Output         : None
+ 905:libstr91x/src/91x_mc.c **** * Return         : The new state of the MC_IT(SET or RESET).
+ 906:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 907:libstr91x/src/91x_mc.c **** ITStatus MC_GetITStatus(u16 MC_IT)
+ 908:libstr91x/src/91x_mc.c **** {
+ 1237              		.loc 1 908 0
+ 1238              		.cfi_startproc
+ 1239              		@ args = 0, pretend = 0, frame = 0
+ 1240              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1241              		@ link register save eliminated.
+ 1242              	.LVL32:
+ 909:libstr91x/src/91x_mc.c ****   if((MC->IPR & MC_IT) && (MC->IMR & MC_IT))
+ 1243              		.loc 1 909 0
+ 1244 06cc 24309FE5 		ldr	r3, .L149
+ 1245 06d0 B820D3E1 		ldrh	r2, [r3, #8]
+ 1246 06d4 022010E0 		ands	r2, r0, r2
+ 1247 06d8 0400000A 		beq	.L148
+ 1248              		.loc 1 909 0 is_stmt 0 discriminator 1
+ 1249 06dc BC33D3E1 		ldrh	r3, [r3, #60]
+ 910:libstr91x/src/91x_mc.c ****   {
+ 911:libstr91x/src/91x_mc.c ****     return SET;
+ 1250              		.loc 1 911 0 is_stmt 1 discriminator 1
+ 1251 06e0 030010E1 		tst	r0, r3
+ 1252 06e4 0000A003 		moveq	r0, #0
+ 1253 06e8 0100A013 		movne	r0, #1
+ 1254              	.LVL33:
+ 1255 06ec 1EFF2FE1 		bx	lr
+ 1256              	.LVL34:
+ 1257              	.L148:
+ 912:libstr91x/src/91x_mc.c ****   }
+ 913:libstr91x/src/91x_mc.c ****   else
+ 914:libstr91x/src/91x_mc.c ****   {
+ 915:libstr91x/src/91x_mc.c ****     return RESET;
+ 1258              		.loc 1 915 0
+ 1259 06f0 0200A0E1 		mov	r0, r2
+ 1260              	.LVL35:
+ 916:libstr91x/src/91x_mc.c ****   }
+ 917:libstr91x/src/91x_mc.c **** }
+ 1261              		.loc 1 917 0
+ 1262 06f4 1EFF2FE1 		bx	lr
+ 1263              	.L150:
+ 1264              		.align	2
+ 1265              	.L149:
+ 1266 06f8 0030005C 		.word	1543516160
+ 1267              		.cfi_endproc
+ 1268              	.LFE30:
+ 1270              		.align	2
+ 1271              		.global	MC_ClearITPendingBit
+ 1273              	MC_ClearITPendingBit:
+ 1274              	.LFB31:
+ 918:libstr91x/src/91x_mc.c **** 
+ 919:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 920:libstr91x/src/91x_mc.c **** * Function Name  : MC_ClearITPendingBit
+ 921:libstr91x/src/91x_mc.c **** * Description    : Clears the IMC's interrupt pending bits.
+ 922:libstr91x/src/91x_mc.c **** * Input          : MC_IT: specifies the pending bit to clear.
+ 923:libstr91x/src/91x_mc.c **** *                  This parameter can be any combination of the following values:
+ 924:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPW: Compare W Interrupt.
+ 925:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPV: Compare V Interrupt.
+ 926:libstr91x/src/91x_mc.c **** *                         - MC_IT_CMPU: Compare U Interrupt.
+ 927:libstr91x/src/91x_mc.c **** *                         - MC_IT_ZPC: Zero of PWM counter Interrupt.
+ 928:libstr91x/src/91x_mc.c **** *                         - MC_IT_ADT: Automatic Data Transfer Interrupt.
+ 929:libstr91x/src/91x_mc.c **** *                         - MC_IT_OTC: Overflow of Tacho counter Interrupt.
+ 930:libstr91x/src/91x_mc.c **** *                         - MC_IT_CPT: Capture of Tacho counter Interrupt.
+ 931:libstr91x/src/91x_mc.c **** *                         - MC_IT_CM0: Compare 0 Interrupt.
+ 932:libstr91x/src/91x_mc.c **** * Output         : None
+ 933:libstr91x/src/91x_mc.c **** * Return         : None
+ 934:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 935:libstr91x/src/91x_mc.c **** void MC_ClearITPendingBit(u16 MC_IT)
+ 936:libstr91x/src/91x_mc.c **** {
+ 1275              		.loc 1 936 0
+ 1276              		.cfi_startproc
+ 1277              		@ args = 0, pretend = 0, frame = 0
+ 1278              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1279              		@ link register save eliminated.
+ 1280              	.LVL36:
+ 937:libstr91x/src/91x_mc.c **** /* Clear the corresponding interrupt pending bit */ 
+ 938:libstr91x/src/91x_mc.c ****   MC->IPR &= ~MC_IT;
+ 1281              		.loc 1 938 0
+ 1282 06fc 0C309FE5 		ldr	r3, .L152
+ 1283 0700 B810D3E1 		ldrh	r1, [r3, #8]
+ 1284 0704 0020C1E1 		bic	r2, r1, r0
+ 1285 0708 B820C3E1 		strh	r2, [r3, #8]	@ movhi
+ 939:libstr91x/src/91x_mc.c **** }
+ 1286              		.loc 1 939 0
+ 1287 070c 1EFF2FE1 		bx	lr
+ 1288              	.L153:
+ 1289              		.align	2
+ 1290              	.L152:
+ 1291 0710 0030005C 		.word	1543516160
+ 1292              		.cfi_endproc
+ 1293              	.LFE31:
+ 1295              		.align	2
+ 1296              		.global	MC_Lock
+ 1298              	MC_Lock:
+ 1299              	.LFB32:
+ 940:libstr91x/src/91x_mc.c **** 
+ 941:libstr91x/src/91x_mc.c **** 
+ 942:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 943:libstr91x/src/91x_mc.c **** * Function Name  : MC_Lock
+ 944:libstr91x/src/91x_mc.c **** * Description    : Enables the lock of certain control register bits 
+ 945:libstr91x/src/91x_mc.c **** * Input          : - MC_LockLevel: Specifies the level to be locked.
+ 946:libstr91x/src/91x_mc.c **** *                  This parameter can be any combination of the following values:
+ 947:libstr91x/src/91x_mc.c **** *                         - MC_LockLevel4: Lock Dead Time Generator register.
+ 948:libstr91x/src/91x_mc.c **** *                         - MC_LockLevel3: Lock Output Peripheral Register.
+ 949:libstr91x/src/91x_mc.c **** *                         - MC_LockLevel2: Lock phase polarity bits.
+ 950:libstr91x/src/91x_mc.c **** *                         - MC_LockLevel1: Lock Emergency Stop Disable bit.
+ 951:libstr91x/src/91x_mc.c **** *                         - MC_LockLevel0: Dead Time Enable and Output  Dead Time
+ 952:libstr91x/src/91x_mc.c **** *                                          counter Selection bits.
+ 953:libstr91x/src/91x_mc.c **** * Output         : None
+ 954:libstr91x/src/91x_mc.c **** * Return         : None
+ 955:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 956:libstr91x/src/91x_mc.c **** void  MC_Lock(u16 MC_LockLevel)
+ 957:libstr91x/src/91x_mc.c **** {
+ 1300              		.loc 1 957 0
+ 1301              		.cfi_startproc
+ 1302              		@ args = 0, pretend = 0, frame = 0
+ 1303              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1304              		@ link register save eliminated.
+ 1305              	.LVL37:
+ 958:libstr91x/src/91x_mc.c ****   MC->LOK &= ~MC_LockLevel; 
+ 1306              		.loc 1 958 0
+ 1307 0714 18309FE5 		ldr	r3, .L155
+ 1308 0718 BCC4D3E1 		ldrh	ip, [r3, #76]
+ 1309 071c 0010CCE1 		bic	r1, ip, r0
+ 1310 0720 BC14C3E1 		strh	r1, [r3, #76]	@ movhi
+ 959:libstr91x/src/91x_mc.c ****   MC->LOK |= MC_LockLevel;
+ 1311              		.loc 1 959 0
+ 1312 0724 BC24D3E1 		ldrh	r2, [r3, #76]
+ 1313 0728 020080E1 		orr	r0, r0, r2
+ 1314              	.LVL38:
+ 1315 072c BC04C3E1 		strh	r0, [r3, #76]	@ movhi
+ 960:libstr91x/src/91x_mc.c **** }
+ 1316              		.loc 1 960 0
+ 1317 0730 1EFF2FE1 		bx	lr
+ 1318              	.L156:
+ 1319              		.align	2
+ 1320              	.L155:
+ 1321 0734 0030005C 		.word	1543516160
+ 1322              		.cfi_endproc
+ 1323              	.LFE32:
+ 1325              		.align	2
+ 1326              		.global	MC_CounterModeConfig
+ 1328              	MC_CounterModeConfig:
+ 1329              	.LFB33:
+ 961:libstr91x/src/91x_mc.c **** 
+ 962:libstr91x/src/91x_mc.c **** /******************************************************************************
+ 963:libstr91x/src/91x_mc.c **** * Function Name  :  MC_CounterModeConfig
+ 964:libstr91x/src/91x_mc.c **** * Description    : Enables the 10 bits mode for the dead time counter or enables
+ 965:libstr91x/src/91x_mc.c **** *                  the 16 bits mode for the PWM counter.
+ 966:libstr91x/src/91x_mc.c **** * Input          : - MC_Counter : Specifies the counter
+ 967:libstr91x/src/91x_mc.c **** *                  This parameter can be any combination of the following values:
+ 968:libstr91x/src/91x_mc.c **** *                         - MC_DT_Counter  : Dead Time Counter is in 10 bits mode.
+ 969:libstr91x/src/91x_mc.c **** *                         - MC_PWM_Counter : PWM_Counter is in 16 bits mode.
+ 970:libstr91x/src/91x_mc.c **** * Output         : None
+ 971:libstr91x/src/91x_mc.c **** * Return         : None
+ 972:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 973:libstr91x/src/91x_mc.c **** void MC_CounterModeConfig(u16 MC_Counter)
+ 974:libstr91x/src/91x_mc.c **** { 
+ 1330              		.loc 1 974 0
+ 1331              		.cfi_startproc
+ 1332              		@ args = 0, pretend = 0, frame = 0
+ 1333              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1334              		@ link register save eliminated.
+ 1335              	.LVL39:
+ 975:libstr91x/src/91x_mc.c ****   MC->ECR &= ~MC_Counter; 
+ 1336              		.loc 1 975 0
+ 1337 0738 18309FE5 		ldr	r3, .L158
+ 1338 073c B8C4D3E1 		ldrh	ip, [r3, #72]
+ 1339 0740 0010CCE1 		bic	r1, ip, r0
+ 1340 0744 B814C3E1 		strh	r1, [r3, #72]	@ movhi
+ 976:libstr91x/src/91x_mc.c ****   MC->ECR |=  MC_Counter;               
+ 1341              		.loc 1 976 0
+ 1342 0748 B824D3E1 		ldrh	r2, [r3, #72]
+ 1343 074c 020080E1 		orr	r0, r0, r2
+ 1344              	.LVL40:
+ 1345 0750 B804C3E1 		strh	r0, [r3, #72]	@ movhi
+ 977:libstr91x/src/91x_mc.c **** }
+ 1346              		.loc 1 977 0
+ 1347 0754 1EFF2FE1 		bx	lr
+ 1348              	.L159:
+ 1349              		.align	2
+ 1350              	.L158:
+ 1351 0758 0030005C 		.word	1543516160
+ 1352              		.cfi_endproc
+ 1353              	.LFE33:
+ 1355              		.align	2
+ 1356              		.global	MC_DoubleUpdateMode
+ 1358              	MC_DoubleUpdateMode:
+ 1359              	.LFB34:
+ 978:libstr91x/src/91x_mc.c **** 
+ 979:libstr91x/src/91x_mc.c **** /*******************************************************************************
+ 980:libstr91x/src/91x_mc.c **** * Function Name  : MC_DoubleUpdateMode
+ 981:libstr91x/src/91x_mc.c **** * Description    : Enables or disables the Double Update Mode for the MC
+ 982:libstr91x/src/91x_mc.c **** * Input          : - Newstate: New state of the double update mode.
+ 983:libstr91x/src/91x_mc.c **** *                  This parameter can be: ENABLE or DISABLE.
+ 984:libstr91x/src/91x_mc.c **** * Output         : None
+ 985:libstr91x/src/91x_mc.c **** * Return         : None
+ 986:libstr91x/src/91x_mc.c **** *******************************************************************************/
+ 987:libstr91x/src/91x_mc.c **** void MC_DoubleUpdateMode(FunctionalState NewState)
+ 988:libstr91x/src/91x_mc.c **** {
+ 1360              		.loc 1 988 0
+ 1361              		.cfi_startproc
+ 1362              		@ args = 0, pretend = 0, frame = 0
+ 1363              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1364              		@ link register save eliminated.
+ 1365              	.LVL41:
+ 989:libstr91x/src/91x_mc.c ****   if( NewState==ENABLE)
+ 1366              		.loc 1 989 0
+ 1367 075c 010050E3 		cmp	r0, #1
+ 990:libstr91x/src/91x_mc.c ****   { 
+ 991:libstr91x/src/91x_mc.c ****     MC->ECR |= MC_DUM;
+ 1368              		.loc 1 991 0
+ 1369 0760 20309F05 		ldreq	r3, .L163
+ 992:libstr91x/src/91x_mc.c ****   }
+ 993:libstr91x/src/91x_mc.c ****   else
+ 994:libstr91x/src/91x_mc.c ****   { 
+ 995:libstr91x/src/91x_mc.c ****     MC->ECR &= ~MC_DUM; 
+ 1370              		.loc 1 995 0
+ 1371 0764 1C209F15 		ldrne	r2, .L163
+ 991:libstr91x/src/91x_mc.c ****     MC->ECR |= MC_DUM;
+ 1372              		.loc 1 991 0
+ 1373 0768 B824D301 		ldreqh	r2, [r3, #72]
+ 1374              		.loc 1 995 0
+ 1375 076c 18309F15 		ldrne	r3, .L163+4
+ 1376 0770 B814D211 		ldrneh	r1, [r2, #72]
+ 991:libstr91x/src/91x_mc.c ****     MC->ECR |= MC_DUM;
+ 1377              		.loc 1 991 0
+ 1378 0774 01208203 		orreq	r2, r2, #1
+ 1379              		.loc 1 995 0
+ 1380 0778 03300110 		andne	r3, r1, r3
+ 991:libstr91x/src/91x_mc.c ****     MC->ECR |= MC_DUM;
+ 1381              		.loc 1 991 0
+ 1382 077c B824C301 		streqh	r2, [r3, #72]	@ movhi
+ 1383              		.loc 1 995 0
+ 1384 0780 B834C211 		strneh	r3, [r2, #72]	@ movhi
+ 1385 0784 1EFF2FE1 		bx	lr
+ 1386              	.L164:
+ 1387              		.align	2
+ 1388              	.L163:
+ 1389 0788 0030005C 		.word	1543516160
+ 1390 078c FEFF0000 		.word	65534
+ 1391              		.cfi_endproc
+ 1392              	.LFE34:
+ 1394              		.align	2
+ 1395              		.global	MC_ADCTrigger
+ 1397              	MC_ADCTrigger:
+ 1398              	.LFB35:
+ 996:libstr91x/src/91x_mc.c ****   }
+ 997:libstr91x/src/91x_mc.c **** }
+ 998:libstr91x/src/91x_mc.c **** 
+ 999:libstr91x/src/91x_mc.c **** /*******************************************************************************
+1000:libstr91x/src/91x_mc.c **** * Function Name  : MC_ADCTrigger
+1001:libstr91x/src/91x_mc.c **** * Description    : Enables or disables the Triggers to the ADC conversion 
+1002:libstr91x/src/91x_mc.c **** * Input          : IMC event : The IMC event to trigger the ADC conversion
+1003:libstr91x/src/91x_mc.c **** *                  This parameter can be one of the following values:
+1004:libstr91x/src/91x_mc.c **** *                          - MC_ZPC : When the PWM counter reaches zero.
+1005:libstr91x/src/91x_mc.c **** *                          - MC_CM0 : When the PWM counter reaches its maximum 
+1006:libstr91x/src/91x_mc.c **** *                                     count.
+1007:libstr91x/src/91x_mc.c **** *                          - MC_ADT : When the PWM counter equals zero and the 
+1008:libstr91x/src/91x_mc.c **** *                                     Repetition Down counter equals zero.
+1009:libstr91x/src/91x_mc.c **** *                  - Newstate: New state of the ADC trigger event.
+1010:libstr91x/src/91x_mc.c **** *                  This parameter can be: ENABLE or DISABLE.
+1011:libstr91x/src/91x_mc.c **** * Output         : None
+1012:libstr91x/src/91x_mc.c **** * Return         : None
+1013:libstr91x/src/91x_mc.c **** *******************************************************************************/
+1014:libstr91x/src/91x_mc.c **** void MC_ADCTrigger(u16 IMC_Event, FunctionalState NewState)
+1015:libstr91x/src/91x_mc.c **** {
+ 1399              		.loc 1 1015 0
+ 1400              		.cfi_startproc
+ 1401              		@ args = 0, pretend = 0, frame = 0
+ 1402              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1403              		@ link register save eliminated.
+ 1404              	.LVL42:
+1016:libstr91x/src/91x_mc.c ****   MC->ECR &= 0x01F3;
+ 1405              		.loc 1 1016 0
+ 1406 0790 24309FE5 		ldr	r3, .L168
+ 1407 0794 24209FE5 		ldr	r2, .L168+4
+ 1408 0798 B8C4D3E1 		ldrh	ip, [r3, #72]
+1017:libstr91x/src/91x_mc.c ****   
+1018:libstr91x/src/91x_mc.c ****   if( NewState==ENABLE)
+ 1409              		.loc 1 1018 0
+ 1410 079c 010051E3 		cmp	r1, #1
+1016:libstr91x/src/91x_mc.c ****   MC->ECR &= 0x01F3;
+ 1411              		.loc 1 1016 0
+ 1412 07a0 02100CE0 		and	r1, ip, r2
+ 1413              	.LVL43:
+ 1414 07a4 B814C3E1 		strh	r1, [r3, #72]	@ movhi
+1019:libstr91x/src/91x_mc.c ****   {
+1020:libstr91x/src/91x_mc.c ****     MC->ECR |= IMC_Event;
+ 1415              		.loc 1 1020 0
+ 1416 07a8 B824D3E1 		ldrh	r2, [r3, #72]
+ 1417 07ac 02008001 		orreq	r0, r0, r2
+ 1418              	.LVL44:
+1021:libstr91x/src/91x_mc.c ****   }
+1022:libstr91x/src/91x_mc.c ****   else
+1023:libstr91x/src/91x_mc.c ****   {
+1024:libstr91x/src/91x_mc.c ****     MC->ECR &= ~IMC_Event; 
+ 1419              		.loc 1 1024 0
+ 1420 07b0 0000C211 		bicne	r0, r2, r0
+ 1421 07b4 B804C3E1 		strh	r0, [r3, #72]	@ movhi
+ 1422 07b8 1EFF2FE1 		bx	lr
+ 1423              	.L169:
+ 1424              		.align	2
+ 1425              	.L168:
+ 1426 07bc 0030005C 		.word	1543516160
+ 1427 07c0 F3010000 		.word	499
+ 1428              		.cfi_endproc
+ 1429              	.LFE35:
+ 1431              		.align	2
+ 1432              		.global	MC_EnhancedStop
+ 1434              	MC_EnhancedStop:
+ 1435              	.LFB36:
+1025:libstr91x/src/91x_mc.c ****   }    
+1026:libstr91x/src/91x_mc.c **** }
+1027:libstr91x/src/91x_mc.c **** 
+1028:libstr91x/src/91x_mc.c **** 
+1029:libstr91x/src/91x_mc.c **** /*******************************************************************************
+1030:libstr91x/src/91x_mc.c **** * Function Name  : MC_EnhancedStop
+1031:libstr91x/src/91x_mc.c **** * Description    : Enables or disables an Enhanced Motor Stop feature.
+1032:libstr91x/src/91x_mc.c **** * Input          : NewState : This pararameter can be ENABLE or DISABLE.
+1033:libstr91x/src/91x_mc.c **** * Output         : None
+1034:libstr91x/src/91x_mc.c **** * Return         : None
+1035:libstr91x/src/91x_mc.c **** *******************************************************************************/
+1036:libstr91x/src/91x_mc.c **** void MC_EnhancedStop(FunctionalState NewState)
+1037:libstr91x/src/91x_mc.c **** { 
+ 1436              		.loc 1 1037 0
+ 1437              		.cfi_startproc
+ 1438              		@ args = 0, pretend = 0, frame = 0
+ 1439              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1440              		@ link register save eliminated.
+ 1441              	.LVL45:
+1038:libstr91x/src/91x_mc.c ****   if( NewState==ENABLE)
+ 1442              		.loc 1 1038 0
+ 1443 07c4 010050E3 		cmp	r0, #1
+1039:libstr91x/src/91x_mc.c ****   {
+1040:libstr91x/src/91x_mc.c ****     MC->ECR |=  0x0040;
+ 1444              		.loc 1 1040 0
+ 1445 07c8 20309F05 		ldreq	r3, .L173
+1041:libstr91x/src/91x_mc.c ****   }
+1042:libstr91x/src/91x_mc.c ****   else
+1043:libstr91x/src/91x_mc.c ****   {
+1044:libstr91x/src/91x_mc.c ****     MC->ECR &= ~ 0x0040; 
+ 1446              		.loc 1 1044 0
+ 1447 07cc 1C209F15 		ldrne	r2, .L173
+1040:libstr91x/src/91x_mc.c ****     MC->ECR |=  0x0040;
+ 1448              		.loc 1 1040 0
+ 1449 07d0 B824D301 		ldreqh	r2, [r3, #72]
+ 1450              		.loc 1 1044 0
+ 1451 07d4 18309F15 		ldrne	r3, .L173+4
+ 1452 07d8 B814D211 		ldrneh	r1, [r2, #72]
+1040:libstr91x/src/91x_mc.c ****     MC->ECR |=  0x0040;
+ 1453              		.loc 1 1040 0
+ 1454 07dc 40208203 		orreq	r2, r2, #64
+ 1455              		.loc 1 1044 0
+ 1456 07e0 03300110 		andne	r3, r1, r3
+1040:libstr91x/src/91x_mc.c ****     MC->ECR |=  0x0040;
+ 1457              		.loc 1 1040 0
+ 1458 07e4 B824C301 		streqh	r2, [r3, #72]	@ movhi
+ 1459              		.loc 1 1044 0
+ 1460 07e8 B834C211 		strneh	r3, [r2, #72]	@ movhi
+ 1461 07ec 1EFF2FE1 		bx	lr
+ 1462              	.L174:
+ 1463              		.align	2
+ 1464              	.L173:
+ 1465 07f0 0030005C 		.word	1543516160
+ 1466 07f4 BFFF0000 		.word	65471
+ 1467              		.cfi_endproc
+ 1468              	.LFE36:
+ 1470              		.align	2
+ 1471              		.global	MC_DebugOutputProtection
+ 1473              	MC_DebugOutputProtection:
+ 1474              	.LFB37:
+1045:libstr91x/src/91x_mc.c ****   }
+1046:libstr91x/src/91x_mc.c **** }
+1047:libstr91x/src/91x_mc.c **** /*******************************************************************************
+1048:libstr91x/src/91x_mc.c **** * Function Name  : MC_DebugOutputProtection
+1049:libstr91x/src/91x_mc.c **** * Description    : Allows the output phases to follow the polarity set by PSR if 
+1050:libstr91x/src/91x_mc.c **** *		   enabled or they remain in their last known state if disabled.
+1051:libstr91x/src/91x_mc.c **** * Input          : NewState : This pararameter can be ENABLE or DISABLE.
+1052:libstr91x/src/91x_mc.c **** * Output         : None
+1053:libstr91x/src/91x_mc.c **** * Return         : None
+1054:libstr91x/src/91x_mc.c **** *******************************************************************************/
+1055:libstr91x/src/91x_mc.c **** void MC_DebugOutputProtection(FunctionalState NewState)
+1056:libstr91x/src/91x_mc.c **** { 
+ 1475              		.loc 1 1056 0
+ 1476              		.cfi_startproc
+ 1477              		@ args = 0, pretend = 0, frame = 0
+ 1478              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1479              		@ link register save eliminated.
+ 1480              	.LVL46:
+1057:libstr91x/src/91x_mc.c ****   if( NewState==ENABLE)
+ 1481              		.loc 1 1057 0
+ 1482 07f8 010050E3 		cmp	r0, #1
+1058:libstr91x/src/91x_mc.c ****   {
+1059:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0080;
+ 1483              		.loc 1 1059 0
+ 1484 07fc 20309F05 		ldreq	r3, .L178
+1060:libstr91x/src/91x_mc.c ****   }
+1061:libstr91x/src/91x_mc.c ****   else
+1062:libstr91x/src/91x_mc.c ****   {
+1063:libstr91x/src/91x_mc.c ****     MC->ECR &= ~0x0080; 
+ 1485              		.loc 1 1063 0
+ 1486 0800 1C209F15 		ldrne	r2, .L178
+1059:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0080;
+ 1487              		.loc 1 1059 0
+ 1488 0804 B824D301 		ldreqh	r2, [r3, #72]
+ 1489              		.loc 1 1063 0
+ 1490 0808 18309F15 		ldrne	r3, .L178+4
+ 1491 080c B814D211 		ldrneh	r1, [r2, #72]
+1059:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0080;
+ 1492              		.loc 1 1059 0
+ 1493 0810 80208203 		orreq	r2, r2, #128
+ 1494              		.loc 1 1063 0
+ 1495 0814 03300110 		andne	r3, r1, r3
+1059:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0080;
+ 1496              		.loc 1 1059 0
+ 1497 0818 B824C301 		streqh	r2, [r3, #72]	@ movhi
+ 1498              		.loc 1 1063 0
+ 1499 081c B834C211 		strneh	r3, [r2, #72]	@ movhi
+ 1500 0820 1EFF2FE1 		bx	lr
+ 1501              	.L179:
+ 1502              		.align	2
+ 1503              	.L178:
+ 1504 0824 0030005C 		.word	1543516160
+ 1505 0828 7FFF0000 		.word	65407
+ 1506              		.cfi_endproc
+ 1507              	.LFE37:
+ 1509              		.align	2
+ 1510              		.global	MC_EmergencyStopPolarity
+ 1512              	MC_EmergencyStopPolarity:
+ 1513              	.LFB38:
+1064:libstr91x/src/91x_mc.c ****   }
+1065:libstr91x/src/91x_mc.c **** }
+1066:libstr91x/src/91x_mc.c **** 
+1067:libstr91x/src/91x_mc.c **** /*******************************************************************************
+1068:libstr91x/src/91x_mc.c **** * Function Name  : MC_EmergencyStopPolarity
+1069:libstr91x/src/91x_mc.c **** * Description    : Enables or disables an Enhanced Stop Polarity feature.
+1070:libstr91x/src/91x_mc.c **** * Input          : NewState : This pararameter can be ENABLE or DISABLE.
+1071:libstr91x/src/91x_mc.c **** * Output         : None
+1072:libstr91x/src/91x_mc.c **** * Return         : None
+1073:libstr91x/src/91x_mc.c **** *******************************************************************************/
+1074:libstr91x/src/91x_mc.c **** void MC_EmergencyStopPolarity(FunctionalState NewState)
+1075:libstr91x/src/91x_mc.c **** { 
+ 1514              		.loc 1 1075 0
+ 1515              		.cfi_startproc
+ 1516              		@ args = 0, pretend = 0, frame = 0
+ 1517              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1518              		@ link register save eliminated.
+ 1519              	.LVL47:
+1076:libstr91x/src/91x_mc.c ****   if( NewState==ENABLE)
+ 1520              		.loc 1 1076 0
+ 1521 082c 010050E3 		cmp	r0, #1
+1077:libstr91x/src/91x_mc.c ****   {
+1078:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0002;
+ 1522              		.loc 1 1078 0
+ 1523 0830 20309F05 		ldreq	r3, .L183
+1079:libstr91x/src/91x_mc.c ****   }
+1080:libstr91x/src/91x_mc.c ****   else
+1081:libstr91x/src/91x_mc.c ****   {
+1082:libstr91x/src/91x_mc.c ****     MC->ECR &= ~0x0002; 
+ 1524              		.loc 1 1082 0
+ 1525 0834 1C209F15 		ldrne	r2, .L183
+1078:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0002;
+ 1526              		.loc 1 1078 0
+ 1527 0838 B824D301 		ldreqh	r2, [r3, #72]
+ 1528              		.loc 1 1082 0
+ 1529 083c 18309F15 		ldrne	r3, .L183+4
+ 1530 0840 B814D211 		ldrneh	r1, [r2, #72]
+1078:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0002;
+ 1531              		.loc 1 1078 0
+ 1532 0844 02208203 		orreq	r2, r2, #2
+ 1533              		.loc 1 1082 0
+ 1534 0848 03300110 		andne	r3, r1, r3
+1078:libstr91x/src/91x_mc.c ****     MC->ECR |= 0x0002;
+ 1535              		.loc 1 1078 0
+ 1536 084c B824C301 		streqh	r2, [r3, #72]	@ movhi
+ 1537              		.loc 1 1082 0
+ 1538 0850 B834C211 		strneh	r3, [r2, #72]	@ movhi
+ 1539 0854 1EFF2FE1 		bx	lr
+ 1540              	.L184:
+ 1541              		.align	2
+ 1542              	.L183:
+ 1543 0858 0030005C 		.word	1543516160
+ 1544 085c FDFF0000 		.word	65533
+ 1545              		.cfi_endproc
+ 1546              	.LFE38:
+ 1548              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_mc.c
+     /tmp/ccrVfYXA.s:21     .text:00000000 $a
+     /tmp/ccrVfYXA.s:24     .text:00000000 MC_DeInit
+     /tmp/ccrVfYXA.s:53     .text:00000020 MC_Init
+     /tmp/ccrVfYXA.s:206    .text:00000178 $d
+     /tmp/ccrVfYXA.s:212    .text:00000188 $a
+     /tmp/ccrVfYXA.s:398    .text:0000032c $d
+     /tmp/ccrVfYXA.s:402    .text:00000330 $a
+     /tmp/ccrVfYXA.s:405    .text:00000330 MC_StructInit
+     /tmp/ccrVfYXA.s:499    .text:000003d4 $d
+     /tmp/ccrVfYXA.s:503    .text:000003d8 $a
+     /tmp/ccrVfYXA.s:506    .text:000003d8 MC_Cmd
+     /tmp/ccrVfYXA.s:553    .text:0000043c $d
+     /tmp/ccrVfYXA.s:558    .text:00000444 $a
+     /tmp/ccrVfYXA.s:561    .text:00000444 MC_ClearPWMCounter
+     /tmp/ccrVfYXA.s:578    .text:00000458 $d
+     /tmp/ccrVfYXA.s:582    .text:0000045c $a
+     /tmp/ccrVfYXA.s:585    .text:0000045c MC_ClearTachoCounter
+     /tmp/ccrVfYXA.s:602    .text:00000470 $d
+     /tmp/ccrVfYXA.s:606    .text:00000474 $a
+     /tmp/ccrVfYXA.s:609    .text:00000474 MC_CtrlPWMOutputs
+     /tmp/ccrVfYXA.s:640    .text:000004a0 $d
+     /tmp/ccrVfYXA.s:645    .text:000004a8 $a
+     /tmp/ccrVfYXA.s:648    .text:000004a8 MC_ITConfig
+     /tmp/ccrVfYXA.s:683    .text:000004dc $d
+     /tmp/ccrVfYXA.s:687    .text:000004e0 $a
+     /tmp/ccrVfYXA.s:690    .text:000004e0 MC_SetPrescaler
+     /tmp/ccrVfYXA.s:706    .text:000004ec $d
+     /tmp/ccrVfYXA.s:710    .text:000004f0 $a
+     /tmp/ccrVfYXA.s:713    .text:000004f0 MC_SetPeriod
+     /tmp/ccrVfYXA.s:729    .text:000004fc $d
+     /tmp/ccrVfYXA.s:733    .text:00000500 $a
+     /tmp/ccrVfYXA.s:736    .text:00000500 MC_SetPulseU
+     /tmp/ccrVfYXA.s:752    .text:0000050c $d
+     /tmp/ccrVfYXA.s:756    .text:00000510 $a
+     /tmp/ccrVfYXA.s:759    .text:00000510 MC_SetPulseV
+     /tmp/ccrVfYXA.s:775    .text:0000051c $d
+     /tmp/ccrVfYXA.s:779    .text:00000520 $a
+     /tmp/ccrVfYXA.s:782    .text:00000520 MC_SetPulseW
+     /tmp/ccrVfYXA.s:798    .text:0000052c $d
+     /tmp/ccrVfYXA.s:802    .text:00000530 $a
+     /tmp/ccrVfYXA.s:805    .text:00000530 MC_PWMModeConfig
+     /tmp/ccrVfYXA.s:827    .text:0000054c $d
+     /tmp/ccrVfYXA.s:831    .text:00000550 $a
+     /tmp/ccrVfYXA.s:834    .text:00000550 MC_SetDeadTime
+     /tmp/ccrVfYXA.s:850    .text:0000055c $d
+     /tmp/ccrVfYXA.s:854    .text:00000560 $a
+     /tmp/ccrVfYXA.s:857    .text:00000560 MC_SetTachoCompare
+     /tmp/ccrVfYXA.s:873    .text:0000056c $d
+     /tmp/ccrVfYXA.s:877    .text:00000570 $a
+     /tmp/ccrVfYXA.s:880    .text:00000570 MC_EmergencyCmd
+     /tmp/ccrVfYXA.s:902    .text:0000058c $d
+     /tmp/ccrVfYXA.s:906    .text:00000590 $a
+     /tmp/ccrVfYXA.s:909    .text:00000590 MC_EmergencyClear
+     /tmp/ccrVfYXA.s:931    .text:000005ac $d
+     /tmp/ccrVfYXA.s:936    .text:000005b4 $a
+     /tmp/ccrVfYXA.s:939    .text:000005b4 MC_GetPeriod
+     /tmp/ccrVfYXA.s:954    .text:000005c0 $d
+     /tmp/ccrVfYXA.s:958    .text:000005c4 $a
+     /tmp/ccrVfYXA.s:961    .text:000005c4 MC_GetPulseU
+     /tmp/ccrVfYXA.s:976    .text:000005d0 $d
+     /tmp/ccrVfYXA.s:980    .text:000005d4 $a
+     /tmp/ccrVfYXA.s:983    .text:000005d4 MC_GetPulseV
+     /tmp/ccrVfYXA.s:998    .text:000005e0 $d
+     /tmp/ccrVfYXA.s:1002   .text:000005e4 $a
+     /tmp/ccrVfYXA.s:1005   .text:000005e4 MC_GetPulseW
+     /tmp/ccrVfYXA.s:1020   .text:000005f0 $d
+     /tmp/ccrVfYXA.s:1024   .text:000005f4 $a
+     /tmp/ccrVfYXA.s:1027   .text:000005f4 MC_GetTachoCapture
+     /tmp/ccrVfYXA.s:1042   .text:00000600 $d
+     /tmp/ccrVfYXA.s:1046   .text:00000604 $a
+     /tmp/ccrVfYXA.s:1049   .text:00000604 MC_ClearOnTachoCapture
+     /tmp/ccrVfYXA.s:1071   .text:00000620 $d
+     /tmp/ccrVfYXA.s:1075   .text:00000624 $a
+     /tmp/ccrVfYXA.s:1078   .text:00000624 MC_ForceDataTransfer
+     /tmp/ccrVfYXA.s:1101   .text:00000648 $d
+     /tmp/ccrVfYXA.s:1105   .text:0000064c $a
+     /tmp/ccrVfYXA.s:1108   .text:0000064c MC_SoftwarePreloadConfig
+     /tmp/ccrVfYXA.s:1125   .text:00000660 $d
+     /tmp/ccrVfYXA.s:1129   .text:00000664 $a
+     /tmp/ccrVfYXA.s:1132   .text:00000664 MC_SoftwareTachoCapture
+     /tmp/ccrVfYXA.s:1149   .text:00000678 $d
+     /tmp/ccrVfYXA.s:1153   .text:0000067c $a
+     /tmp/ccrVfYXA.s:1156   .text:0000067c MC_GetCountingStatus
+     /tmp/ccrVfYXA.s:1175   .text:00000694 $d
+     /tmp/ccrVfYXA.s:1179   .text:00000698 $a
+     /tmp/ccrVfYXA.s:1182   .text:00000698 MC_GetFlagStatus
+     /tmp/ccrVfYXA.s:1203   .text:000006b0 $d
+     /tmp/ccrVfYXA.s:1207   .text:000006b4 $a
+     /tmp/ccrVfYXA.s:1210   .text:000006b4 MC_ClearFlag
+     /tmp/ccrVfYXA.s:1228   .text:000006c8 $d
+     /tmp/ccrVfYXA.s:1232   .text:000006cc $a
+     /tmp/ccrVfYXA.s:1235   .text:000006cc MC_GetITStatus
+     /tmp/ccrVfYXA.s:1266   .text:000006f8 $d
+     /tmp/ccrVfYXA.s:1270   .text:000006fc $a
+     /tmp/ccrVfYXA.s:1273   .text:000006fc MC_ClearITPendingBit
+     /tmp/ccrVfYXA.s:1291   .text:00000710 $d
+     /tmp/ccrVfYXA.s:1295   .text:00000714 $a
+     /tmp/ccrVfYXA.s:1298   .text:00000714 MC_Lock
+     /tmp/ccrVfYXA.s:1321   .text:00000734 $d
+     /tmp/ccrVfYXA.s:1325   .text:00000738 $a
+     /tmp/ccrVfYXA.s:1328   .text:00000738 MC_CounterModeConfig
+     /tmp/ccrVfYXA.s:1351   .text:00000758 $d
+     /tmp/ccrVfYXA.s:1355   .text:0000075c $a
+     /tmp/ccrVfYXA.s:1358   .text:0000075c MC_DoubleUpdateMode
+     /tmp/ccrVfYXA.s:1389   .text:00000788 $d
+     /tmp/ccrVfYXA.s:1394   .text:00000790 $a
+     /tmp/ccrVfYXA.s:1397   .text:00000790 MC_ADCTrigger
+     /tmp/ccrVfYXA.s:1426   .text:000007bc $d
+     /tmp/ccrVfYXA.s:1431   .text:000007c4 $a
+     /tmp/ccrVfYXA.s:1434   .text:000007c4 MC_EnhancedStop
+     /tmp/ccrVfYXA.s:1465   .text:000007f0 $d
+     /tmp/ccrVfYXA.s:1470   .text:000007f8 $a
+     /tmp/ccrVfYXA.s:1473   .text:000007f8 MC_DebugOutputProtection
+     /tmp/ccrVfYXA.s:1504   .text:00000824 $d
+     /tmp/ccrVfYXA.s:1509   .text:0000082c $a
+     /tmp/ccrVfYXA.s:1512   .text:0000082c MC_EmergencyStopPolarity
+     /tmp/ccrVfYXA.s:1543   .text:00000858 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset

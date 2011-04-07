@@ -1,0 +1,538 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_emi.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	EMI_DeInit
+  24              	EMI_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_emi.c"
+   1:libstr91x/src/91x_emi.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_emi.c **** * File Name          : 91x_emi.c
+   3:libstr91x/src/91x_emi.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_emi.c **** * Version            : V2.1
+   5:libstr91x/src/91x_emi.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_emi.c **** * Description        : This file provides all the EMI firmware functions.
+   7:libstr91x/src/91x_emi.c **** ********************************************************************************
+   8:libstr91x/src/91x_emi.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_emi.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_emi.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_emi.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_emi.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_emi.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_emi.c **** *******************************************************************************/
+  15:libstr91x/src/91x_emi.c **** 
+  16:libstr91x/src/91x_emi.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_emi.c **** #include "91x_emi.h"
+  18:libstr91x/src/91x_emi.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_emi.c **** /* Private typedef -----------------------------------------------------------*/
+  20:libstr91x/src/91x_emi.c **** /* Private define ------------------------------------------------------------*/
+  21:libstr91x/src/91x_emi.c **** 
+  22:libstr91x/src/91x_emi.c **** /* These constant variables are used as masks to handle the EMI registers.  */
+  23:libstr91x/src/91x_emi.c **** 
+  24:libstr91x/src/91x_emi.c **** 
+  25:libstr91x/src/91x_emi.c **** #define   EMI_Burst_and_PageModeRead_TL_Mask	     0xFFFFF3FF
+  26:libstr91x/src/91x_emi.c **** #define   EMI_Burst_and_PageModeRead_Sel_Mask	     0xFFFFFEFF
+  27:libstr91x/src/91x_emi.c **** #define   EMI_MemWidth_Mask     	             0xFFFFFFCF
+  28:libstr91x/src/91x_emi.c **** #define   EMI_WriteProtect_Mask	                     0xFFFFFFF7  
+  29:libstr91x/src/91x_emi.c **** #define   EMI_ByteLane_Mask	                     0xFFFFFFFE  
+  30:libstr91x/src/91x_emi.c **** #define   EMI_AccessRead_Dev_Mask	             0xFFFFFDFF  
+  31:libstr91x/src/91x_emi.c **** #define   EMI_BurstModeWrite_Sel_Mask	             0xFFFEFFFF
+  32:libstr91x/src/91x_emi.c **** #define   EMI_AccessWrite_Dev_Mask	             0xFFFDFFFF
+  33:libstr91x/src/91x_emi.c **** #define   EMI_BurstModeWrite_TL_Mask	             0xFFF3FFFF
+  34:libstr91x/src/91x_emi.c **** 
+  35:libstr91x/src/91x_emi.c **** 
+  36:libstr91x/src/91x_emi.c **** /* Private macro -------------------------------------------------------------*/
+  37:libstr91x/src/91x_emi.c **** /* Private variables ---------------------------------------------------------*/
+  38:libstr91x/src/91x_emi.c **** /* Registers reset value */
+  39:libstr91x/src/91x_emi.c **** /* Private function prototypes -----------------------------------------------*/
+  40:libstr91x/src/91x_emi.c **** /* Private functions ---------------------------------------------------------*/
+  41:libstr91x/src/91x_emi.c **** 
+  42:libstr91x/src/91x_emi.c **** /******************************************************************************
+  43:libstr91x/src/91x_emi.c **** * Function Name  : EMI_DeInit
+  44:libstr91x/src/91x_emi.c **** * Description    : Deinitializes the EMI peripheral registers to their default
+  45:libstr91x/src/91x_emi.c **** *                  reset values.
+  46:libstr91x/src/91x_emi.c **** * Input          : None
+  47:libstr91x/src/91x_emi.c **** * Output         : None
+  48:libstr91x/src/91x_emi.c **** * Return         : None
+  49:libstr91x/src/91x_emi.c **** *******************************************************************************/
+  50:libstr91x/src/91x_emi.c **** 
+  51:libstr91x/src/91x_emi.c **** void EMI_DeInit(void)
+  52:libstr91x/src/91x_emi.c **** {
+  27              		.loc 1 52 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 10402DE9 		stmfd	sp!, {r4, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  53:libstr91x/src/91x_emi.c **** 
+  54:libstr91x/src/91x_emi.c ****   SCU_AHBPeriphReset(__EMI, ENABLE);          /* EMI peripheral under Reset */
+  34              		.loc 1 54 0
+  35 0004 4000A0E3 		mov	r0, #64
+  36 0008 0110A0E3 		mov	r1, #1
+  37              		.cfi_offset 14, -4
+  38              		.cfi_offset 4, -8
+  39 000c FEFFFFEB 		bl	SCU_AHBPeriphReset
+  55:libstr91x/src/91x_emi.c ****   SCU_AHBPeriphReset(__EMI,DISABLE );         /* EMI not under Reset */
+  40              		.loc 1 55 0
+  41 0010 4000A0E3 		mov	r0, #64
+  42 0014 0010A0E3 		mov	r1, #0
+  56:libstr91x/src/91x_emi.c **** 
+  57:libstr91x/src/91x_emi.c **** }
+  43              		.loc 1 57 0
+  44 0018 1040BDE8 		ldmfd	sp!, {r4, lr}
+  55:libstr91x/src/91x_emi.c ****   SCU_AHBPeriphReset(__EMI,DISABLE );         /* EMI not under Reset */
+  45              		.loc 1 55 0
+  46 001c FEFFFFEA 		b	SCU_AHBPeriphReset
+  47              		.cfi_endproc
+  48              	.LFE0:
+  50              		.align	2
+  51              		.global	EMI_StructInit
+  53              	EMI_StructInit:
+  54              	.LFB1:
+  58:libstr91x/src/91x_emi.c **** 
+  59:libstr91x/src/91x_emi.c **** /*******************************************************************************
+  60:libstr91x/src/91x_emi.c **** * Function Name  : EMI_StructInit
+  61:libstr91x/src/91x_emi.c **** * Description    : Fills the EMI_InitTypeDef structure member with its reset
+  62:libstr91x/src/91x_emi.c **** *                  value.
+  63:libstr91x/src/91x_emi.c **** * Input          : EMI_InitStruct : pointer to a EMI_InitTypeDef structure
+  64:libstr91x/src/91x_emi.c **** *                  which will be initialized.
+  65:libstr91x/src/91x_emi.c **** * Output         : None
+  66:libstr91x/src/91x_emi.c **** * Return         : None
+  67:libstr91x/src/91x_emi.c **** *******************************************************************************/
+  68:libstr91x/src/91x_emi.c **** 
+  69:libstr91x/src/91x_emi.c **** void EMI_StructInit( EMI_InitTypeDef *EMI_InitStruct)
+  70:libstr91x/src/91x_emi.c **** {
+  55              		.loc 1 70 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              	.LVL0:
+  71:libstr91x/src/91x_emi.c **** 
+  72:libstr91x/src/91x_emi.c ****   /* Number of bus turnaround cycles added between read and write accesses.*/
+  73:libstr91x/src/91x_emi.c ****   /*This member can be 0x01,0x02,0x03, ....0xF (Reset value:0xF "15 cycles"*/
+  74:libstr91x/src/91x_emi.c **** 
+  75:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_IDCY =0xF;
+  76:libstr91x/src/91x_emi.c **** 
+  77:libstr91x/src/91x_emi.c **** 
+  78:libstr91x/src/91x_emi.c ****   /* Number of wait states for read accesses*/
+  79:libstr91x/src/91x_emi.c ****   /*This member can be: 0x01,0x02,0x03, ....0x1F (Reset value:0x1F "31 cycles"*/
+  80:libstr91x/src/91x_emi.c **** 
+  81:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTRD =0x1F;
+  82:libstr91x/src/91x_emi.c **** 
+  83:libstr91x/src/91x_emi.c **** 
+  84:libstr91x/src/91x_emi.c ****   /* Number of wait states for write accesses*/
+  85:libstr91x/src/91x_emi.c ****   /*This member can be: 0x01,0x02,0x03, ....0x1F (Reset value:0x1F "31 cycles"*/
+  86:libstr91x/src/91x_emi.c **** 
+  87:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTWR =0x1F;
+  88:libstr91x/src/91x_emi.c **** 
+  89:libstr91x/src/91x_emi.c ****   /*Output enable assertion delay from chip select assertion*/
+  90:libstr91x/src/91x_emi.c ****   /*This member can be: 0x01,0x02,0x03, ....0xF (Reset value:0x01 "1 cycle"*/
+  91:libstr91x/src/91x_emi.c **** 
+  92:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTROEN =0x01;
+  93:libstr91x/src/91x_emi.c **** 
+  94:libstr91x/src/91x_emi.c **** 
+  95:libstr91x/src/91x_emi.c ****   /*Write enable assertion delay from chip select assertion*/
+  96:libstr91x/src/91x_emi.c ****   /*This member can be: 0x01,0x02,0x03, ....0xF (Reset value:0x00 "0 cycle"*/
+  97:libstr91x/src/91x_emi.c **** 
+  98:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTWEN =0x00;
+  61              		.loc 1 98 0
+  62 0020 0030A0E3 		mov	r3, #0
+  81:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTRD =0x1F;
+  63              		.loc 1 81 0
+  64 0024 1F20A0E3 		mov	r2, #31
+  75:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_IDCY =0xF;
+  65              		.loc 1 75 0
+  66 0028 0FC0A0E3 		mov	ip, #15
+  92:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTROEN =0x01;
+  67              		.loc 1 92 0
+  68 002c 0110A0E3 		mov	r1, #1
+  75:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_IDCY =0xF;
+  69              		.loc 1 75 0
+  70 0030 00C080E5 		str	ip, [r0, #0]
+  81:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTRD =0x1F;
+  71              		.loc 1 81 0
+  72 0034 042080E5 		str	r2, [r0, #4]
+  87:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTWR =0x1F;
+  73              		.loc 1 87 0
+  74 0038 082080E5 		str	r2, [r0, #8]
+  92:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_WSTROEN =0x01;
+  75              		.loc 1 92 0
+  76 003c 0C1080E5 		str	r1, [r0, #12]
+  77              		.loc 1 98 0
+  78 0040 103080E5 		str	r3, [r0, #16]
+  99:libstr91x/src/91x_emi.c ****   
+ 100:libstr91x/src/91x_emi.c ****   /*Number of wait states for burst read accesses after the first read.*/ 
+ 101:libstr91x/src/91x_emi.c ****   /* They do not apply to non-burst devices.*/ 
+ 102:libstr91x/src/91x_emi.c ****   /*This member can be: 0x01,0x02,0x03, ....0x1F (Reset value:0x1F "31 cycles"*/
+ 103:libstr91x/src/91x_emi.c ****   
+ 104:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_BRDCR =0x1F;
+  79              		.loc 1 104 0
+  80 0044 142080E5 		str	r2, [r0, #20]
+ 105:libstr91x/src/91x_emi.c **** 
+ 106:libstr91x/src/91x_emi.c ****   /*This member Controls the memory width*/
+ 107:libstr91x/src/91x_emi.c ****   /*This member can be :"EMI_Width_Byte" = 8 bits width or "EMI_Width_HalfWord" = 16 bits width*/
+ 108:libstr91x/src/91x_emi.c **** 
+ 109:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Bank_MemWidth = EMI_Width_Byte;
+  81              		.loc 1 109 0
+  82 0048 183080E5 		str	r3, [r0, #24]
+ 110:libstr91x/src/91x_emi.c **** 
+ 111:libstr91x/src/91x_emi.c **** 
+ 112:libstr91x/src/91x_emi.c ****   /*Write protection feature */
+ 113:libstr91x/src/91x_emi.c ****   /*This member can be :"EMI_Bank_NonWriteProtect" = No write protection or "EMI_Bank_WriteProtect"
+ 114:libstr91x/src/91x_emi.c **** 
+ 115:libstr91x/src/91x_emi.c ****   EMI_InitStruct-> EMI_Bank_WriteProtection= EMI_Bank_NonWriteProtect;
+  83              		.loc 1 115 0
+  84 004c 1C3080E5 		str	r3, [r0, #28]
+ 116:libstr91x/src/91x_emi.c **** 
+ 117:libstr91x/src/91x_emi.c **** 
+ 118:libstr91x/src/91x_emi.c ****   /* Burst Read or page mode transfer length */
+ 119:libstr91x/src/91x_emi.c ****   /*This member can be :"EMI_Read_4Data"  or "EMI_Read_8Data" for page mode*/
+ 120:libstr91x/src/91x_emi.c ****   /*Read and it can be "EMI_Read_4Data","EMI_Read_8Data","EMI_Read_16Data" */
+ 121:libstr91x/src/91x_emi.c ****   /*or "EMI_Read_Continuous"(synchronous only) for burst mode read*/
+ 122:libstr91x/src/91x_emi.c ****                                                        
+ 123:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Burst_and_PageModeRead_TransferLength= EMI_Read_4Data;
+  85              		.loc 1 123 0
+  86 0050 203080E5 		str	r3, [r0, #32]
+ 124:libstr91x/src/91x_emi.c **** 
+ 125:libstr91x/src/91x_emi.c ****   /*Select or deselect the Burst and page mode read*/
+ 126:libstr91x/src/91x_emi.c ****   /*This member can be :"EMI_NormalMode" or "EMI_BurstModeRead" */
+ 127:libstr91x/src/91x_emi.c **** 
+ 128:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_Burst_and_PageModeRead_Selection = EMI_NormalMode;
+  87              		.loc 1 128 0
+  88 0054 243080E5 		str	r3, [r0, #36]
+ 129:libstr91x/src/91x_emi.c ****   
+ 130:libstr91x/src/91x_emi.c ****   
+ 131:libstr91x/src/91x_emi.c ****   /* Enables the byte select signals in 16-bit PSRAM bus mode*/ 
+ 132:libstr91x/src/91x_emi.c ****   /*(EMI_UBn and EMI_LBn) are enabled. Bit 2 in the GPIO EMI register */
+ 133:libstr91x/src/91x_emi.c ****   /*(SCU_EMI) must also be set to 1 */
+ 134:libstr91x/src/91x_emi.c ****   
+ 135:libstr91x/src/91x_emi.c ****    EMI_InitStruct->EMI_ByteLane_Selection=EMI_Byte_Select_disabled;
+  89              		.loc 1 135 0
+  90 0058 383080E5 		str	r3, [r0, #56]
+ 136:libstr91x/src/91x_emi.c ****   
+ 137:libstr91x/src/91x_emi.c ****   /*Access the device using synchronous accesses for reads*/
+ 138:libstr91x/src/91x_emi.c ****    
+ 139:libstr91x/src/91x_emi.c ****   EMI_InitStruct-> EMI_AccessRead_Support=EMI_Read_Asyn;
+  91              		.loc 1 139 0
+  92 005c 303080E5 		str	r3, [r0, #48]
+ 140:libstr91x/src/91x_emi.c ****   
+ 141:libstr91x/src/91x_emi.c ****   /*Access the device using synchronous accesses for Write*/
+ 142:libstr91x/src/91x_emi.c ****    
+ 143:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_AccessWrite_Support=EMI_Write_Asyn;
+  93              		.loc 1 143 0
+  94 0060 343080E5 		str	r3, [r0, #52]
+ 144:libstr91x/src/91x_emi.c ****   
+ 145:libstr91x/src/91x_emi.c ****   /* Burst Write transfer length */
+ 146:libstr91x/src/91x_emi.c ****   /*This member can be :"EMI_Write_4Data", "EMI_Write_8Data" or */
+ 147:libstr91x/src/91x_emi.c ****   /*"EMI_Write_Continuous" for synchronous only*/
+ 148:libstr91x/src/91x_emi.c ****   
+ 149:libstr91x/src/91x_emi.c ****   EMI_InitStruct->EMI_BurstModeWrite_TransferLength = EMI_Write_4Data;
+  95              		.loc 1 149 0
+  96 0064 283080E5 		str	r3, [r0, #40]
+ 150:libstr91x/src/91x_emi.c ****   
+ 151:libstr91x/src/91x_emi.c ****   /* Select burst or non-burst write to memory*/
+ 152:libstr91x/src/91x_emi.c ****    
+ 153:libstr91x/src/91x_emi.c ****   EMI_InitStruct-> EMI_BurstModeWrite_Selection=EMI_NonBurstModeWrite;
+  97              		.loc 1 153 0
+  98 0068 2C3080E5 		str	r3, [r0, #44]
+ 154:libstr91x/src/91x_emi.c ****   
+ 155:libstr91x/src/91x_emi.c **** 
+ 156:libstr91x/src/91x_emi.c **** }
+  99              		.loc 1 156 0
+ 100 006c 1EFF2FE1 		bx	lr
+ 101              		.cfi_endproc
+ 102              	.LFE1:
+ 104              		.align	2
+ 105              		.global	EMI_Init
+ 107              	EMI_Init:
+ 108              	.LFB2:
+ 157:libstr91x/src/91x_emi.c **** 
+ 158:libstr91x/src/91x_emi.c **** /*******************************************************************************
+ 159:libstr91x/src/91x_emi.c **** * Function Name  : EMI_Init
+ 160:libstr91x/src/91x_emi.c **** * Description    : Initializes EMI  peripheral according to the specified
+ 161:libstr91x/src/91x_emi.c **** *                  parameters in the EMI_InitStruct.
+ 162:libstr91x/src/91x_emi.c **** 
+ 163:libstr91x/src/91x_emi.c **** * Input          : EMI_Bankx:where x can be 0,1,2 or 3 to select the EMI Bank.
+ 164:libstr91x/src/91x_emi.c ****                    EMI_InitStruct: pointer to a EMI_InitTypeDef structure
+ 165:libstr91x/src/91x_emi.c **** 				  ( Structure Config to be loaded in EMI Registers). .
+ 166:libstr91x/src/91x_emi.c **** 
+ 167:libstr91x/src/91x_emi.c **** * Output         : None
+ 168:libstr91x/src/91x_emi.c **** * Return         : None
+ 169:libstr91x/src/91x_emi.c **** *******************************************************************************/
+ 170:libstr91x/src/91x_emi.c **** 
+ 171:libstr91x/src/91x_emi.c **** void EMI_Init( EMI_Bank_TypeDef* EMI_Bankx, EMI_InitTypeDef* EMI_InitStruct)
+ 172:libstr91x/src/91x_emi.c **** 
+ 173:libstr91x/src/91x_emi.c **** {
+ 109              		.loc 1 173 0
+ 110              		.cfi_startproc
+ 111              		@ args = 0, pretend = 0, frame = 0
+ 112              		@ frame_needed = 0, uses_anonymous_args = 0
+ 113              		@ link register save eliminated.
+ 114              	.LVL1:
+ 174:libstr91x/src/91x_emi.c **** 
+ 175:libstr91x/src/91x_emi.c ****   EMI_Bankx->ICR  = EMI_InitStruct-> EMI_Bank_IDCY ;
+ 176:libstr91x/src/91x_emi.c **** 
+ 177:libstr91x/src/91x_emi.c ****   EMI_Bankx->RCR  = EMI_InitStruct->EMI_Bank_WSTRD ;
+ 178:libstr91x/src/91x_emi.c **** 
+ 179:libstr91x/src/91x_emi.c ****   EMI_Bankx->WCR  = EMI_InitStruct->EMI_Bank_WSTWR ;
+ 180:libstr91x/src/91x_emi.c **** 
+ 181:libstr91x/src/91x_emi.c ****   EMI_Bankx->OECR = EMI_InitStruct->EMI_Bank_WSTROEN;
+ 115              		.loc 1 181 0
+ 116 0070 0CC091E5 		ldr	ip, [r1, #12]
+ 182:libstr91x/src/91x_emi.c **** 
+ 183:libstr91x/src/91x_emi.c ****   EMI_Bankx->WECR = EMI_InitStruct->EMI_Bank_WSTWEN ;
+ 117              		.loc 1 183 0
+ 118 0074 102091E5 		ldr	r2, [r1, #16]
+ 184:libstr91x/src/91x_emi.c ****   
+ 185:libstr91x/src/91x_emi.c ****   EMI_Bankx->BRDCR  = EMI_InitStruct->EMI_Bank_BRDCR ;
+ 119              		.loc 1 185 0
+ 120 0078 143091E5 		ldr	r3, [r1, #20]
+ 173:libstr91x/src/91x_emi.c **** {
+ 121              		.loc 1 173 0
+ 122 007c 70002DE9 		stmfd	sp!, {r4, r5, r6}
+ 123              	.LCFI1:
+ 124              		.cfi_def_cfa_offset 12
+ 179:libstr91x/src/91x_emi.c ****   EMI_Bankx->WCR  = EMI_InitStruct->EMI_Bank_WSTWR ;
+ 125              		.loc 1 179 0
+ 126 0080 084091E5 		ldr	r4, [r1, #8]
+ 127              		.cfi_offset 6, -4
+ 128              		.cfi_offset 5, -8
+ 129              		.cfi_offset 4, -12
+ 175:libstr91x/src/91x_emi.c ****   EMI_Bankx->ICR  = EMI_InitStruct-> EMI_Bank_IDCY ;
+ 130              		.loc 1 175 0
+ 131 0084 006091E5 		ldr	r6, [r1, #0]
+ 177:libstr91x/src/91x_emi.c ****   EMI_Bankx->RCR  = EMI_InitStruct->EMI_Bank_WSTRD ;
+ 132              		.loc 1 177 0
+ 133 0088 045091E5 		ldr	r5, [r1, #4]
+ 175:libstr91x/src/91x_emi.c ****   EMI_Bankx->ICR  = EMI_InitStruct-> EMI_Bank_IDCY ;
+ 134              		.loc 1 175 0
+ 135 008c 006080E5 		str	r6, [r0, #0]
+ 177:libstr91x/src/91x_emi.c ****   EMI_Bankx->RCR  = EMI_InitStruct->EMI_Bank_WSTRD ;
+ 136              		.loc 1 177 0
+ 137 0090 045080E5 		str	r5, [r0, #4]
+ 179:libstr91x/src/91x_emi.c ****   EMI_Bankx->WCR  = EMI_InitStruct->EMI_Bank_WSTWR ;
+ 138              		.loc 1 179 0
+ 139 0094 084080E5 		str	r4, [r0, #8]
+ 181:libstr91x/src/91x_emi.c ****   EMI_Bankx->OECR = EMI_InitStruct->EMI_Bank_WSTROEN;
+ 140              		.loc 1 181 0
+ 141 0098 0CC080E5 		str	ip, [r0, #12]
+ 183:libstr91x/src/91x_emi.c ****   EMI_Bankx->WECR = EMI_InitStruct->EMI_Bank_WSTWEN ;
+ 142              		.loc 1 183 0
+ 143 009c 102080E5 		str	r2, [r0, #16]
+ 144              		.loc 1 185 0
+ 145 00a0 1C3080E5 		str	r3, [r0, #28]
+ 186:libstr91x/src/91x_emi.c ****   
+ 187:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_MemWidth_Mask;
+ 146              		.loc 1 187 0
+ 147 00a4 142090E5 		ldr	r2, [r0, #20]
+ 188:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Bank_MemWidth;
+ 148              		.loc 1 188 0
+ 149 00a8 183091E5 		ldr	r3, [r1, #24]
+ 187:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_MemWidth_Mask;
+ 150              		.loc 1 187 0
+ 151 00ac 30C0C2E3 		bic	ip, r2, #48
+ 152 00b0 14C080E5 		str	ip, [r0, #20]
+ 153              		.loc 1 188 0
+ 154 00b4 144090E5 		ldr	r4, [r0, #20]
+ 189:libstr91x/src/91x_emi.c **** 
+ 190:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_WriteProtect_Mask;
+ 191:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Bank_WriteProtection;
+ 155              		.loc 1 191 0
+ 156 00b8 1CC091E5 		ldr	ip, [r1, #28]
+ 188:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Bank_MemWidth;
+ 157              		.loc 1 188 0
+ 158 00bc 032084E1 		orr	r2, r4, r3
+ 159 00c0 142080E5 		str	r2, [r0, #20]
+ 190:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_WriteProtect_Mask;
+ 160              		.loc 1 190 0
+ 161 00c4 144090E5 		ldr	r4, [r0, #20]
+ 192:libstr91x/src/91x_emi.c **** 
+ 193:libstr91x/src/91x_emi.c ****  
+ 194:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_Burst_and_PageModeRead_TL_Mask;
+ 195:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Burst_and_PageModeRead_TransferLength;
+ 162              		.loc 1 195 0
+ 163 00c8 202091E5 		ldr	r2, [r1, #32]
+ 190:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_WriteProtect_Mask;
+ 164              		.loc 1 190 0
+ 165 00cc 0830C4E3 		bic	r3, r4, #8
+ 166 00d0 143080E5 		str	r3, [r0, #20]
+ 191:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Bank_WriteProtection;
+ 167              		.loc 1 191 0
+ 168 00d4 144090E5 		ldr	r4, [r0, #20]
+ 196:libstr91x/src/91x_emi.c ****   
+ 197:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_Burst_and_PageModeRead_Sel_Mask;
+ 198:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_Burst_and_PageModeRead_Selection;
+ 169              		.loc 1 198 0
+ 170 00d8 243091E5 		ldr	r3, [r1, #36]
+ 191:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Bank_WriteProtection;
+ 171              		.loc 1 191 0
+ 172 00dc 0C4084E1 		orr	r4, r4, ip
+ 173 00e0 144080E5 		str	r4, [r0, #20]
+ 194:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_Burst_and_PageModeRead_TL_Mask;
+ 174              		.loc 1 194 0
+ 175 00e4 14C090E5 		ldr	ip, [r0, #20]
+ 176 00e8 034BCCE3 		bic	r4, ip, #3072
+ 177 00ec 144080E5 		str	r4, [r0, #20]
+ 195:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_Burst_and_PageModeRead_TransferLength;
+ 178              		.loc 1 195 0
+ 179 00f0 14C090E5 		ldr	ip, [r0, #20]
+ 180 00f4 02408CE1 		orr	r4, ip, r2
+ 181 00f8 144080E5 		str	r4, [r0, #20]
+ 197:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_Burst_and_PageModeRead_Sel_Mask;
+ 182              		.loc 1 197 0
+ 183 00fc 142090E5 		ldr	r2, [r0, #20]
+ 184 0100 01CCC2E3 		bic	ip, r2, #256
+ 185 0104 14C080E5 		str	ip, [r0, #20]
+ 186              		.loc 1 198 0
+ 187 0108 144090E5 		ldr	r4, [r0, #20]
+ 188 010c 032084E1 		orr	r2, r4, r3
+ 189 0110 142080E5 		str	r2, [r0, #20]
+ 199:libstr91x/src/91x_emi.c ****   
+ 200:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_BurstModeWrite_TL_Mask;
+ 190              		.loc 1 200 0
+ 191 0114 14C090E5 		ldr	ip, [r0, #20]
+ 192 0118 0337CCE3 		bic	r3, ip, #786432
+ 193 011c 143080E5 		str	r3, [r0, #20]
+ 201:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_BurstModeWrite_TransferLength;
+ 194              		.loc 1 201 0
+ 195 0120 144090E5 		ldr	r4, [r0, #20]
+ 196 0124 282091E5 		ldr	r2, [r1, #40]
+ 202:libstr91x/src/91x_emi.c ****  
+ 203:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_BurstModeWrite_Sel_Mask;
+ 204:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_BurstModeWrite_Selection;
+ 197              		.loc 1 204 0
+ 198 0128 2C3091E5 		ldr	r3, [r1, #44]
+ 201:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |= EMI_InitStruct->EMI_BurstModeWrite_TransferLength;
+ 199              		.loc 1 201 0
+ 200 012c 02C084E1 		orr	ip, r4, r2
+ 201 0130 14C080E5 		str	ip, [r0, #20]
+ 203:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_BurstModeWrite_Sel_Mask;
+ 202              		.loc 1 203 0
+ 203 0134 144090E5 		ldr	r4, [r0, #20]
+ 205:libstr91x/src/91x_emi.c ****   
+ 206:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=  EMI_ByteLane_Mask;
+ 207:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_ByteLane_Selection;
+ 204              		.loc 1 207 0
+ 205 0138 38C091E5 		ldr	ip, [r1, #56]
+ 203:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &= EMI_BurstModeWrite_Sel_Mask;
+ 206              		.loc 1 203 0
+ 207 013c 0128C4E3 		bic	r2, r4, #65536
+ 208 0140 142080E5 		str	r2, [r0, #20]
+ 204:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_BurstModeWrite_Selection;
+ 209              		.loc 1 204 0
+ 210 0144 144090E5 		ldr	r4, [r0, #20]
+ 208:libstr91x/src/91x_emi.c ****   
+ 209:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=  EMI_AccessRead_Dev_Mask;	
+ 210:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_AccessRead_Support;
+ 211              		.loc 1 210 0
+ 212 0148 302091E5 		ldr	r2, [r1, #48]
+ 204:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_BurstModeWrite_Selection;
+ 213              		.loc 1 204 0
+ 214 014c 034084E1 		orr	r4, r4, r3
+ 215 0150 144080E5 		str	r4, [r0, #20]
+ 206:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=  EMI_ByteLane_Mask;
+ 216              		.loc 1 206 0
+ 217 0154 144090E5 		ldr	r4, [r0, #20]
+ 211:libstr91x/src/91x_emi.c ****   
+ 212:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=   EMI_AccessWrite_Dev_Mask;	
+ 213:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_AccessWrite_Support;
+ 218              		.loc 1 213 0
+ 219 0158 343091E5 		ldr	r3, [r1, #52]
+ 206:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=  EMI_ByteLane_Mask;
+ 220              		.loc 1 206 0
+ 221 015c 0110C4E3 		bic	r1, r4, #1
+ 222              	.LVL2:
+ 223 0160 141080E5 		str	r1, [r0, #20]
+ 207:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_ByteLane_Selection;
+ 224              		.loc 1 207 0
+ 225 0164 141090E5 		ldr	r1, [r0, #20]
+ 226 0168 0CC081E1 		orr	ip, r1, ip
+ 227 016c 14C080E5 		str	ip, [r0, #20]
+ 209:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=  EMI_AccessRead_Dev_Mask;	
+ 228              		.loc 1 209 0
+ 229 0170 141090E5 		ldr	r1, [r0, #20]
+ 230 0174 02CCC1E3 		bic	ip, r1, #512
+ 231 0178 14C080E5 		str	ip, [r0, #20]
+ 210:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR |=  EMI_InitStruct->EMI_AccessRead_Support;
+ 232              		.loc 1 210 0
+ 233 017c 141090E5 		ldr	r1, [r0, #20]
+ 234 0180 022081E1 		orr	r2, r1, r2
+ 235 0184 142080E5 		str	r2, [r0, #20]
+ 212:libstr91x/src/91x_emi.c ****   EMI_Bankx->BCR &=   EMI_AccessWrite_Dev_Mask;	
+ 236              		.loc 1 212 0
+ 237 0188 14C090E5 		ldr	ip, [r0, #20]
+ 238 018c 0218CCE3 		bic	r1, ip, #131072
+ 239 0190 141080E5 		str	r1, [r0, #20]
+ 240              		.loc 1 213 0
+ 241 0194 142090E5 		ldr	r2, [r0, #20]
+ 242 0198 033082E1 		orr	r3, r2, r3
+ 243 019c 143080E5 		str	r3, [r0, #20]
+ 214:libstr91x/src/91x_emi.c **** 
+ 215:libstr91x/src/91x_emi.c **** 
+ 216:libstr91x/src/91x_emi.c **** }
+ 244              		.loc 1 216 0
+ 245 01a0 7000BDE8 		ldmfd	sp!, {r4, r5, r6}
+ 246 01a4 1EFF2FE1 		bx	lr
+ 247              		.cfi_endproc
+ 248              	.LFE2:
+ 250              		.align	2
+ 251              		.global	EMI_BCLKCmd
+ 253              	EMI_BCLKCmd:
+ 254              	.LFB3:
+ 217:libstr91x/src/91x_emi.c **** /*******************************************************************************
+ 218:libstr91x/src/91x_emi.c **** * Function Name  : EMI_BCLKCmd
+ 219:libstr91x/src/91x_emi.c **** * Description    : Enable or Disable the activation of BCLK clock (LFBGA only)
+ 220:libstr91x/src/91x_emi.c **** * Input          : NewState : ENABLE or DISABLE
+ 221:libstr91x/src/91x_emi.c **** * Output         : None
+ 222:libstr91x/src/91x_emi.c **** * Return         : None
+ 223:libstr91x/src/91x_emi.c **** *******************************************************************************/
+ 224:libstr91x/src/91x_emi.c **** void EMI_BCLKCmd(FunctionalState NewState)
+ 225:libstr91x/src/91x_emi.c **** {
+ 255              		.loc 1 225 0
+ 256              		.cfi_startproc
+ 257              		@ args = 0, pretend = 0, frame = 0
+ 258              		@ frame_needed = 0, uses_anonymous_args = 0
+ 259              		@ link register save eliminated.
+ 260              	.LVL3:
+ 226:libstr91x/src/91x_emi.c ****   if (NewState == ENABLE)
+ 227:libstr91x/src/91x_emi.c ****  *EMI_CCR |=0x1;
+ 261              		.loc 1 227 0
+ 262 01a8 1D33A0E3 		mov	r3, #1946157056
+ 263 01ac 042293E5 		ldr	r2, [r3, #516]
+ 226:libstr91x/src/91x_emi.c ****   if (NewState == ENABLE)
+ 264              		.loc 1 226 0
+ 265 01b0 010050E3 		cmp	r0, #1
+ 266              		.loc 1 227 0
+ 267 01b4 01208203 		orreq	r2, r2, #1
+ 228:libstr91x/src/91x_emi.c ****   else
+ 229:libstr91x/src/91x_emi.c ****  *EMI_CCR &=~0x1;
+ 268              		.loc 1 229 0
+ 269 01b8 0120C213 		bicne	r2, r2, #1
+ 270 01bc 042283E5 		str	r2, [r3, #516]
+ 271 01c0 1EFF2FE1 		bx	lr
+ 272              		.cfi_endproc
+ 273              	.LFE3:
+ 275              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_emi.c
+     /tmp/ccsbpLP6.s:21     .text:00000000 $a
+     /tmp/ccsbpLP6.s:24     .text:00000000 EMI_DeInit
+     /tmp/ccsbpLP6.s:53     .text:00000020 EMI_StructInit
+     /tmp/ccsbpLP6.s:107    .text:00000070 EMI_Init
+     /tmp/ccsbpLP6.s:253    .text:000001a8 EMI_BCLKCmd
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_AHBPeriphReset

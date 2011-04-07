@@ -1,0 +1,1962 @@
+   1              		.cpu arm9e
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 18, 4
+  11              		.file	"91x_gpio.c"
+  19              	.Ltext0:
+  20              		.cfi_sections	.debug_frame
+  21              		.align	2
+  22              		.global	GPIO_DeInit
+  24              	GPIO_DeInit:
+  25              	.LFB0:
+  26              		.file 1 "libstr91x/src/91x_gpio.c"
+   1:libstr91x/src/91x_gpio.c **** /******************** (C) COPYRIGHT 2008 STMicroelectronics ********************
+   2:libstr91x/src/91x_gpio.c **** * File Name          : 91x_gpio.c
+   3:libstr91x/src/91x_gpio.c **** * Author             : MCD Application Team
+   4:libstr91x/src/91x_gpio.c **** * Version            : V2.1
+   5:libstr91x/src/91x_gpio.c **** * Date               : 12/22/2008
+   6:libstr91x/src/91x_gpio.c **** * Description        : This file provides all the GPIO firmware functions.
+   7:libstr91x/src/91x_gpio.c **** ********************************************************************************
+   8:libstr91x/src/91x_gpio.c **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+   9:libstr91x/src/91x_gpio.c **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  10:libstr91x/src/91x_gpio.c **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  11:libstr91x/src/91x_gpio.c **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  12:libstr91x/src/91x_gpio.c **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  13:libstr91x/src/91x_gpio.c **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  14:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+  15:libstr91x/src/91x_gpio.c **** 
+  16:libstr91x/src/91x_gpio.c **** /* Includes ------------------------------------------------------------------*/
+  17:libstr91x/src/91x_gpio.c **** #include "91x_gpio.h"
+  18:libstr91x/src/91x_gpio.c **** #include "91x_scu.h"
+  19:libstr91x/src/91x_gpio.c **** 
+  20:libstr91x/src/91x_gpio.c **** /* Private typedef -----------------------------------------------------------*/
+  21:libstr91x/src/91x_gpio.c **** /* Private define ------------------------------------------------------------*/
+  22:libstr91x/src/91x_gpio.c **** 
+  23:libstr91x/src/91x_gpio.c **** /* Private macro -------------------------------------------------------------*/
+  24:libstr91x/src/91x_gpio.c **** /* Private variables ---------------------------------------------------------*/
+  25:libstr91x/src/91x_gpio.c **** /* Private function prototypes -----------------------------------------------*/
+  26:libstr91x/src/91x_gpio.c ****    static u8 GPIO_GetGPIONumber(GPIO_TypeDef* GPIOx);
+  27:libstr91x/src/91x_gpio.c ****    static u16 GPIO_GetAnaloClearBits(u8 GPIO_ANAChannel);
+  28:libstr91x/src/91x_gpio.c **** 
+  29:libstr91x/src/91x_gpio.c **** /* Private functions ---------------------------------------------------------*/
+  30:libstr91x/src/91x_gpio.c **** 
+  31:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+  32:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_DeInit
+  33:libstr91x/src/91x_gpio.c **** * Description    : Deinitializes the GPIOx peripheral registers to their default
+  34:libstr91x/src/91x_gpio.c **** *                  reset values.
+  35:libstr91x/src/91x_gpio.c **** * Input          : GPIOx: where x can be (0..9) to select the GPIO peripheral.
+  36:libstr91x/src/91x_gpio.c **** * Output         : None
+  37:libstr91x/src/91x_gpio.c **** * Return         : None
+  38:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+  39:libstr91x/src/91x_gpio.c **** void GPIO_DeInit(GPIO_TypeDef* GPIOx)
+  40:libstr91x/src/91x_gpio.c **** {
+  27              		.loc 1 40 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  41:libstr91x/src/91x_gpio.c ****   /* Reset the GPIO registers values */
+  42:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO0)
+  32              		.loc 1 42 0
+  33 0000 54329FE5 		ldr	r3, .L22
+  40:libstr91x/src/91x_gpio.c **** {
+  34              		.loc 1 40 0
+  35 0004 10402DE9 		stmfd	sp!, {r4, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.loc 1 42 0
+  39 0008 030050E1 		cmp	r0, r3
+  40:libstr91x/src/91x_gpio.c **** {
+  40              		.loc 1 40 0
+  41 000c 0040A0E1 		mov	r4, r0
+  42              		.cfi_offset 14, -4
+  43              		.cfi_offset 4, -8
+  44              		.loc 1 42 0
+  45 0010 2500000A 		beq	.L13
+  43:libstr91x/src/91x_gpio.c ****   {
+  44:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO0,ENABLE);
+  45:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO0,DISABLE);
+  46:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x00] = 0x0000 ;
+  47:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x00]  = 0x0000;
+  48:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x00]   = 0x0000;
+  49:libstr91x/src/91x_gpio.c ****   }
+  50:libstr91x/src/91x_gpio.c **** 
+  51:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO1)
+  46              		.loc 1 51 0
+  47 0014 44129FE5 		ldr	r1, .L22+4
+  48 0018 010050E1 		cmp	r0, r1
+  49 001c 2E00000A 		beq	.L14
+  52:libstr91x/src/91x_gpio.c ****   {
+  53:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO1,ENABLE);
+  54:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO1,DISABLE);
+  55:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x01] = 0x0000 ;
+  56:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x01]  = 0x0000;
+  57:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x01]   = 0x0000;
+  58:libstr91x/src/91x_gpio.c ****   }
+  59:libstr91x/src/91x_gpio.c **** 
+  60:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO2)
+  50              		.loc 1 60 0
+  51 0020 3C229FE5 		ldr	r2, .L22+8
+  52 0024 020050E1 		cmp	r0, r2
+  53 0028 3700000A 		beq	.L15
+  54              	.LVL1:
+  55              	.L3:
+  61:libstr91x/src/91x_gpio.c ****   {
+  62:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO2,ENABLE);
+  63:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO2,DISABLE);
+  64:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x02] = 0x0000 ;
+  65:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x02]  = 0x0000;
+  66:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x02]   = 0x0000;
+  67:libstr91x/src/91x_gpio.c ****   }
+  68:libstr91x/src/91x_gpio.c **** 
+  69:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO3)
+  56              		.loc 1 69 0
+  57 002c 34C29FE5 		ldr	ip, .L22+12
+  58 0030 0C0054E1 		cmp	r4, ip
+  59 0034 4000000A 		beq	.L16
+  60              	.L5:
+  70:libstr91x/src/91x_gpio.c ****   {
+  71:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO3,ENABLE);
+  72:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO3,DISABLE);
+  73:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x03] = 0x0000 ;
+  74:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x03]  = 0x0000;
+  75:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x03]   = 0x0000;
+  76:libstr91x/src/91x_gpio.c ****   }
+  77:libstr91x/src/91x_gpio.c **** 
+  78:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO4)
+  61              		.loc 1 78 0
+  62 0038 2C029FE5 		ldr	r0, .L22+16
+  63 003c 000054E1 		cmp	r4, r0
+  64 0040 4900000A 		beq	.L17
+  65              	.L6:
+  79:libstr91x/src/91x_gpio.c ****   {
+  80:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO4,ENABLE);
+  81:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO4,DISABLE);
+  82:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x04] = 0x0000 ;
+  83:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x04]  = 0x0000;
+  84:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x04]   = 0x0000;
+  85:libstr91x/src/91x_gpio.c ****     SCU->GPIOANA = 0x00;
+  86:libstr91x/src/91x_gpio.c ****   }
+  87:libstr91x/src/91x_gpio.c **** 
+  88:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO5)
+  66              		.loc 1 88 0
+  67 0044 24229FE5 		ldr	r2, .L22+20
+  68 0048 020054E1 		cmp	r4, r2
+  69 004c 5300000A 		beq	.L18
+  70              	.L7:
+  89:libstr91x/src/91x_gpio.c ****   {
+  90:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO5,ENABLE);
+  91:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO5,DISABLE);
+  92:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x05] = 0x0000 ;
+  93:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x05]  = 0x0000;
+  94:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x05]   = 0x0000;
+  95:libstr91x/src/91x_gpio.c ****   }
+  96:libstr91x/src/91x_gpio.c **** 
+  97:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO6)
+  71              		.loc 1 97 0
+  72 0050 1C129FE5 		ldr	r1, .L22+24
+  73 0054 010054E1 		cmp	r4, r1
+  74 0058 5C00000A 		beq	.L19
+  75              	.L8:
+  98:libstr91x/src/91x_gpio.c ****   {
+  99:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO6,ENABLE);
+ 100:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO6,DISABLE);
+ 101:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x06] = 0x0000 ;
+ 102:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x06]  = 0x0000;
+ 103:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x06]   = 0x0000;
+ 104:libstr91x/src/91x_gpio.c ****   }
+ 105:libstr91x/src/91x_gpio.c **** 
+ 106:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO7)
+  76              		.loc 1 106 0
+  77 005c 14029FE5 		ldr	r0, .L22+28
+  78 0060 000054E1 		cmp	r4, r0
+  79 0064 6500000A 		beq	.L20
+  80              	.L9:
+ 107:libstr91x/src/91x_gpio.c ****   {
+ 108:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO7,ENABLE);
+ 109:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO7,DISABLE);
+ 110:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x07] = 0x0000;
+ 111:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x07]  = 0x0000;
+ 112:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x07]   = 0x0000;
+ 113:libstr91x/src/91x_gpio.c ****   }
+ 114:libstr91x/src/91x_gpio.c **** 
+ 115:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO8)
+  81              		.loc 1 115 0
+  82 0068 0CC29FE5 		ldr	ip, .L22+32
+  83 006c 0C0054E1 		cmp	r4, ip
+  84 0070 6E00000A 		beq	.L21
+  85              	.L10:
+ 116:libstr91x/src/91x_gpio.c ****   {
+ 117:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO8,ENABLE);
+ 118:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO8,DISABLE);
+ 119:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x08] = 0x0000;
+ 120:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x00;
+ 121:libstr91x/src/91x_gpio.c ****   }
+ 122:libstr91x/src/91x_gpio.c **** 
+ 123:libstr91x/src/91x_gpio.c ****    if(GPIOx == GPIO9)
+  86              		.loc 1 123 0
+  87 0074 04129FE5 		ldr	r1, .L22+36
+  88 0078 010054E1 		cmp	r4, r1
+  89 007c 1080BD18 		ldmnefd	sp!, {r4, pc}
+ 124:libstr91x/src/91x_gpio.c ****   {
+ 125:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO9,ENABLE);
+  90              		.loc 1 125 0
+  91 0080 0205A0E3 		mov	r0, #8388608
+  92 0084 0110A0E3 		mov	r1, #1
+  93 0088 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 126:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO9,DISABLE);
+  94              		.loc 1 126 0
+  95 008c 0205A0E3 		mov	r0, #8388608
+  96 0090 0010A0E3 		mov	r1, #0
+  97 0094 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 127:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x09] = 0x0000;
+  98              		.loc 1 127 0
+  99 0098 E4319FE5 		ldr	r3, .L22+40
+ 100 009c 00C0A0E3 		mov	ip, #0
+ 101 00a0 A8C083E5 		str	ip, [r3, #168]
+ 128:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x00;
+ 102              		.loc 1 128 0
+ 103 00a4 ACC083E5 		str	ip, [r3, #172]
+ 104 00a8 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 105              	.L13:
+  44:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO0,ENABLE);
+ 106              		.loc 1 44 0
+ 107 00ac 0109A0E3 		mov	r0, #16384
+ 108 00b0 0110A0E3 		mov	r1, #1
+ 109 00b4 FEFFFFEB 		bl	SCU_APBPeriphReset
+  45:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO0,DISABLE);
+ 110              		.loc 1 45 0
+ 111 00b8 0109A0E3 		mov	r0, #16384
+ 112 00bc 0010A0E3 		mov	r1, #0
+ 113 00c0 FEFFFFEB 		bl	SCU_APBPeriphReset
+  46:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x00] = 0x0000 ;
+ 114              		.loc 1 46 0
+ 115 00c4 B8019FE5 		ldr	r0, .L22+40
+ 116 00c8 0020A0E3 		mov	r2, #0
+ 117 00cc 842080E5 		str	r2, [r0, #132]
+  47:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x00]  = 0x0000;
+ 118              		.loc 1 47 0
+ 119 00d0 442080E5 		str	r2, [r0, #68]
+  48:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x00]   = 0x0000;
+ 120              		.loc 1 48 0
+ 121 00d4 642080E5 		str	r2, [r0, #100]
+ 122 00d8 D3FFFFEA 		b	.L3
+ 123              	.L14:
+  53:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO1,ENABLE);
+ 124              		.loc 1 53 0
+ 125 00dc 0209A0E3 		mov	r0, #32768
+ 126 00e0 0110A0E3 		mov	r1, #1
+ 127 00e4 FEFFFFEB 		bl	SCU_APBPeriphReset
+  54:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO1,DISABLE);
+ 128              		.loc 1 54 0
+ 129 00e8 0209A0E3 		mov	r0, #32768
+ 130 00ec 0010A0E3 		mov	r1, #0
+ 131 00f0 FEFFFFEB 		bl	SCU_APBPeriphReset
+  55:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x01] = 0x0000 ;
+ 132              		.loc 1 55 0
+ 133 00f4 88319FE5 		ldr	r3, .L22+40
+ 134 00f8 00C0A0E3 		mov	ip, #0
+ 135 00fc 88C083E5 		str	ip, [r3, #136]
+  56:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x01]  = 0x0000;
+ 136              		.loc 1 56 0
+ 137 0100 48C083E5 		str	ip, [r3, #72]
+  57:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x01]   = 0x0000;
+ 138              		.loc 1 57 0
+ 139 0104 68C083E5 		str	ip, [r3, #104]
+ 140 0108 CAFFFFEA 		b	.L5
+ 141              	.L15:
+  62:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO2,ENABLE);
+ 142              		.loc 1 62 0
+ 143 010c 0108A0E3 		mov	r0, #65536
+ 144 0110 0110A0E3 		mov	r1, #1
+ 145 0114 FEFFFFEB 		bl	SCU_APBPeriphReset
+  63:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO2,DISABLE);
+ 146              		.loc 1 63 0
+ 147 0118 0108A0E3 		mov	r0, #65536
+ 148 011c 0010A0E3 		mov	r1, #0
+ 149 0120 FEFFFFEB 		bl	SCU_APBPeriphReset
+  64:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x02] = 0x0000 ;
+ 150              		.loc 1 64 0
+ 151 0124 58119FE5 		ldr	r1, .L22+40
+ 152 0128 0000A0E3 		mov	r0, #0
+ 153 012c 8C0081E5 		str	r0, [r1, #140]
+  65:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x02]  = 0x0000;
+ 154              		.loc 1 65 0
+ 155 0130 4C0081E5 		str	r0, [r1, #76]
+  66:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x02]   = 0x0000;
+ 156              		.loc 1 66 0
+ 157 0134 6C0081E5 		str	r0, [r1, #108]
+ 158 0138 C1FFFFEA 		b	.L6
+ 159              	.L16:
+  71:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO3,ENABLE);
+ 160              		.loc 1 71 0
+ 161 013c 0208A0E3 		mov	r0, #131072
+ 162 0140 0110A0E3 		mov	r1, #1
+ 163 0144 FEFFFFEB 		bl	SCU_APBPeriphReset
+  72:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO3,DISABLE);
+ 164              		.loc 1 72 0
+ 165 0148 0208A0E3 		mov	r0, #131072
+ 166 014c 0010A0E3 		mov	r1, #0
+ 167 0150 FEFFFFEB 		bl	SCU_APBPeriphReset
+  73:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x03] = 0x0000 ;
+ 168              		.loc 1 73 0
+ 169 0154 28319FE5 		ldr	r3, .L22+40
+ 170 0158 0020A0E3 		mov	r2, #0
+ 171 015c 902083E5 		str	r2, [r3, #144]
+  74:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x03]  = 0x0000;
+ 172              		.loc 1 74 0
+ 173 0160 502083E5 		str	r2, [r3, #80]
+  75:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x03]   = 0x0000;
+ 174              		.loc 1 75 0
+ 175 0164 702083E5 		str	r2, [r3, #112]
+ 176 0168 B8FFFFEA 		b	.L7
+ 177              	.L17:
+  80:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO4,ENABLE);
+ 178              		.loc 1 80 0
+ 179 016c 0107A0E3 		mov	r0, #262144
+ 180 0170 0110A0E3 		mov	r1, #1
+ 181 0174 FEFFFFEB 		bl	SCU_APBPeriphReset
+  81:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO4,DISABLE);
+ 182              		.loc 1 81 0
+ 183 0178 0010A0E3 		mov	r1, #0
+ 184 017c 0107A0E3 		mov	r0, #262144
+ 185 0180 FEFFFFEB 		bl	SCU_APBPeriphReset
+  82:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x04] = 0x0000 ;
+ 186              		.loc 1 82 0
+ 187 0184 F8C09FE5 		ldr	ip, .L22+40
+ 188 0188 0010A0E3 		mov	r1, #0
+ 189 018c 94108CE5 		str	r1, [ip, #148]
+  83:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x04]  = 0x0000;
+ 190              		.loc 1 83 0
+ 191 0190 54108CE5 		str	r1, [ip, #84]
+  84:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x04]   = 0x0000;
+ 192              		.loc 1 84 0
+ 193 0194 74108CE5 		str	r1, [ip, #116]
+  85:libstr91x/src/91x_gpio.c ****     SCU->GPIOANA = 0x00;
+ 194              		.loc 1 85 0
+ 195 0198 BC108CE5 		str	r1, [ip, #188]
+ 196 019c AEFFFFEA 		b	.L8
+ 197              	.L18:
+  90:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO5,ENABLE);
+ 198              		.loc 1 90 0
+ 199 01a0 0207A0E3 		mov	r0, #524288
+ 200 01a4 0110A0E3 		mov	r1, #1
+ 201 01a8 FEFFFFEB 		bl	SCU_APBPeriphReset
+  91:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO5,DISABLE);
+ 202              		.loc 1 91 0
+ 203 01ac 0207A0E3 		mov	r0, #524288
+ 204 01b0 0010A0E3 		mov	r1, #0
+ 205 01b4 FEFFFFEB 		bl	SCU_APBPeriphReset
+  92:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x05] = 0x0000 ;
+ 206              		.loc 1 92 0
+ 207 01b8 C4309FE5 		ldr	r3, .L22+40
+ 208 01bc 0000A0E3 		mov	r0, #0
+ 209 01c0 980083E5 		str	r0, [r3, #152]
+  93:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x05]  = 0x0000;
+ 210              		.loc 1 93 0
+ 211 01c4 580083E5 		str	r0, [r3, #88]
+  94:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x05]   = 0x0000;
+ 212              		.loc 1 94 0
+ 213 01c8 780083E5 		str	r0, [r3, #120]
+ 214 01cc A5FFFFEA 		b	.L9
+ 215              	.L19:
+  99:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO6,ENABLE);
+ 216              		.loc 1 99 0
+ 217 01d0 0106A0E3 		mov	r0, #1048576
+ 218 01d4 0110A0E3 		mov	r1, #1
+ 219 01d8 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 100:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO6,DISABLE);
+ 220              		.loc 1 100 0
+ 221 01dc 0106A0E3 		mov	r0, #1048576
+ 222 01e0 0010A0E3 		mov	r1, #0
+ 223 01e4 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 101:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x06] = 0x0000 ;
+ 224              		.loc 1 101 0
+ 225 01e8 94209FE5 		ldr	r2, .L22+40
+ 226 01ec 00C0A0E3 		mov	ip, #0
+ 227 01f0 9CC082E5 		str	ip, [r2, #156]
+ 102:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x06]  = 0x0000;
+ 228              		.loc 1 102 0
+ 229 01f4 5CC082E5 		str	ip, [r2, #92]
+ 103:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x06]   = 0x0000;
+ 230              		.loc 1 103 0
+ 231 01f8 7CC082E5 		str	ip, [r2, #124]
+ 232 01fc 9CFFFFEA 		b	.L10
+ 233              	.L20:
+ 108:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO7,ENABLE);
+ 234              		.loc 1 108 0
+ 235 0200 0206A0E3 		mov	r0, #2097152
+ 236 0204 0110A0E3 		mov	r1, #1
+ 237 0208 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 109:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO7,DISABLE);
+ 238              		.loc 1 109 0
+ 239 020c 0010A0E3 		mov	r1, #0
+ 240 0210 0206A0E3 		mov	r0, #2097152
+ 241 0214 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 110:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x07] = 0x0000;
+ 242              		.loc 1 110 0
+ 243 0218 64309FE5 		ldr	r3, .L22+40
+ 244 021c 0010A0E3 		mov	r1, #0
+ 245 0220 A01083E5 		str	r1, [r3, #160]
+ 111:libstr91x/src/91x_gpio.c ****     SCU->GPIOOUT[0x07]  = 0x0000;
+ 246              		.loc 1 111 0
+ 247 0224 601083E5 		str	r1, [r3, #96]
+ 112:libstr91x/src/91x_gpio.c ****     SCU->GPIOIN[0x07]   = 0x0000;
+ 248              		.loc 1 112 0
+ 249 0228 801083E5 		str	r1, [r3, #128]
+ 250 022c 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 251              	.L21:
+ 117:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO8,ENABLE);
+ 252              		.loc 1 117 0
+ 253 0230 0105A0E3 		mov	r0, #4194304
+ 254 0234 0110A0E3 		mov	r1, #1
+ 255 0238 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 118:libstr91x/src/91x_gpio.c ****     SCU_APBPeriphReset(__GPIO8,DISABLE);
+ 256              		.loc 1 118 0
+ 257 023c 0105A0E3 		mov	r0, #4194304
+ 258 0240 0010A0E3 		mov	r1, #0
+ 259 0244 FEFFFFEB 		bl	SCU_APBPeriphReset
+ 119:libstr91x/src/91x_gpio.c ****     SCU->GPIOTYPE[0x08] = 0x0000;
+ 260              		.loc 1 119 0
+ 261 0248 34009FE5 		ldr	r0, .L22+40
+ 262 024c 0020A0E3 		mov	r2, #0
+ 263 0250 A42080E5 		str	r2, [r0, #164]
+ 120:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x00;
+ 264              		.loc 1 120 0
+ 265 0254 AC2080E5 		str	r2, [r0, #172]
+ 266 0258 1080BDE8 		ldmfd	sp!, {r4, pc}
+ 267              	.L23:
+ 268              		.align	2
+ 269              	.L22:
+ 270 025c 00600058 		.word	1476419584
+ 271 0260 00700058 		.word	1476423680
+ 272 0264 00800058 		.word	1476427776
+ 273 0268 00900058 		.word	1476431872
+ 274 026c 00A00058 		.word	1476435968
+ 275 0270 00B00058 		.word	1476440064
+ 276 0274 00C00058 		.word	1476444160
+ 277 0278 00D00058 		.word	1476448256
+ 278 027c 00E00058 		.word	1476452352
+ 279 0280 00F00058 		.word	1476456448
+ 280 0284 0020005C 		.word	1543512064
+ 281              		.cfi_endproc
+ 282              	.LFE0:
+ 284              		.align	2
+ 285              		.global	GPIO_Init
+ 287              	GPIO_Init:
+ 288              	.LFB1:
+ 129:libstr91x/src/91x_gpio.c ****   }
+ 130:libstr91x/src/91x_gpio.c **** }
+ 131:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 132:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_Init
+ 133:libstr91x/src/91x_gpio.c **** * Description    : Initializes the GPIOx peripheral according to the specified
+ 134:libstr91x/src/91x_gpio.c **** *                  parameters in the GPIO_InitStruct .
+ 135:libstr91x/src/91x_gpio.c **** * Input          :- GPIOx: where x can be (0..9) to select the GPIO peripheral.
+ 136:libstr91x/src/91x_gpio.c **** *                 - GPIO_InitStruct: pointer to a GPIO_InitTypeDef structure that
+ 137:libstr91x/src/91x_gpio.c **** *                   contains the configuration information for the specified GPIO
+ 138:libstr91x/src/91x_gpio.c **** *                   peripheral.
+ 139:libstr91x/src/91x_gpio.c **** * Output         : None
+ 140:libstr91x/src/91x_gpio.c **** * Return         : None
+ 141:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 142:libstr91x/src/91x_gpio.c **** void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct)
+ 143:libstr91x/src/91x_gpio.c **** {
+ 289              		.loc 1 143 0
+ 290              		.cfi_startproc
+ 291              		@ args = 0, pretend = 0, frame = 0
+ 292              		@ frame_needed = 0, uses_anonymous_args = 0
+ 293              		@ link register save eliminated.
+ 294              	.LVL2:
+ 295              	.LBB6:
+ 296              	.LBB7:
+ 144:libstr91x/src/91x_gpio.c ****   /* Select pin direction */
+ 145:libstr91x/src/91x_gpio.c ****   u8 PinNumber = 0;
+ 146:libstr91x/src/91x_gpio.c ****   u8 Counter = 0;
+ 147:libstr91x/src/91x_gpio.c ****   u8 GPIO_Number = 0;
+ 148:libstr91x/src/91x_gpio.c **** 
+ 149:libstr91x/src/91x_gpio.c ****   GPIO_Number = GPIO_GetGPIONumber(GPIOx);
+ 150:libstr91x/src/91x_gpio.c **** 
+ 151:libstr91x/src/91x_gpio.c ****   if(GPIO_InitStruct->GPIO_Direction == GPIO_PinOutput)
+ 152:libstr91x/src/91x_gpio.c ****   {
+ 153:libstr91x/src/91x_gpio.c ****   GPIOx->DDR |= GPIO_InitStruct->GPIO_Pin;
+ 154:libstr91x/src/91x_gpio.c ****   }
+ 155:libstr91x/src/91x_gpio.c ****   else
+ 156:libstr91x/src/91x_gpio.c ****   {
+ 157:libstr91x/src/91x_gpio.c ****    GPIOx->DDR &= ~GPIO_InitStruct->GPIO_Pin;
+ 158:libstr91x/src/91x_gpio.c ****   }
+ 159:libstr91x/src/91x_gpio.c **** 
+ 160:libstr91x/src/91x_gpio.c ****    for (Counter = 0; Counter < 8;Counter++)
+ 161:libstr91x/src/91x_gpio.c ****     {
+ 162:libstr91x/src/91x_gpio.c ****      /*Search pin number*/
+ 163:libstr91x/src/91x_gpio.c ****      PinNumber = (GPIO_InitStruct->GPIO_Pin & (1 <<Counter));
+ 164:libstr91x/src/91x_gpio.c ****      if((PinNumber >> Counter) == 1)
+ 165:libstr91x/src/91x_gpio.c ****      {
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 167:libstr91x/src/91x_gpio.c ****         {
+ 168:libstr91x/src/91x_gpio.c ****           /*Output ALternate 0*/
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 171:libstr91x/src/91x_gpio.c ****           {
+ 172:libstr91x/src/91x_gpio.c ****             /*Output ALternate 1*/
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 174:libstr91x/src/91x_gpio.c ****           }
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 176:libstr91x/src/91x_gpio.c ****           {
+ 177:libstr91x/src/91x_gpio.c ****             /*Output ALternate 2*/
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 179:libstr91x/src/91x_gpio.c ****           }
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 181:libstr91x/src/91x_gpio.c ****           {
+ 182:libstr91x/src/91x_gpio.c ****             /*Output ALternate 3*/
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 184:libstr91x/src/91x_gpio.c ****           }
+ 185:libstr91x/src/91x_gpio.c **** 
+ 186:libstr91x/src/91x_gpio.c ****           /*IP Connected disable*/
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 189:libstr91x/src/91x_gpio.c ****           {
+ 190:libstr91x/src/91x_gpio.c ****             /*IP Connected enable*/
+ 191:libstr91x/src/91x_gpio.c ****             SCU->GPIOIN[GPIO_Number] |= 0x1 << Counter;
+ 192:libstr91x/src/91x_gpio.c ****           }
+ 193:libstr91x/src/91x_gpio.c ****         }
+ 194:libstr91x/src/91x_gpio.c ****         
+ 195:libstr91x/src/91x_gpio.c ****        /*Type configuration: PushPull or Open Collector*/
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 198:libstr91x/src/91x_gpio.c ****        {
+ 199:libstr91x/src/91x_gpio.c ****          /*Open Drain configuration*/
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 201:libstr91x/src/91x_gpio.c ****        }     
+ 202:libstr91x/src/91x_gpio.c ****     }
+ 203:libstr91x/src/91x_gpio.c ****  }
+ 204:libstr91x/src/91x_gpio.c **** }
+ 205:libstr91x/src/91x_gpio.c **** 
+ 206:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 207:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_StructInit
+ 208:libstr91x/src/91x_gpio.c **** * Description    : Initialize the GPIO Init Structure parameters
+ 209:libstr91x/src/91x_gpio.c **** * Input          : GPIO_InitStruct : pointer to a GPIO_InitTypeDef structure
+ 210:libstr91x/src/91x_gpio.c **** *                  which will be initialized.
+ 211:libstr91x/src/91x_gpio.c **** * Output         : None
+ 212:libstr91x/src/91x_gpio.c **** * Return         : None
+ 213:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 214:libstr91x/src/91x_gpio.c **** void GPIO_StructInit(GPIO_InitTypeDef* GPIO_InitStruct) 
+ 215:libstr91x/src/91x_gpio.c **** {
+ 216:libstr91x/src/91x_gpio.c ****   /* Reset GPIO init structure parameters values */
+ 217:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Pin  = GPIO_Pin_All;
+ 218:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Direction = GPIO_PinInput;
+ 219:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_IPInputConnected = GPIO_IPInputConnected_Disable;
+ 220:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Alternate = GPIO_InputAlt1;
+ 221:libstr91x/src/91x_gpio.c **** }
+ 222:libstr91x/src/91x_gpio.c **** 
+ 223:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 224:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_ReadBit
+ 225:libstr91x/src/91x_gpio.c **** * Description    : Reads the specified port pin
+ 226:libstr91x/src/91x_gpio.c **** * Input          : - GPIOx: where x can be (0..9) to select the GPIO peripheral.
+ 227:libstr91x/src/91x_gpio.c **** *                : - GPIO_Pin: the Pin number. This parameter can be GPIO_Pin_x
+ 228:libstr91x/src/91x_gpio.c **** *                    where x can be (0..7).
+ 229:libstr91x/src/91x_gpio.c **** * Output         : None
+ 230:libstr91x/src/91x_gpio.c **** * Return         : The port pin value
+ 231:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 232:libstr91x/src/91x_gpio.c **** u8 GPIO_ReadBit(GPIO_TypeDef* GPIOx, u8 GPIO_Pin)
+ 233:libstr91x/src/91x_gpio.c **** { 
+ 234:libstr91x/src/91x_gpio.c ****   if ((((GPIOx->DR[GPIO_Pin<<2])) & GPIO_Pin) != Bit_RESET )
+ 235:libstr91x/src/91x_gpio.c ****   {
+ 236:libstr91x/src/91x_gpio.c ****     return Bit_SET;
+ 237:libstr91x/src/91x_gpio.c ****   }
+ 238:libstr91x/src/91x_gpio.c ****   else
+ 239:libstr91x/src/91x_gpio.c ****   {
+ 240:libstr91x/src/91x_gpio.c ****     return Bit_RESET;
+ 241:libstr91x/src/91x_gpio.c ****   }
+ 242:libstr91x/src/91x_gpio.c **** }
+ 243:libstr91x/src/91x_gpio.c **** 
+ 244:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 245:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_Read
+ 246:libstr91x/src/91x_gpio.c **** * Description    : Reads the specified GPIO data port
+ 247:libstr91x/src/91x_gpio.c **** * Input          : - GPIOx: where x can be (0..9) to select the GPIO peripheral.
+ 248:libstr91x/src/91x_gpio.c **** * Output         : None
+ 249:libstr91x/src/91x_gpio.c **** * Return         : GPIO data port word value.
+ 250:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 251:libstr91x/src/91x_gpio.c **** u8 GPIO_Read(GPIO_TypeDef* GPIOx)
+ 252:libstr91x/src/91x_gpio.c **** {
+ 253:libstr91x/src/91x_gpio.c ****   return (GPIOx->DR[0x3FC]);
+ 254:libstr91x/src/91x_gpio.c **** }
+ 255:libstr91x/src/91x_gpio.c **** 
+ 256:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 257:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_WriteBit
+ 258:libstr91x/src/91x_gpio.c **** * Description    : Sets or clears the selected data port bit.
+ 259:libstr91x/src/91x_gpio.c **** * Input          : - GPIOx: where x can be (0..9) to select the GPIO peripheral.
+ 260:libstr91x/src/91x_gpio.c **** *                  - GPIO_Pin: the Pin number. This parameter can be GPIO_Pin_x
+ 261:libstr91x/src/91x_gpio.c **** *                    where x can be (0..7).
+ 262:libstr91x/src/91x_gpio.c **** *                  - BitVal: this parameter specifies the value to be written
+ 263:libstr91x/src/91x_gpio.c **** *                    to the selected bit.
+ 264:libstr91x/src/91x_gpio.c **** *                    BitVal must be one of the BitAction enum values:
+ 265:libstr91x/src/91x_gpio.c **** *                       - Bit_RESET: to clear the port pin
+ 266:libstr91x/src/91x_gpio.c **** *                       - Bit_SET: to set the port pin
+ 267:libstr91x/src/91x_gpio.c **** * Output         : None
+ 268:libstr91x/src/91x_gpio.c **** * Return         : None
+ 269:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 270:libstr91x/src/91x_gpio.c **** void GPIO_WriteBit(GPIO_TypeDef* GPIOx, u8 GPIO_Pin, BitAction BitVal)
+ 271:libstr91x/src/91x_gpio.c **** {
+ 272:libstr91x/src/91x_gpio.c ****   if(BitVal == Bit_SET)
+ 273:libstr91x/src/91x_gpio.c ****   {
+ 274:libstr91x/src/91x_gpio.c ****     GPIOx->DR[GPIO_Pin <<2] = GPIO_Pin;
+ 275:libstr91x/src/91x_gpio.c ****   }
+ 276:libstr91x/src/91x_gpio.c ****   else
+ 277:libstr91x/src/91x_gpio.c ****   {
+ 278:libstr91x/src/91x_gpio.c ****     GPIOx->DR[GPIO_Pin <<2] = 0x00;
+ 279:libstr91x/src/91x_gpio.c ****   }
+ 280:libstr91x/src/91x_gpio.c **** }
+ 281:libstr91x/src/91x_gpio.c **** 
+ 282:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 283:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_Write
+ 284:libstr91x/src/91x_gpio.c **** * Description    : Writes the passed value in the selected data GPIOx port
+ 285:libstr91x/src/91x_gpio.c **** *                  register.
+ 286:libstr91x/src/91x_gpio.c **** * Input          :- GPIOx: where x can be (0..9) to select the GPIO peripheral.
+ 287:libstr91x/src/91x_gpio.c **** *                 - PortVal: the value to be written to the data port register.
+ 288:libstr91x/src/91x_gpio.c **** * Output         : None
+ 289:libstr91x/src/91x_gpio.c **** * Return         : None
+ 290:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 291:libstr91x/src/91x_gpio.c **** void GPIO_Write(GPIO_TypeDef* GPIOx, u8 PortVal) 
+ 292:libstr91x/src/91x_gpio.c **** {
+ 293:libstr91x/src/91x_gpio.c ****   GPIOx->DR[0x3FC] = PortVal;
+ 294:libstr91x/src/91x_gpio.c **** }
+ 295:libstr91x/src/91x_gpio.c **** 
+ 296:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 297:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_EMIConfig
+ 298:libstr91x/src/91x_gpio.c **** * Description    : Enables or disables GPIO 8 and 9 in EMI mode.
+ 299:libstr91x/src/91x_gpio.c **** * Input          : - NewState: new state of the EMI.
+ 300:libstr91x/src/91x_gpio.c **** *                   This parameter can be: ENABLE or DISABLE.
+ 301:libstr91x/src/91x_gpio.c **** * Output         : None
+ 302:libstr91x/src/91x_gpio.c **** * Return         : None
+ 303:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 304:libstr91x/src/91x_gpio.c **** void GPIO_EMIConfig(FunctionalState NewState) 
+ 305:libstr91x/src/91x_gpio.c **** {
+ 306:libstr91x/src/91x_gpio.c ****   if(NewState == ENABLE)
+ 307:libstr91x/src/91x_gpio.c ****   {
+ 308:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x01;
+ 309:libstr91x/src/91x_gpio.c ****   }
+ 310:libstr91x/src/91x_gpio.c ****   else
+ 311:libstr91x/src/91x_gpio.c ****   {
+ 312:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x00;
+ 313:libstr91x/src/91x_gpio.c ****   }
+ 314:libstr91x/src/91x_gpio.c **** }
+ 315:libstr91x/src/91x_gpio.c **** 
+ 316:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 317:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_ANAPinConfig
+ 318:libstr91x/src/91x_gpio.c **** * Description    : Enables or disables pins from GPIO 4 in Analogue mode.
+ 319:libstr91x/src/91x_gpio.c **** * Input          :- GPIO_ANAChannel: selects the ADC channel pin.
+ 320:libstr91x/src/91x_gpio.c **** *                   This parameter can be one of the following values:
+ 321:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel0
+ 322:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel1
+ 323:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel2
+ 324:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel3
+ 325:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel4
+ 326:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel5
+ 327:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel6
+ 328:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel7
+ 329:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannelALL
+ 330:libstr91x/src/91x_gpio.c **** *                 - NewState: new state of the port pin.
+ 331:libstr91x/src/91x_gpio.c **** *                   This parameter can be: ENABLE or DISABLE.
+ 332:libstr91x/src/91x_gpio.c **** * Output         : None
+ 333:libstr91x/src/91x_gpio.c **** * Return         : None
+ 334:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 335:libstr91x/src/91x_gpio.c **** void GPIO_ANAPinConfig(u8 GPIO_ANAChannel, FunctionalState NewState) 
+ 336:libstr91x/src/91x_gpio.c **** {
+ 337:libstr91x/src/91x_gpio.c ****   if(NewState == ENABLE)
+ 338:libstr91x/src/91x_gpio.c ****   {
+ 339:libstr91x/src/91x_gpio.c ****      SCU->GPIOOUT[4] &= GPIO_GetAnaloClearBits(GPIO_ANAChannel);
+ 340:libstr91x/src/91x_gpio.c ****      SCU->GPIOIN[4]  &= ~GPIO_ANAChannel;
+ 341:libstr91x/src/91x_gpio.c ****      SCU->GPIOANA    |= GPIO_ANAChannel;
+ 342:libstr91x/src/91x_gpio.c ****   }
+ 343:libstr91x/src/91x_gpio.c ****   else
+ 344:libstr91x/src/91x_gpio.c ****   {
+ 345:libstr91x/src/91x_gpio.c ****     SCU->GPIOANA &= ~GPIO_ANAChannel;
+ 346:libstr91x/src/91x_gpio.c ****   }
+ 347:libstr91x/src/91x_gpio.c **** }
+ 348:libstr91x/src/91x_gpio.c **** 
+ 349:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 350:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_GetGPIONumber
+ 351:libstr91x/src/91x_gpio.c **** * Description    : searche the GPIO number.
+ 352:libstr91x/src/91x_gpio.c **** * Input          : GPIOx: where x can be (0..9) to select the GPIO peripheral.
+ 353:libstr91x/src/91x_gpio.c **** * Output         : None
+ 354:libstr91x/src/91x_gpio.c **** * Return         : GPIO number
+ 355:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 356:libstr91x/src/91x_gpio.c **** u8 GPIO_GetGPIONumber(GPIO_TypeDef* GPIOx) 
+ 357:libstr91x/src/91x_gpio.c **** {
+ 358:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO1)
+ 297              		.loc 1 358 0
+ 298 0288 44379FE5 		ldr	r3, .L144
+ 299 028c 030050E1 		cmp	r0, r3
+ 359:libstr91x/src/91x_gpio.c ****   {
+ 360:libstr91x/src/91x_gpio.c ****     return  1;
+ 300              		.loc 1 360 0
+ 301 0290 0120A003 		moveq	r2, #1
+ 358:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO1)
+ 302              		.loc 1 358 0
+ 303 0294 1F00000A 		beq	.L25
+ 361:libstr91x/src/91x_gpio.c ****   }
+ 362:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO2)
+ 304              		.loc 1 362 0
+ 305 0298 013A83E2 		add	r3, r3, #4096
+ 306 029c 030050E1 		cmp	r0, r3
+ 363:libstr91x/src/91x_gpio.c ****   {
+ 364:libstr91x/src/91x_gpio.c ****     return  2;
+ 307              		.loc 1 364 0
+ 308 02a0 0220A003 		moveq	r2, #2
+ 362:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO2)
+ 309              		.loc 1 362 0
+ 310 02a4 1B00000A 		beq	.L25
+ 365:libstr91x/src/91x_gpio.c ****   }
+ 366:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO3)
+ 311              		.loc 1 366 0
+ 312 02a8 013A83E2 		add	r3, r3, #4096
+ 313 02ac 030050E1 		cmp	r0, r3
+ 367:libstr91x/src/91x_gpio.c ****   {
+ 368:libstr91x/src/91x_gpio.c ****     return  3;
+ 314              		.loc 1 368 0
+ 315 02b0 0320A003 		moveq	r2, #3
+ 366:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO3)
+ 316              		.loc 1 366 0
+ 317 02b4 1700000A 		beq	.L25
+ 369:libstr91x/src/91x_gpio.c ****   }
+ 370:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO4)
+ 318              		.loc 1 370 0
+ 319 02b8 013A83E2 		add	r3, r3, #4096
+ 320 02bc 030050E1 		cmp	r0, r3
+ 371:libstr91x/src/91x_gpio.c ****   {
+ 372:libstr91x/src/91x_gpio.c ****     return  4;
+ 321              		.loc 1 372 0
+ 322 02c0 0420A003 		moveq	r2, #4
+ 370:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO4)
+ 323              		.loc 1 370 0
+ 324 02c4 1300000A 		beq	.L25
+ 373:libstr91x/src/91x_gpio.c ****   }
+ 374:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO5)
+ 325              		.loc 1 374 0
+ 326 02c8 013A83E2 		add	r3, r3, #4096
+ 327 02cc 030050E1 		cmp	r0, r3
+ 375:libstr91x/src/91x_gpio.c ****   {
+ 376:libstr91x/src/91x_gpio.c ****     return  5;
+ 328              		.loc 1 376 0
+ 329 02d0 0520A003 		moveq	r2, #5
+ 374:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO5)
+ 330              		.loc 1 374 0
+ 331 02d4 0F00000A 		beq	.L25
+ 377:libstr91x/src/91x_gpio.c ****   }
+ 378:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO6)
+ 332              		.loc 1 378 0
+ 333 02d8 013A83E2 		add	r3, r3, #4096
+ 334 02dc 030050E1 		cmp	r0, r3
+ 379:libstr91x/src/91x_gpio.c ****   {
+ 380:libstr91x/src/91x_gpio.c ****     return  6;
+ 335              		.loc 1 380 0
+ 336 02e0 0620A003 		moveq	r2, #6
+ 378:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO6)
+ 337              		.loc 1 378 0
+ 338 02e4 0B00000A 		beq	.L25
+ 381:libstr91x/src/91x_gpio.c ****   }
+ 382:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO7)
+ 339              		.loc 1 382 0
+ 340 02e8 013A83E2 		add	r3, r3, #4096
+ 341 02ec 030050E1 		cmp	r0, r3
+ 383:libstr91x/src/91x_gpio.c ****   {
+ 384:libstr91x/src/91x_gpio.c ****     return  7;
+ 342              		.loc 1 384 0
+ 343 02f0 0720A003 		moveq	r2, #7
+ 382:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO7)
+ 344              		.loc 1 382 0
+ 345 02f4 0700000A 		beq	.L25
+ 385:libstr91x/src/91x_gpio.c ****   }
+ 386:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO8)
+ 346              		.loc 1 386 0
+ 347 02f8 013A83E2 		add	r3, r3, #4096
+ 348 02fc 030050E1 		cmp	r0, r3
+ 387:libstr91x/src/91x_gpio.c ****   {
+ 388:libstr91x/src/91x_gpio.c ****     return  8;
+ 349              		.loc 1 388 0
+ 350 0300 0820A003 		moveq	r2, #8
+ 386:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO8)
+ 351              		.loc 1 386 0
+ 352 0304 0300000A 		beq	.L25
+ 389:libstr91x/src/91x_gpio.c ****   }
+ 390:libstr91x/src/91x_gpio.c ****   if(GPIOx == GPIO9)
+ 353              		.loc 1 390 0
+ 354 0308 C8269FE5 		ldr	r2, .L144+4
+ 391:libstr91x/src/91x_gpio.c ****   {
+ 392:libstr91x/src/91x_gpio.c ****     return  9;
+ 355              		.loc 1 392 0
+ 356 030c 020050E1 		cmp	r0, r2
+ 357 0310 0920A003 		moveq	r2, #9
+ 358 0314 0020A013 		movne	r2, #0
+ 359              	.L25:
+ 360              	.LVL3:
+ 361              	.LBE7:
+ 362              	.LBE6:
+ 151:libstr91x/src/91x_gpio.c ****   if(GPIO_InitStruct->GPIO_Direction == GPIO_PinOutput)
+ 363              		.loc 1 151 0
+ 364 0318 0130D1E5 		ldrb	r3, [r1, #1]	@ zero_extendqisi2
+ 153:libstr91x/src/91x_gpio.c ****   GPIOx->DDR |= GPIO_InitStruct->GPIO_Pin;
+ 365              		.loc 1 153 0
+ 366 031c 00C0D1E5 		ldrb	ip, [r1, #0]	@ zero_extendqisi2
+ 151:libstr91x/src/91x_gpio.c ****   if(GPIO_InitStruct->GPIO_Direction == GPIO_PinOutput)
+ 367              		.loc 1 151 0
+ 368 0320 010053E3 		cmp	r3, #1
+ 153:libstr91x/src/91x_gpio.c ****   GPIOx->DDR |= GPIO_InitStruct->GPIO_Pin;
+ 369              		.loc 1 153 0
+ 370 0324 003490E5 		ldr	r3, [r0, #1024]
+ 371 0328 03308C01 		orreq	r3, ip, r3
+ 157:libstr91x/src/91x_gpio.c ****    GPIOx->DDR &= ~GPIO_InitStruct->GPIO_Pin;
+ 372              		.loc 1 157 0
+ 373 032c 0C30C311 		bicne	r3, r3, ip
+ 374 0330 003480E5 		str	r3, [r0, #1024]
+ 375              	.LVL4:
+ 163:libstr91x/src/91x_gpio.c ****      PinNumber = (GPIO_InitStruct->GPIO_Pin & (1 <<Counter));
+ 376              		.loc 1 163 0
+ 377 0334 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 164:libstr91x/src/91x_gpio.c ****      if((PinNumber >> Counter) == 1)
+ 378              		.loc 1 164 0
+ 379 0338 010013E3 		tst	r3, #1
+ 380 033c 2101001A 		bne	.L120
+ 381              	.LVL5:
+ 382              	.L28:
+ 383 0340 020013E3 		tst	r3, #2
+ 384 0344 F800001A 		bne	.L121
+ 385              	.L35:
+ 386              	.LVL6:
+ 387 0348 040013E3 		tst	r3, #4
+ 388 034c CF00001A 		bne	.L122
+ 389              	.L42:
+ 390              	.LVL7:
+ 391 0350 080013E3 		tst	r3, #8
+ 392 0354 A600001A 		bne	.L123
+ 393              	.L49:
+ 394              	.LVL8:
+ 395 0358 100013E3 		tst	r3, #16
+ 396 035c 7D00001A 		bne	.L124
+ 397              	.L56:
+ 398              	.LVL9:
+ 399 0360 200013E3 		tst	r3, #32
+ 400 0364 5400001A 		bne	.L125
+ 401              	.L63:
+ 402              	.LVL10:
+ 403 0368 400013E3 		tst	r3, #64
+ 404 036c 2900001A 		bne	.L126
+ 405              	.LVL11:
+ 406 0370 A333B0E1 		movs	r3, r3, lsr #7
+ 407 0374 1EFF2F01 		bxeq	lr
+ 408              	.LVL12:
+ 409              	.L131:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 410              		.loc 1 166 0
+ 411 0378 070052E3 		cmp	r2, #7
+ 412 037c 1900008A 		bhi	.L79
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 413              		.loc 1 169 0
+ 414 0380 0201A0E1 		mov	r0, r2, asl #2
+ 415 0384 173380E2 		add	r3, r0, #1543503872
+ 416 0388 813D83E2 		add	r3, r3, #8256
+ 417 038c 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 418              		.loc 1 170 0
+ 419 0390 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 420              		.loc 1 169 0
+ 421 0394 03C9CCE3 		bic	ip, ip, #49152
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 422              		.loc 1 170 0
+ 423 0398 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 424              		.loc 1 169 0
+ 425 039c 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 426              		.loc 1 170 0
+ 427 03a0 6F01000A 		beq	.L127
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 428              		.loc 1 175 0
+ 429 03a4 020050E3 		cmp	r0, #2
+ 430 03a8 6901000A 		beq	.L128
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 431              		.loc 1 180 0
+ 432 03ac 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 433              		.loc 1 183 0
+ 434 03b0 04009305 		ldreq	r0, [r3, #4]
+ 435 03b4 03098003 		orreq	r0, r0, #49152
+ 436 03b8 04008305 		streq	r0, [r3, #4]
+ 437              	.L81:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 438              		.loc 1 187 0
+ 439 03bc 18369FE5 		ldr	r3, .L144+8
+ 440 03c0 0201A0E1 		mov	r0, r2, asl #2
+ 441 03c4 033080E0 		add	r3, r0, r3
+ 442 03c8 04C093E5 		ldr	ip, [r3, #4]
+ 443 03cc 8000CCE3 		bic	r0, ip, #128
+ 444 03d0 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 445              		.loc 1 188 0
+ 446 03d4 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 447 03d8 01005CE3 		cmp	ip, #1
+ 191:libstr91x/src/91x_gpio.c ****             SCU->GPIOIN[GPIO_Number] |= 0x1 << Counter;
+ 448              		.loc 1 191 0
+ 449 03dc 04C09305 		ldreq	ip, [r3, #4]
+ 450 03e0 80C08C03 		orreq	ip, ip, #128
+ 451 03e4 04C08305 		streq	ip, [r3, #4]
+ 452              	.L79:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 453              		.loc 1 196 0
+ 454 03e8 0221A0E1 		mov	r2, r2, asl #2
+ 455 03ec 170382E2 		add	r0, r2, #1543503872
+ 456 03f0 822D80E2 		add	r2, r0, #8320
+ 457 03f4 043092E5 		ldr	r3, [r2, #4]
+ 458 03f8 80C0C3E3 		bic	ip, r3, #128
+ 459 03fc 04C082E5 		str	ip, [r2, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 460              		.loc 1 197 0
+ 461 0400 0210D1E5 		ldrb	r1, [r1, #2]	@ zero_extendqisi2
+ 462              	.LVL13:
+ 463 0404 010051E3 		cmp	r1, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 464              		.loc 1 200 0
+ 465 0408 04109205 		ldreq	r1, [r2, #4]
+ 466 040c 80108103 		orreq	r1, r1, #128
+ 467 0410 04108205 		streq	r1, [r2, #4]
+ 468              	.LVL14:
+ 469 0414 1EFF2FE1 		bx	lr
+ 470              	.LVL15:
+ 471              	.L126:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 472              		.loc 1 166 0
+ 473 0418 070052E3 		cmp	r2, #7
+ 474 041c 1700008A 		bhi	.L74
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 475              		.loc 1 169 0
+ 476 0420 0201A0E1 		mov	r0, r2, asl #2
+ 477 0424 173380E2 		add	r3, r0, #1543503872
+ 478 0428 813D83E2 		add	r3, r3, #8256
+ 479 042c 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 480              		.loc 1 170 0
+ 481 0430 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 482              		.loc 1 169 0
+ 483 0434 03CACCE3 		bic	ip, ip, #12288
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 484              		.loc 1 170 0
+ 485 0438 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 486              		.loc 1 169 0
+ 487 043c 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 488              		.loc 1 170 0
+ 489 0440 5701000A 		beq	.L129
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 490              		.loc 1 175 0
+ 491 0444 020050E3 		cmp	r0, #2
+ 492 0448 5101000A 		beq	.L75
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 493              		.loc 1 180 0
+ 494 044c 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 495              		.loc 1 183 0
+ 496 0450 04009305 		ldreq	r0, [r3, #4]
+ 497 0454 03CA8003 		orreq	ip, r0, #12288
+ 498 0458 04C08305 		streq	ip, [r3, #4]
+ 499              	.L76:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 500              		.loc 1 187 0
+ 501 045c 78359FE5 		ldr	r3, .L144+8
+ 502 0460 0201A0E1 		mov	r0, r2, asl #2
+ 503 0464 033080E0 		add	r3, r0, r3
+ 504 0468 04C093E5 		ldr	ip, [r3, #4]
+ 505 046c 4000CCE3 		bic	r0, ip, #64
+ 506 0470 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 507              		.loc 1 188 0
+ 508 0474 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 509 0478 01005CE3 		cmp	ip, #1
+ 510 047c 0001000A 		beq	.L130
+ 511              	.L74:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 512              		.loc 1 196 0
+ 513 0480 0201A0E1 		mov	r0, r2, asl #2
+ 514 0484 173380E2 		add	r3, r0, #1543503872
+ 515 0488 823D83E2 		add	r3, r3, #8320
+ 516 048c 04C093E5 		ldr	ip, [r3, #4]
+ 517 0490 4000CCE3 		bic	r0, ip, #64
+ 518 0494 040083E5 		str	r0, [r3, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 519              		.loc 1 197 0
+ 520 0498 02C0D1E5 		ldrb	ip, [r1, #2]	@ zero_extendqisi2
+ 521 049c 01005CE3 		cmp	ip, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 522              		.loc 1 200 0
+ 523 04a0 04C09305 		ldreq	ip, [r3, #4]
+ 524 04a4 40C08C03 		orreq	ip, ip, #64
+ 525 04a8 04C08305 		streq	ip, [r3, #4]
+ 526 04ac 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 527              	.LVL16:
+ 164:libstr91x/src/91x_gpio.c ****      if((PinNumber >> Counter) == 1)
+ 528              		.loc 1 164 0
+ 529 04b0 A333B0E1 		movs	r3, r3, lsr #7
+ 530 04b4 1EFF2F01 		bxeq	lr
+ 531 04b8 AEFFFFEA 		b	.L131
+ 532              	.LVL17:
+ 533              	.L125:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 534              		.loc 1 166 0
+ 535 04bc 070052E3 		cmp	r2, #7
+ 536 04c0 1700008A 		bhi	.L67
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 537              		.loc 1 169 0
+ 538 04c4 0201A0E1 		mov	r0, r2, asl #2
+ 539 04c8 173380E2 		add	r3, r0, #1543503872
+ 540 04cc 813D83E2 		add	r3, r3, #8256
+ 541 04d0 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 542              		.loc 1 170 0
+ 543 04d4 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 544              		.loc 1 169 0
+ 545 04d8 03CBCCE3 		bic	ip, ip, #3072
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 546              		.loc 1 170 0
+ 547 04dc 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 548              		.loc 1 169 0
+ 549 04e0 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 550              		.loc 1 170 0
+ 551 04e4 2601000A 		beq	.L132
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 552              		.loc 1 175 0
+ 553 04e8 020050E3 		cmp	r0, #2
+ 554 04ec 2001000A 		beq	.L68
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 555              		.loc 1 180 0
+ 556 04f0 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 557              		.loc 1 183 0
+ 558 04f4 04009305 		ldreq	r0, [r3, #4]
+ 559 04f8 03CB8003 		orreq	ip, r0, #3072
+ 560 04fc 04C08305 		streq	ip, [r3, #4]
+ 561              	.L69:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 562              		.loc 1 187 0
+ 563 0500 D4349FE5 		ldr	r3, .L144+8
+ 564 0504 0201A0E1 		mov	r0, r2, asl #2
+ 565 0508 033080E0 		add	r3, r0, r3
+ 566 050c 04C093E5 		ldr	ip, [r3, #4]
+ 567 0510 2000CCE3 		bic	r0, ip, #32
+ 568 0514 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 569              		.loc 1 188 0
+ 570 0518 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 571 051c 01005CE3 		cmp	ip, #1
+ 572 0520 CF00000A 		beq	.L133
+ 573              	.L67:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 574              		.loc 1 196 0
+ 575 0524 0201A0E1 		mov	r0, r2, asl #2
+ 576 0528 173380E2 		add	r3, r0, #1543503872
+ 577 052c 823D83E2 		add	r3, r3, #8320
+ 578 0530 04C093E5 		ldr	ip, [r3, #4]
+ 579 0534 2000CCE3 		bic	r0, ip, #32
+ 580 0538 040083E5 		str	r0, [r3, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 581              		.loc 1 197 0
+ 582 053c 02C0D1E5 		ldrb	ip, [r1, #2]	@ zero_extendqisi2
+ 583 0540 01005CE3 		cmp	ip, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 584              		.loc 1 200 0
+ 585 0544 04C09305 		ldreq	ip, [r3, #4]
+ 586 0548 20C08C03 		orreq	ip, ip, #32
+ 587 054c 04C08305 		streq	ip, [r3, #4]
+ 588 0550 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 589 0554 83FFFFEA 		b	.L63
+ 590              	.LVL18:
+ 591              	.L124:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 592              		.loc 1 166 0
+ 593 0558 070052E3 		cmp	r2, #7
+ 594 055c 1700008A 		bhi	.L60
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 595              		.loc 1 169 0
+ 596 0560 0201A0E1 		mov	r0, r2, asl #2
+ 597 0564 173380E2 		add	r3, r0, #1543503872
+ 598 0568 813D83E2 		add	r3, r3, #8256
+ 599 056c 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 600              		.loc 1 170 0
+ 601 0570 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 602              		.loc 1 169 0
+ 603 0574 03CCCCE3 		bic	ip, ip, #768
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 604              		.loc 1 170 0
+ 605 0578 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 606              		.loc 1 169 0
+ 607 057c 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 608              		.loc 1 170 0
+ 609 0580 0F01000A 		beq	.L134
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 610              		.loc 1 175 0
+ 611 0584 020050E3 		cmp	r0, #2
+ 612 0588 0901000A 		beq	.L61
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 613              		.loc 1 180 0
+ 614 058c 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 615              		.loc 1 183 0
+ 616 0590 04009305 		ldreq	r0, [r3, #4]
+ 617 0594 03CC8003 		orreq	ip, r0, #768
+ 618 0598 04C08305 		streq	ip, [r3, #4]
+ 619              	.L62:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 620              		.loc 1 187 0
+ 621 059c 38349FE5 		ldr	r3, .L144+8
+ 622 05a0 0201A0E1 		mov	r0, r2, asl #2
+ 623 05a4 033080E0 		add	r3, r0, r3
+ 624 05a8 04C093E5 		ldr	ip, [r3, #4]
+ 625 05ac 1000CCE3 		bic	r0, ip, #16
+ 626 05b0 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 627              		.loc 1 188 0
+ 628 05b4 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 629 05b8 01005CE3 		cmp	ip, #1
+ 630 05bc AC00000A 		beq	.L135
+ 631              	.L60:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 632              		.loc 1 196 0
+ 633 05c0 0201A0E1 		mov	r0, r2, asl #2
+ 634 05c4 173380E2 		add	r3, r0, #1543503872
+ 635 05c8 823D83E2 		add	r3, r3, #8320
+ 636 05cc 04C093E5 		ldr	ip, [r3, #4]
+ 637 05d0 1000CCE3 		bic	r0, ip, #16
+ 638 05d4 040083E5 		str	r0, [r3, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 639              		.loc 1 197 0
+ 640 05d8 02C0D1E5 		ldrb	ip, [r1, #2]	@ zero_extendqisi2
+ 641 05dc 01005CE3 		cmp	ip, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 642              		.loc 1 200 0
+ 643 05e0 04C09305 		ldreq	ip, [r3, #4]
+ 644 05e4 10C08C03 		orreq	ip, ip, #16
+ 645 05e8 04C08305 		streq	ip, [r3, #4]
+ 646 05ec 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 647 05f0 5AFFFFEA 		b	.L56
+ 648              	.LVL19:
+ 649              	.L123:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 650              		.loc 1 166 0
+ 651 05f4 070052E3 		cmp	r2, #7
+ 652 05f8 1700008A 		bhi	.L53
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 653              		.loc 1 169 0
+ 654 05fc 0201A0E1 		mov	r0, r2, asl #2
+ 655 0600 173380E2 		add	r3, r0, #1543503872
+ 656 0604 813D83E2 		add	r3, r3, #8256
+ 657 0608 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 658              		.loc 1 170 0
+ 659 060c B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 660              		.loc 1 169 0
+ 661 0610 C0C0CCE3 		bic	ip, ip, #192
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 662              		.loc 1 170 0
+ 663 0614 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 664              		.loc 1 169 0
+ 665 0618 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 666              		.loc 1 170 0
+ 667 061c C000000A 		beq	.L136
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 668              		.loc 1 175 0
+ 669 0620 020050E3 		cmp	r0, #2
+ 670 0624 BA00000A 		beq	.L54
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 671              		.loc 1 180 0
+ 672 0628 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 673              		.loc 1 183 0
+ 674 062c 04009305 		ldreq	r0, [r3, #4]
+ 675 0630 C0C08003 		orreq	ip, r0, #192
+ 676 0634 04C08305 		streq	ip, [r3, #4]
+ 677              	.L55:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 678              		.loc 1 187 0
+ 679 0638 9C339FE5 		ldr	r3, .L144+8
+ 680 063c 0201A0E1 		mov	r0, r2, asl #2
+ 681 0640 033080E0 		add	r3, r0, r3
+ 682 0644 04C093E5 		ldr	ip, [r3, #4]
+ 683 0648 0800CCE3 		bic	r0, ip, #8
+ 684 064c 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 685              		.loc 1 188 0
+ 686 0650 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 687 0654 01005CE3 		cmp	ip, #1
+ 688 0658 8D00000A 		beq	.L137
+ 689              	.L53:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 690              		.loc 1 196 0
+ 691 065c 0201A0E1 		mov	r0, r2, asl #2
+ 692 0660 173380E2 		add	r3, r0, #1543503872
+ 693 0664 823D83E2 		add	r3, r3, #8320
+ 694 0668 04C093E5 		ldr	ip, [r3, #4]
+ 695 066c 0800CCE3 		bic	r0, ip, #8
+ 696 0670 040083E5 		str	r0, [r3, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 697              		.loc 1 197 0
+ 698 0674 02C0D1E5 		ldrb	ip, [r1, #2]	@ zero_extendqisi2
+ 699 0678 01005CE3 		cmp	ip, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 700              		.loc 1 200 0
+ 701 067c 04C09305 		ldreq	ip, [r3, #4]
+ 702 0680 08C08C03 		orreq	ip, ip, #8
+ 703 0684 04C08305 		streq	ip, [r3, #4]
+ 704 0688 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 705 068c 31FFFFEA 		b	.L49
+ 706              	.LVL20:
+ 707              	.L122:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 708              		.loc 1 166 0
+ 709 0690 070052E3 		cmp	r2, #7
+ 710 0694 1700008A 		bhi	.L46
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 711              		.loc 1 169 0
+ 712 0698 0201A0E1 		mov	r0, r2, asl #2
+ 713 069c 173380E2 		add	r3, r0, #1543503872
+ 714 06a0 813D83E2 		add	r3, r3, #8256
+ 715 06a4 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 716              		.loc 1 170 0
+ 717 06a8 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 718              		.loc 1 169 0
+ 719 06ac 30C0CCE3 		bic	ip, ip, #48
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 720              		.loc 1 170 0
+ 721 06b0 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 722              		.loc 1 169 0
+ 723 06b4 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 724              		.loc 1 170 0
+ 725 06b8 A100000A 		beq	.L138
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 726              		.loc 1 175 0
+ 727 06bc 020050E3 		cmp	r0, #2
+ 728 06c0 9B00000A 		beq	.L47
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 729              		.loc 1 180 0
+ 730 06c4 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 731              		.loc 1 183 0
+ 732 06c8 04009305 		ldreq	r0, [r3, #4]
+ 733 06cc 30C08003 		orreq	ip, r0, #48
+ 734 06d0 04C08305 		streq	ip, [r3, #4]
+ 735              	.L48:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 736              		.loc 1 187 0
+ 737 06d4 00339FE5 		ldr	r3, .L144+8
+ 738 06d8 0201A0E1 		mov	r0, r2, asl #2
+ 739 06dc 033080E0 		add	r3, r0, r3
+ 740 06e0 04C093E5 		ldr	ip, [r3, #4]
+ 741 06e4 0400CCE3 		bic	r0, ip, #4
+ 742 06e8 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 743              		.loc 1 188 0
+ 744 06ec 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 745 06f0 01005CE3 		cmp	ip, #1
+ 746 06f4 6A00000A 		beq	.L139
+ 747              	.L46:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 748              		.loc 1 196 0
+ 749 06f8 0201A0E1 		mov	r0, r2, asl #2
+ 750 06fc 173380E2 		add	r3, r0, #1543503872
+ 751 0700 823D83E2 		add	r3, r3, #8320
+ 752 0704 04C093E5 		ldr	ip, [r3, #4]
+ 753 0708 0400CCE3 		bic	r0, ip, #4
+ 754 070c 040083E5 		str	r0, [r3, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 755              		.loc 1 197 0
+ 756 0710 02C0D1E5 		ldrb	ip, [r1, #2]	@ zero_extendqisi2
+ 757 0714 01005CE3 		cmp	ip, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 758              		.loc 1 200 0
+ 759 0718 04C09305 		ldreq	ip, [r3, #4]
+ 760 071c 04C08C03 		orreq	ip, ip, #4
+ 761 0720 04C08305 		streq	ip, [r3, #4]
+ 762 0724 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 763 0728 08FFFFEA 		b	.L42
+ 764              	.LVL21:
+ 765              	.L121:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 766              		.loc 1 166 0
+ 767 072c 070052E3 		cmp	r2, #7
+ 768 0730 1700008A 		bhi	.L39
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 769              		.loc 1 169 0
+ 770 0734 0201A0E1 		mov	r0, r2, asl #2
+ 771 0738 173380E2 		add	r3, r0, #1543503872
+ 772 073c 813D83E2 		add	r3, r3, #8256
+ 773 0740 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 774              		.loc 1 170 0
+ 775 0744 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 776              		.loc 1 169 0
+ 777 0748 0CC0CCE3 		bic	ip, ip, #12
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 778              		.loc 1 170 0
+ 779 074c 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 780              		.loc 1 169 0
+ 781 0750 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 782              		.loc 1 170 0
+ 783 0754 6200000A 		beq	.L140
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 784              		.loc 1 175 0
+ 785 0758 020050E3 		cmp	r0, #2
+ 786 075c 5C00000A 		beq	.L40
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 787              		.loc 1 180 0
+ 788 0760 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 789              		.loc 1 183 0
+ 790 0764 04009305 		ldreq	r0, [r3, #4]
+ 791 0768 0CC08003 		orreq	ip, r0, #12
+ 792 076c 04C08305 		streq	ip, [r3, #4]
+ 793              	.L41:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 794              		.loc 1 187 0
+ 795 0770 64329FE5 		ldr	r3, .L144+8
+ 796 0774 0201A0E1 		mov	r0, r2, asl #2
+ 797 0778 033080E0 		add	r3, r0, r3
+ 798 077c 04C093E5 		ldr	ip, [r3, #4]
+ 799 0780 0200CCE3 		bic	r0, ip, #2
+ 800 0784 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 801              		.loc 1 188 0
+ 802 0788 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 803 078c 01005CE3 		cmp	ip, #1
+ 804 0790 4700000A 		beq	.L141
+ 805              	.L39:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 806              		.loc 1 196 0
+ 807 0794 0201A0E1 		mov	r0, r2, asl #2
+ 808 0798 173380E2 		add	r3, r0, #1543503872
+ 809 079c 823D83E2 		add	r3, r3, #8320
+ 810 07a0 04C093E5 		ldr	ip, [r3, #4]
+ 811 07a4 0200CCE3 		bic	r0, ip, #2
+ 812 07a8 040083E5 		str	r0, [r3, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 813              		.loc 1 197 0
+ 814 07ac 02C0D1E5 		ldrb	ip, [r1, #2]	@ zero_extendqisi2
+ 815 07b0 01005CE3 		cmp	ip, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 816              		.loc 1 200 0
+ 817 07b4 04C09305 		ldreq	ip, [r3, #4]
+ 818 07b8 02C08C03 		orreq	ip, ip, #2
+ 819 07bc 04C08305 		streq	ip, [r3, #4]
+ 820 07c0 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 821 07c4 DFFEFFEA 		b	.L35
+ 822              	.LVL22:
+ 823              	.L120:
+ 166:libstr91x/src/91x_gpio.c ****         if (GPIO_Number < 8)
+ 824              		.loc 1 166 0
+ 825 07c8 070052E3 		cmp	r2, #7
+ 826 07cc 1700008A 		bhi	.L32
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 827              		.loc 1 169 0
+ 828 07d0 0231A0E1 		mov	r3, r2, asl #2
+ 829 07d4 170383E2 		add	r0, r3, #1543503872
+ 830              	.LVL23:
+ 831 07d8 813D80E2 		add	r3, r0, #8256
+ 832 07dc 04C093E5 		ldr	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 833              		.loc 1 170 0
+ 834 07e0 B400D1E1 		ldrh	r0, [r1, #4]
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 835              		.loc 1 169 0
+ 836 07e4 03C0CCE3 		bic	ip, ip, #3
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 837              		.loc 1 170 0
+ 838 07e8 010050E3 		cmp	r0, #1
+ 169:libstr91x/src/91x_gpio.c ****           SCU->GPIOOUT[GPIO_Number] &= ~(0x3 <<(Counter *2));
+ 839              		.loc 1 169 0
+ 840 07ec 04C083E5 		str	ip, [r3, #4]
+ 170:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt1)
+ 841              		.loc 1 170 0
+ 842 07f0 4300000A 		beq	.L142
+ 175:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt2)
+ 843              		.loc 1 175 0
+ 844 07f4 020050E3 		cmp	r0, #2
+ 845 07f8 3D00000A 		beq	.L33
+ 180:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_Alternate == GPIO_OutputAlt3)
+ 846              		.loc 1 180 0
+ 847 07fc 030050E3 		cmp	r0, #3
+ 183:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x3 << (Counter *2);
+ 848              		.loc 1 183 0
+ 849 0800 04009305 		ldreq	r0, [r3, #4]
+ 850 0804 03C08003 		orreq	ip, r0, #3
+ 851 0808 04C08305 		streq	ip, [r3, #4]
+ 852              	.L34:
+ 187:libstr91x/src/91x_gpio.c ****           SCU->GPIOIN[GPIO_Number] &= ~(0x1 << Counter) ;
+ 853              		.loc 1 187 0
+ 854 080c C8319FE5 		ldr	r3, .L144+8
+ 855 0810 0201A0E1 		mov	r0, r2, asl #2
+ 856 0814 033080E0 		add	r3, r0, r3
+ 857 0818 04C093E5 		ldr	ip, [r3, #4]
+ 858 081c 0100CCE3 		bic	r0, ip, #1
+ 859 0820 040083E5 		str	r0, [r3, #4]
+ 188:libstr91x/src/91x_gpio.c ****           if(GPIO_InitStruct->GPIO_IPInputConnected == GPIO_IPInputConnected_Enable)
+ 860              		.loc 1 188 0
+ 861 0824 03C0D1E5 		ldrb	ip, [r1, #3]	@ zero_extendqisi2
+ 862 0828 01005CE3 		cmp	ip, #1
+ 863 082c 2400000A 		beq	.L143
+ 864              	.L32:
+ 196:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] &= ~(0x1 << Counter) ;
+ 865              		.loc 1 196 0
+ 866 0830 0231A0E1 		mov	r3, r2, asl #2
+ 867 0834 17C383E2 		add	ip, r3, #1543503872
+ 868 0838 82CD8CE2 		add	ip, ip, #8320
+ 869 083c 04009CE5 		ldr	r0, [ip, #4]
+ 870 0840 0130C0E3 		bic	r3, r0, #1
+ 871 0844 04308CE5 		str	r3, [ip, #4]
+ 197:libstr91x/src/91x_gpio.c ****        if(GPIO_InitStruct->GPIO_Type == GPIO_Type_OpenCollector)
+ 872              		.loc 1 197 0
+ 873 0848 0200D1E5 		ldrb	r0, [r1, #2]	@ zero_extendqisi2
+ 874 084c 010050E3 		cmp	r0, #1
+ 200:libstr91x/src/91x_gpio.c ****         SCU->GPIOTYPE[GPIO_Number] |= 0x1 << Counter;
+ 875              		.loc 1 200 0
+ 876 0850 04009C05 		ldreq	r0, [ip, #4]
+ 877 0854 01008003 		orreq	r0, r0, #1
+ 878 0858 04008C05 		streq	r0, [ip, #4]
+ 879 085c 0030D1E5 		ldrb	r3, [r1, #0]	@ zero_extendqisi2
+ 880 0860 B6FEFFEA 		b	.L28
+ 881              	.LVL24:
+ 882              	.L133:
+ 191:libstr91x/src/91x_gpio.c ****             SCU->GPIOIN[GPIO_Number] |= 0x1 << Counter;
+ 883              		.loc 1 191 0
+ 884 0864 040093E5 		ldr	r0, [r3, #4]
+ 885 0868 20C080E3 		orr	ip, r0, #32
+ 886 086c 04C083E5 		str	ip, [r3, #4]
+ 887 0870 2BFFFFEA 		b	.L67
+ 888              	.LVL25:
+ 889              	.L135:
+ 890 0874 040093E5 		ldr	r0, [r3, #4]
+ 891 0878 10C080E3 		orr	ip, r0, #16
+ 892 087c 04C083E5 		str	ip, [r3, #4]
+ 893 0880 4EFFFFEA 		b	.L60
+ 894              	.LVL26:
+ 895              	.L130:
+ 896 0884 040093E5 		ldr	r0, [r3, #4]
+ 897 0888 40C080E3 		orr	ip, r0, #64
+ 898 088c 04C083E5 		str	ip, [r3, #4]
+ 899 0890 FAFEFFEA 		b	.L74
+ 900              	.LVL27:
+ 901              	.L137:
+ 902 0894 040093E5 		ldr	r0, [r3, #4]
+ 903 0898 08C080E3 		orr	ip, r0, #8
+ 904 089c 04C083E5 		str	ip, [r3, #4]
+ 905 08a0 6DFFFFEA 		b	.L53
+ 906              	.LVL28:
+ 907              	.L139:
+ 908 08a4 040093E5 		ldr	r0, [r3, #4]
+ 909 08a8 04C080E3 		orr	ip, r0, #4
+ 910 08ac 04C083E5 		str	ip, [r3, #4]
+ 911 08b0 90FFFFEA 		b	.L46
+ 912              	.LVL29:
+ 913              	.L141:
+ 914 08b4 040093E5 		ldr	r0, [r3, #4]
+ 915 08b8 02C080E3 		orr	ip, r0, #2
+ 916 08bc 04C083E5 		str	ip, [r3, #4]
+ 917 08c0 B3FFFFEA 		b	.L39
+ 918              	.LVL30:
+ 919              	.L143:
+ 920 08c4 040093E5 		ldr	r0, [r3, #4]
+ 921 08c8 01C080E3 		orr	ip, r0, #1
+ 922 08cc 04C083E5 		str	ip, [r3, #4]
+ 923 08d0 D6FFFFEA 		b	.L32
+ 924              	.LVL31:
+ 925              	.L40:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 926              		.loc 1 178 0
+ 927 08d4 040093E5 		ldr	r0, [r3, #4]
+ 928 08d8 08C080E3 		orr	ip, r0, #8
+ 929 08dc 04C083E5 		str	ip, [r3, #4]
+ 930 08e0 A2FFFFEA 		b	.L41
+ 931              	.L140:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 932              		.loc 1 173 0
+ 933 08e4 040093E5 		ldr	r0, [r3, #4]
+ 934 08e8 04C080E3 		orr	ip, r0, #4
+ 935 08ec 04C083E5 		str	ip, [r3, #4]
+ 936 08f0 9EFFFFEA 		b	.L41
+ 937              	.LVL32:
+ 938              	.L33:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 939              		.loc 1 178 0
+ 940 08f4 040093E5 		ldr	r0, [r3, #4]
+ 941 08f8 02C080E3 		orr	ip, r0, #2
+ 942 08fc 04C083E5 		str	ip, [r3, #4]
+ 943 0900 C1FFFFEA 		b	.L34
+ 944              	.L142:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 945              		.loc 1 173 0
+ 946 0904 040093E5 		ldr	r0, [r3, #4]
+ 947 0908 01C080E3 		orr	ip, r0, #1
+ 948 090c 04C083E5 		str	ip, [r3, #4]
+ 949 0910 BDFFFFEA 		b	.L34
+ 950              	.LVL33:
+ 951              	.L54:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 952              		.loc 1 178 0
+ 953 0914 040093E5 		ldr	r0, [r3, #4]
+ 954 0918 80C080E3 		orr	ip, r0, #128
+ 955 091c 04C083E5 		str	ip, [r3, #4]
+ 956 0920 44FFFFEA 		b	.L55
+ 957              	.L136:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 958              		.loc 1 173 0
+ 959 0924 040093E5 		ldr	r0, [r3, #4]
+ 960 0928 40C080E3 		orr	ip, r0, #64
+ 961 092c 04C083E5 		str	ip, [r3, #4]
+ 962 0930 40FFFFEA 		b	.L55
+ 963              	.LVL34:
+ 964              	.L47:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 965              		.loc 1 178 0
+ 966 0934 040093E5 		ldr	r0, [r3, #4]
+ 967 0938 20C080E3 		orr	ip, r0, #32
+ 968 093c 04C083E5 		str	ip, [r3, #4]
+ 969 0940 63FFFFEA 		b	.L48
+ 970              	.L138:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 971              		.loc 1 173 0
+ 972 0944 040093E5 		ldr	r0, [r3, #4]
+ 973 0948 10C080E3 		orr	ip, r0, #16
+ 974 094c 04C083E5 		str	ip, [r3, #4]
+ 975 0950 5FFFFFEA 		b	.L48
+ 976              	.LVL35:
+ 977              	.L128:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 978              		.loc 1 178 0
+ 979 0954 040093E5 		ldr	r0, [r3, #4]
+ 980 0958 02C980E3 		orr	ip, r0, #32768
+ 981 095c 04C083E5 		str	ip, [r3, #4]
+ 982 0960 95FEFFEA 		b	.L81
+ 983              	.L127:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 984              		.loc 1 173 0
+ 985 0964 040093E5 		ldr	r0, [r3, #4]
+ 986 0968 01C980E3 		orr	ip, r0, #16384
+ 987 096c 04C083E5 		str	ip, [r3, #4]
+ 988 0970 91FEFFEA 		b	.L81
+ 989              	.LVL36:
+ 990              	.L68:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 991              		.loc 1 178 0
+ 992 0974 040093E5 		ldr	r0, [r3, #4]
+ 993 0978 02CB80E3 		orr	ip, r0, #2048
+ 994 097c 04C083E5 		str	ip, [r3, #4]
+ 995 0980 DEFEFFEA 		b	.L69
+ 996              	.L132:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 997              		.loc 1 173 0
+ 998 0984 040093E5 		ldr	r0, [r3, #4]
+ 999 0988 01CB80E3 		orr	ip, r0, #1024
+ 1000 098c 04C083E5 		str	ip, [r3, #4]
+ 1001 0990 DAFEFFEA 		b	.L69
+ 1002              	.LVL37:
+ 1003              	.L75:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 1004              		.loc 1 178 0
+ 1005 0994 040093E5 		ldr	r0, [r3, #4]
+ 1006 0998 02CA80E3 		orr	ip, r0, #8192
+ 1007 099c 04C083E5 		str	ip, [r3, #4]
+ 1008 09a0 ADFEFFEA 		b	.L76
+ 1009              	.L129:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 1010              		.loc 1 173 0
+ 1011 09a4 040093E5 		ldr	r0, [r3, #4]
+ 1012 09a8 01CA80E3 		orr	ip, r0, #4096
+ 1013 09ac 04C083E5 		str	ip, [r3, #4]
+ 1014 09b0 A9FEFFEA 		b	.L76
+ 1015              	.LVL38:
+ 1016              	.L61:
+ 178:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 0x2 << (Counter *2);
+ 1017              		.loc 1 178 0
+ 1018 09b4 040093E5 		ldr	r0, [r3, #4]
+ 1019 09b8 02CC80E3 		orr	ip, r0, #512
+ 1020 09bc 04C083E5 		str	ip, [r3, #4]
+ 1021 09c0 F5FEFFEA 		b	.L62
+ 1022              	.L134:
+ 173:libstr91x/src/91x_gpio.c ****             SCU->GPIOOUT[GPIO_Number] |= 1 << (Counter *2);
+ 1023              		.loc 1 173 0
+ 1024 09c4 040093E5 		ldr	r0, [r3, #4]
+ 1025 09c8 01CC80E3 		orr	ip, r0, #256
+ 1026 09cc 04C083E5 		str	ip, [r3, #4]
+ 1027 09d0 F1FEFFEA 		b	.L62
+ 1028              	.L145:
+ 1029              		.align	2
+ 1030              	.L144:
+ 1031 09d4 00700058 		.word	1476423680
+ 1032 09d8 00F00058 		.word	1476456448
+ 1033 09dc 6020005C 		.word	1543512160
+ 1034              		.cfi_endproc
+ 1035              	.LFE1:
+ 1037              		.align	2
+ 1038              		.global	GPIO_StructInit
+ 1040              	GPIO_StructInit:
+ 1041              	.LFB2:
+ 215:libstr91x/src/91x_gpio.c **** {
+ 1042              		.loc 1 215 0
+ 1043              		.cfi_startproc
+ 1044              		@ args = 0, pretend = 0, frame = 0
+ 1045              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1046              		@ link register save eliminated.
+ 1047              	.LVL39:
+ 218:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Direction = GPIO_PinInput;
+ 1048              		.loc 1 218 0
+ 1049 09e0 0030A0E3 		mov	r3, #0
+ 217:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Pin  = GPIO_Pin_All;
+ 1050              		.loc 1 217 0
+ 1051 09e4 0020E0E3 		mvn	r2, #0
+ 1052 09e8 0020C0E5 		strb	r2, [r0, #0]
+ 218:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Direction = GPIO_PinInput;
+ 1053              		.loc 1 218 0
+ 1054 09ec 0130C0E5 		strb	r3, [r0, #1]
+ 219:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_IPInputConnected = GPIO_IPInputConnected_Disable;
+ 1055              		.loc 1 219 0
+ 1056 09f0 0330C0E5 		strb	r3, [r0, #3]
+ 220:libstr91x/src/91x_gpio.c ****   GPIO_InitStruct->GPIO_Alternate = GPIO_InputAlt1;
+ 1057              		.loc 1 220 0
+ 1058 09f4 B430C0E1 		strh	r3, [r0, #4]	@ movhi
+ 221:libstr91x/src/91x_gpio.c **** }
+ 1059              		.loc 1 221 0
+ 1060 09f8 1EFF2FE1 		bx	lr
+ 1061              		.cfi_endproc
+ 1062              	.LFE2:
+ 1064              		.align	2
+ 1065              		.global	GPIO_ReadBit
+ 1067              	GPIO_ReadBit:
+ 1068              	.LFB3:
+ 233:libstr91x/src/91x_gpio.c **** { 
+ 1069              		.loc 1 233 0
+ 1070              		.cfi_startproc
+ 1071              		@ args = 0, pretend = 0, frame = 0
+ 1072              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1073              		@ link register save eliminated.
+ 1074              	.LVL40:
+ 234:libstr91x/src/91x_gpio.c ****   if ((((GPIOx->DR[GPIO_Pin<<2])) & GPIO_Pin) != Bit_RESET )
+ 1075              		.loc 1 234 0
+ 1076 09fc 0131D0E7 		ldrb	r3, [r0, r1, asl #2]	@ zero_extendqisi2
+ 236:libstr91x/src/91x_gpio.c ****     return Bit_SET;
+ 1077              		.loc 1 236 0
+ 1078 0a00 010013E1 		tst	r3, r1
+ 242:libstr91x/src/91x_gpio.c **** }
+ 1079              		.loc 1 242 0
+ 1080 0a04 0000A003 		moveq	r0, #0
+ 1081 0a08 0100A013 		movne	r0, #1
+ 1082              	.LVL41:
+ 1083 0a0c 1EFF2FE1 		bx	lr
+ 1084              		.cfi_endproc
+ 1085              	.LFE3:
+ 1087              		.align	2
+ 1088              		.global	GPIO_Read
+ 1090              	GPIO_Read:
+ 1091              	.LFB4:
+ 252:libstr91x/src/91x_gpio.c **** {
+ 1092              		.loc 1 252 0
+ 1093              		.cfi_startproc
+ 1094              		@ args = 0, pretend = 0, frame = 0
+ 1095              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1096              		@ link register save eliminated.
+ 1097              	.LVL42:
+ 253:libstr91x/src/91x_gpio.c ****   return (GPIOx->DR[0x3FC]);
+ 1098              		.loc 1 253 0
+ 1099 0a10 FC03D0E5 		ldrb	r0, [r0, #1020]	@ zero_extendqisi2
+ 1100              	.LVL43:
+ 254:libstr91x/src/91x_gpio.c **** }
+ 1101              		.loc 1 254 0
+ 1102 0a14 1EFF2FE1 		bx	lr
+ 1103              		.cfi_endproc
+ 1104              	.LFE4:
+ 1106              		.align	2
+ 1107              		.global	GPIO_WriteBit
+ 1109              	GPIO_WriteBit:
+ 1110              	.LFB5:
+ 271:libstr91x/src/91x_gpio.c **** {
+ 1111              		.loc 1 271 0
+ 1112              		.cfi_startproc
+ 1113              		@ args = 0, pretend = 0, frame = 0
+ 1114              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1115              		@ link register save eliminated.
+ 1116              	.LVL44:
+ 272:libstr91x/src/91x_gpio.c ****   if(BitVal == Bit_SET)
+ 1117              		.loc 1 272 0
+ 1118 0a18 010052E3 		cmp	r2, #1
+ 278:libstr91x/src/91x_gpio.c ****     GPIOx->DR[GPIO_Pin <<2] = 0x00;
+ 1119              		.loc 1 278 0
+ 1120 0a1c 0030A013 		movne	r3, #0
+ 274:libstr91x/src/91x_gpio.c ****     GPIOx->DR[GPIO_Pin <<2] = GPIO_Pin;
+ 1121              		.loc 1 274 0
+ 1122 0a20 0111C007 		streqb	r1, [r0, r1, asl #2]
+ 278:libstr91x/src/91x_gpio.c ****     GPIOx->DR[GPIO_Pin <<2] = 0x00;
+ 1123              		.loc 1 278 0
+ 1124 0a24 0131C017 		strneb	r3, [r0, r1, asl #2]
+ 1125 0a28 1EFF2FE1 		bx	lr
+ 1126              		.cfi_endproc
+ 1127              	.LFE5:
+ 1129              		.align	2
+ 1130              		.global	GPIO_Write
+ 1132              	GPIO_Write:
+ 1133              	.LFB6:
+ 292:libstr91x/src/91x_gpio.c **** {
+ 1134              		.loc 1 292 0
+ 1135              		.cfi_startproc
+ 1136              		@ args = 0, pretend = 0, frame = 0
+ 1137              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1138              		@ link register save eliminated.
+ 1139              	.LVL45:
+ 293:libstr91x/src/91x_gpio.c ****   GPIOx->DR[0x3FC] = PortVal;
+ 1140              		.loc 1 293 0
+ 1141 0a2c FC13C0E5 		strb	r1, [r0, #1020]
+ 294:libstr91x/src/91x_gpio.c **** }
+ 1142              		.loc 1 294 0
+ 1143 0a30 1EFF2FE1 		bx	lr
+ 1144              		.cfi_endproc
+ 1145              	.LFE6:
+ 1147              		.align	2
+ 1148              		.global	GPIO_EMIConfig
+ 1150              	GPIO_EMIConfig:
+ 1151              	.LFB7:
+ 305:libstr91x/src/91x_gpio.c **** {
+ 1152              		.loc 1 305 0
+ 1153              		.cfi_startproc
+ 1154              		@ args = 0, pretend = 0, frame = 0
+ 1155              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1156              		@ link register save eliminated.
+ 1157              	.LVL46:
+ 306:libstr91x/src/91x_gpio.c ****   if(NewState == ENABLE)
+ 1158              		.loc 1 306 0
+ 1159 0a34 010050E3 		cmp	r0, #1
+ 308:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x01;
+ 1160              		.loc 1 308 0
+ 1161 0a38 10309F05 		ldreq	r3, .L156
+ 312:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x00;
+ 1162              		.loc 1 312 0
+ 1163 0a3c 0C309F15 		ldrne	r3, .L156
+ 1164 0a40 0020A013 		movne	r2, #0
+ 308:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x01;
+ 1165              		.loc 1 308 0
+ 1166 0a44 AC008305 		streq	r0, [r3, #172]
+ 312:libstr91x/src/91x_gpio.c ****     SCU->GPIOEMI = 0x00;
+ 1167              		.loc 1 312 0
+ 1168 0a48 AC208315 		strne	r2, [r3, #172]
+ 1169 0a4c 1EFF2FE1 		bx	lr
+ 1170              	.L157:
+ 1171              		.align	2
+ 1172              	.L156:
+ 1173 0a50 0020005C 		.word	1543512064
+ 1174              		.cfi_endproc
+ 1175              	.LFE7:
+ 1177              		.align	2
+ 1178              		.global	GPIO_ANAPinConfig
+ 1180              	GPIO_ANAPinConfig:
+ 1181              	.LFB8:
+ 336:libstr91x/src/91x_gpio.c **** {
+ 1182              		.loc 1 336 0
+ 1183              		.cfi_startproc
+ 1184              		@ args = 0, pretend = 0, frame = 0
+ 1185              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1186              		@ link register save eliminated.
+ 1187              	.LVL47:
+ 337:libstr91x/src/91x_gpio.c ****   if(NewState == ENABLE)
+ 1188              		.loc 1 337 0
+ 1189 0a54 010051E3 		cmp	r1, #1
+ 1190 0a58 0400000A 		beq	.L170
+ 345:libstr91x/src/91x_gpio.c ****     SCU->GPIOANA &= ~GPIO_ANAChannel;
+ 1191              		.loc 1 345 0
+ 1192 0a5c B8109FE5 		ldr	r1, .L171
+ 1193              	.LVL48:
+ 1194 0a60 BC2091E5 		ldr	r2, [r1, #188]
+ 1195 0a64 0000C2E1 		bic	r0, r2, r0
+ 1196              	.LVL49:
+ 1197 0a68 BC0081E5 		str	r0, [r1, #188]
+ 1198 0a6c 1EFF2FE1 		bx	lr
+ 1199              	.LVL50:
+ 1200              	.L170:
+ 339:libstr91x/src/91x_gpio.c ****      SCU->GPIOOUT[4] &= GPIO_GetAnaloClearBits(GPIO_ANAChannel);
+ 1201              		.loc 1 339 0
+ 1202 0a70 A4309FE5 		ldr	r3, .L171
+ 1203              	.LBB8:
+ 1204              	.LBB9:
+ 393:libstr91x/src/91x_gpio.c ****   }
+ 394:libstr91x/src/91x_gpio.c ****   return 0;
+ 395:libstr91x/src/91x_gpio.c **** }
+ 396:libstr91x/src/91x_gpio.c **** /*******************************************************************************
+ 397:libstr91x/src/91x_gpio.c **** * Function Name  : GPIO_GetAnaloClearBits
+ 398:libstr91x/src/91x_gpio.c **** * Description    : Clear the corresponding bits in the SCU_OUT register.
+ 399:libstr91x/src/91x_gpio.c **** * Input          : GPIO_ANAChannel: selects the ADC channel pin.
+ 400:libstr91x/src/91x_gpio.c **** *                   This parameter can be one of the following values:
+ 401:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel0
+ 402:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel1
+ 403:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel2
+ 404:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel3
+ 405:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel4
+ 406:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel5
+ 407:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel6
+ 408:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannel7
+ 409:libstr91x/src/91x_gpio.c **** *                      GPIO_ANAChannelALL
+ 410:libstr91x/src/91x_gpio.c **** * Output         : None
+ 411:libstr91x/src/91x_gpio.c **** * Return         : reset value in SCU_OUT register
+ 412:libstr91x/src/91x_gpio.c **** *******************************************************************************/
+ 413:libstr91x/src/91x_gpio.c **** u16 GPIO_GetAnaloClearBits(u8 GPIO_ANAChannel) 
+ 414:libstr91x/src/91x_gpio.c **** {
+ 415:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel0)
+ 1205              		.loc 1 415 0
+ 1206 0a74 010050E3 		cmp	r0, #1
+ 1207              	.LBE9:
+ 1208              	.LBE8:
+ 339:libstr91x/src/91x_gpio.c ****      SCU->GPIOOUT[4] &= GPIO_GetAnaloClearBits(GPIO_ANAChannel);
+ 1209              		.loc 1 339 0
+ 1210 0a78 543093E5 		ldr	r3, [r3, #84]
+ 1211              	.LVL51:
+ 1212              	.LBB11:
+ 1213              	.LBB10:
+ 1214              		.loc 1 415 0
+ 1215 0a7c 9C209F05 		ldreq	r2, .L171+4
+ 1216 0a80 02200300 		andeq	r2, r3, r2
+ 1217 0a84 1B00000A 		beq	.L161
+ 416:libstr91x/src/91x_gpio.c ****   {
+ 417:libstr91x/src/91x_gpio.c ****     return 0xFFFC;
+ 418:libstr91x/src/91x_gpio.c ****   }
+ 419:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel1)
+ 1218              		.loc 1 419 0
+ 1219 0a88 020050E3 		cmp	r0, #2
+ 1220 0a8c 90209F05 		ldreq	r2, .L171+8
+ 1221 0a90 02200300 		andeq	r2, r3, r2
+ 1222 0a94 1700000A 		beq	.L161
+ 420:libstr91x/src/91x_gpio.c ****   {
+ 421:libstr91x/src/91x_gpio.c ****     return 0xFFF3;
+ 422:libstr91x/src/91x_gpio.c ****   }
+ 423:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel2)
+ 1223              		.loc 1 423 0
+ 1224 0a98 040050E3 		cmp	r0, #4
+ 1225 0a9c 84209F05 		ldreq	r2, .L171+12
+ 1226 0aa0 02200300 		andeq	r2, r3, r2
+ 1227 0aa4 1300000A 		beq	.L161
+ 424:libstr91x/src/91x_gpio.c ****   {
+ 425:libstr91x/src/91x_gpio.c ****     return 0xFFCF;
+ 426:libstr91x/src/91x_gpio.c ****   }
+ 427:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel3)
+ 1228              		.loc 1 427 0
+ 1229 0aa8 080050E3 		cmp	r0, #8
+ 1230 0aac 78209F05 		ldreq	r2, .L171+16
+ 1231 0ab0 02200300 		andeq	r2, r3, r2
+ 1232 0ab4 0F00000A 		beq	.L161
+ 428:libstr91x/src/91x_gpio.c ****   {
+ 429:libstr91x/src/91x_gpio.c ****     return 0xFF3F;
+ 430:libstr91x/src/91x_gpio.c ****   }
+ 431:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel4)
+ 1233              		.loc 1 431 0
+ 1234 0ab8 100050E3 		cmp	r0, #16
+ 1235 0abc 6C209F05 		ldreq	r2, .L171+20
+ 1236 0ac0 02200300 		andeq	r2, r3, r2
+ 1237 0ac4 0B00000A 		beq	.L161
+ 432:libstr91x/src/91x_gpio.c ****   {
+ 433:libstr91x/src/91x_gpio.c ****     return 0xFCFF;
+ 434:libstr91x/src/91x_gpio.c ****   }
+ 435:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel5)
+ 1238              		.loc 1 435 0
+ 1239 0ac8 200050E3 		cmp	r0, #32
+ 1240 0acc 60209F05 		ldreq	r2, .L171+24
+ 1241 0ad0 02200300 		andeq	r2, r3, r2
+ 1242 0ad4 0700000A 		beq	.L161
+ 436:libstr91x/src/91x_gpio.c ****   {
+ 437:libstr91x/src/91x_gpio.c ****     return 0xF3FF;
+ 438:libstr91x/src/91x_gpio.c ****   }
+ 439:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel6)
+ 1243              		.loc 1 439 0
+ 1244 0ad8 400050E3 		cmp	r0, #64
+ 1245 0adc 54209F05 		ldreq	r2, .L171+28
+ 1246 0ae0 02200300 		andeq	r2, r3, r2
+ 1247 0ae4 0300000A 		beq	.L161
+ 440:libstr91x/src/91x_gpio.c ****   {
+ 441:libstr91x/src/91x_gpio.c ****     return 0xCFFF;
+ 442:libstr91x/src/91x_gpio.c ****   }
+ 443:libstr91x/src/91x_gpio.c ****   if(GPIO_ANAChannel == GPIO_ANAChannel7)
+ 1248              		.loc 1 443 0
+ 1249 0ae8 800050E3 		cmp	r0, #128
+ 1250 0aec 0339A001 		moveq	r3, r3, asl #18
+ 1251 0af0 2329A001 		moveq	r2, r3, lsr #18
+ 1252 0af4 0020A013 		movne	r2, #0
+ 1253              	.L161:
+ 1254              	.LBE10:
+ 1255              	.LBE11:
+ 339:libstr91x/src/91x_gpio.c ****      SCU->GPIOOUT[4] &= GPIO_GetAnaloClearBits(GPIO_ANAChannel);
+ 1256              		.loc 1 339 0
+ 1257 0af8 1C109FE5 		ldr	r1, .L171
+ 1258              	.LVL52:
+ 1259 0afc 542081E5 		str	r2, [r1, #84]
+ 340:libstr91x/src/91x_gpio.c ****      SCU->GPIOIN[4]  &= ~GPIO_ANAChannel;
+ 1260              		.loc 1 340 0
+ 1261 0b00 743091E5 		ldr	r3, [r1, #116]
+ 1262 0b04 00C0C3E1 		bic	ip, r3, r0
+ 1263 0b08 74C081E5 		str	ip, [r1, #116]
+ 341:libstr91x/src/91x_gpio.c ****      SCU->GPIOANA    |= GPIO_ANAChannel;
+ 1264              		.loc 1 341 0
+ 1265 0b0c BC2091E5 		ldr	r2, [r1, #188]
+ 1266 0b10 020080E1 		orr	r0, r0, r2
+ 1267              	.LVL53:
+ 1268 0b14 BC0081E5 		str	r0, [r1, #188]
+ 1269 0b18 1EFF2FE1 		bx	lr
+ 1270              	.L172:
+ 1271              		.align	2
+ 1272              	.L171:
+ 1273 0b1c 0020005C 		.word	1543512064
+ 1274 0b20 FCFF0000 		.word	65532
+ 1275 0b24 F3FF0000 		.word	65523
+ 1276 0b28 CFFF0000 		.word	65487
+ 1277 0b2c 3FFF0000 		.word	65343
+ 1278 0b30 FFFC0000 		.word	64767
+ 1279 0b34 FFF30000 		.word	62463
+ 1280 0b38 FFCF0000 		.word	53247
+ 1281              		.cfi_endproc
+ 1282              	.LFE8:
+ 1284              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 91x_gpio.c
+     /tmp/ccnOAu3b.s:21     .text:00000000 $a
+     /tmp/ccnOAu3b.s:24     .text:00000000 GPIO_DeInit
+     /tmp/ccnOAu3b.s:270    .text:0000025c $d
+     /tmp/ccnOAu3b.s:284    .text:00000288 $a
+     /tmp/ccnOAu3b.s:287    .text:00000288 GPIO_Init
+     /tmp/ccnOAu3b.s:1031   .text:000009d4 $d
+     /tmp/ccnOAu3b.s:1037   .text:000009e0 $a
+     /tmp/ccnOAu3b.s:1040   .text:000009e0 GPIO_StructInit
+     /tmp/ccnOAu3b.s:1067   .text:000009fc GPIO_ReadBit
+     /tmp/ccnOAu3b.s:1090   .text:00000a10 GPIO_Read
+     /tmp/ccnOAu3b.s:1109   .text:00000a18 GPIO_WriteBit
+     /tmp/ccnOAu3b.s:1132   .text:00000a2c GPIO_Write
+     /tmp/ccnOAu3b.s:1150   .text:00000a34 GPIO_EMIConfig
+     /tmp/ccnOAu3b.s:1173   .text:00000a50 $d
+     /tmp/ccnOAu3b.s:1177   .text:00000a54 $a
+     /tmp/ccnOAu3b.s:1180   .text:00000a54 GPIO_ANAPinConfig
+     /tmp/ccnOAu3b.s:1273   .text:00000b1c $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SCU_APBPeriphReset
