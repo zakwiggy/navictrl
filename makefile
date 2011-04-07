@@ -165,7 +165,7 @@ CPPSRCARM =
 # output from the compiler), and will be deleted upon "make clean"!
 # Even though the DOS/Win* filesystem matches both .s and .S the same,
 # it will preserve the spelling of the filenames, and gcc itself does
-# care about how the name is spelled on its command-line.
+# care about how the name is spelled on its git://github.com/zakwiggy/navi.gitcommand-line.
 ASRC =
 
 # List Assembler source files here which must be assembled in ARM-Mode..
@@ -206,7 +206,7 @@ EXTRA_LIBDIRS =
 
 
 # Compiler flag to set the C Standard level.
-# c89 - "ANSI" C
+# c89 - "ANSI" Cgit://github.com/zakwiggy/navi.git
 # gnu89 - c89 plus GCC extensions
 # c99 - ISO C99 standard (not yet fully implemented)
 # gnu99 - c99 plus GCC extensions
@@ -478,7 +478,7 @@ $(CPPOBJ) : %.o : %.cpp
 
 # Assemble: create object files from assembler source files. ARM/Thumb
 $(AOBJ) : %.o : %.S
-	@echo
+	@echogit://github.com/zakwiggy/navi.git
 	@echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(THUMB) $(ALL_ASFLAGS) $< -o $@
 
@@ -495,34 +495,10 @@ clean: begin clean_list finished end
 
 
 clean_list :
-	@echo
-    	@echo $(MSG_CLEANING)
-	$(REMOVE) $(TARGET).hex
-	$(REMOVE) $(TARGET).bin
-	$(REMOVE) $(TARGET).obj
-	$(REMOVE) $(TARGET).elf
-	$(REMOVE) $(TARGET).map
-	$(REMOVE) $(TARGET).obj
-	$(REMOVE) $(TARGET).a90
-	$(REMOVE) $(TARGET).sym
-	$(REMOVE) $(TARGET).lnk
-	$(REMOVE) $(TARGET).lss
-	$(REMOVE) $(COBJ)
-	$(REMOVE) $(CPPOBJ)
-	$(REMOVE) $(AOBJ)
-	$(REMOVE) $(COBJARM)
-	$(REMOVE) $(CPPOBJARM)
-	$(REMOVE) $(AOBJARM)
-	$(REMOVE) $(LST)
-	$(REMOVE) $(SRC:.c=.s)
-	$(REMOVE) $(SRC:.c=.d)
-	$(REMOVE) $(SRCARM:.c=.s)
-	$(REMOVE) $(SRCARM:.c=.d)
-	$(REMOVE) $(CPPSRC:.cpp=.s)
-	$(REMOVE) $(CPPSRC:.cpp=.d)
-	$(REMOVE) $(CPPSRCARM:.cpp=.s)
-	$(REMOVE) $(CPPSRCARM:.cpp=.d)
-	$(REMOVEDIR) .dep | exit 0
+
+	rm *.hex *.elf *.lss *.map *.lst *.o *.sym
+	
+
 
 
 # Include the dependency files.
