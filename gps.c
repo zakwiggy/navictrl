@@ -614,7 +614,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 								RangedTargetPosition.Longitude += (s32)((float)TargetHomeDeviation.East / (1.11194927f * cos(RadiansFromGPS(GPS_HomePosition.Latitude))) );
 								RangedTargetPosition.Altitude = GPS_pTargetPosition->Altitude;
 								RangedTargetPosition.Status = NEWDATA;
-							}
+							 ToleranceRadius;	}
 							else
 							{	*/// the target is located within the operation radius area
 								// simple copy the loaction to the ranged target position

@@ -120,7 +120,7 @@ void Menu_Update(u8 Keys)
 				LCD_printfxy(0,2,"Error: %d",ErrorCode);
             	LCD_printfxy(0,3,"%s",ErrorMSG);
 			}
-			else LCD_printfxy(0,3,"(c) Zak, test");
+			else LCD_printfxy(0,3,"(c) Zak, test00");
 			break;
 		case 1:
 			if (GPSData.Status == INVALID)
