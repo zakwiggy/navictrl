@@ -182,6 +182,7 @@ u32 UART1_Display_Interval = 0;		// in ms
 /********************************************************/
 void UART1_Init (void)
 
+
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	UART_InitTypeDef UART_InitStructure;
@@ -559,15 +560,40 @@ void UART1_ProcessMkProtocol(void)
 mavlink_message_t msg_tx; 
 mavlink_status_t status; 
 void UART1_ProcessMavlink(void)
-{
+{Point_t point;
 	mavlink_waypoint_t wp;
 	DebugOut.Analog[23] = 2;
     switch(msg_tx.msgid) 
     { 
 	
         case MAVLINK_MSG_ID_WAYPOINT:
-                    mavlink_msg_waypoint_decode(&msg_tx, &wp);
-            // handle wp->x, wp->y, wp->z here. 
+            mavlink_msg_waypoint_decode(&msg_tx, &wp);
+            point.Position.Status = NEWDATA;
+	    point.Index=wp.x;
+		if(point.Position.Status == NEWDATA)
+				{
+					//if(!(FC.StatusFlags & FC_STATUS_FLY)) PointList_Clear(); // flush the list	
+					//pPoint->Index = 1; // must be one after empty list
+					PointList_SetAt(&point);
+					if(FC.StatusFlags & FC_STATUS_FLY) PointList_WPActive(TRUE); 
+					GPS_pWaypoint = PointList_WPBegin(); // updates POI index
+					if(GPS_pWaypoint != NULL) // if new WP exist
+
+					{   // update WP hold time stamp immediately!
+/*						if(GPS_pWaypoint->Heading > 0 && GPS_pWaypoint->Heading <= 360)
+
+
+						{
+
+						 CAM_Orientation.Azimuth = GPS_pWaypoint->Heading;
+						 CAM_Orientation.UpdateMask |= CAM_UPDATE_AZIMUTH;
+
+
+						}
+*/
+					}
+					BeepTime = 50;
+				}
 	DebugOut.Analog[24] = (int)wp.x; 
             break;
     }
