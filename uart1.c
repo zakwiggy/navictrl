@@ -570,6 +570,7 @@ void UART1_ProcessMavlink(void)
             mavlink_msg_waypoint_decode(&msg_tx, &wp);
             point.Position.Status = NEWDATA;
 	    point.Index=wp.x;
+		point.Type=POINT_TYPE_WP;
 		if(point.Position.Status == NEWDATA)
 				{
 					//if(!(FC.StatusFlags & FC_STATUS_FLY)) PointList_Clear(); // flush the list	
