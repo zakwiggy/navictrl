@@ -404,8 +404,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 	static GPS_Pos_t RangedTargetPosition = {0,0,0, INVALID};		// the limited target position, this is derived from the target position with repect to the operating radius
 	static s32 OperatingRadiusOld = -1;
 	static u32 WPTime = 0;
-		DebugOut.Analog[23] = GPSPosDevIntegral_North;
-		DebugOut.Analog[24] = GPSPosDevIntegral_East;
+
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//+ Check for new data from GPS-receiver
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
