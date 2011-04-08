@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/11/trunk/mavlink/include/slugs
+END
+mavlink_msg_air_data.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_air_data.h
+END
+mavlink_msg_gps_date_time.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_gps_date_time.h
+END
+slugs.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/slugs.h
+END
+mavlink_msg_sensor_bias.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_sensor_bias.h
+END
+mavlink_msg_pilot_console.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_pilot_console.h
+END
+mavlink_msg_data_log.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_data_log.h
+END
+mavlink.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink.h
+END
+mavlink_msg_pid.h
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_pid.h
+END
+mavlink_msg_slugs_navigation.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_slugs_navigation.h
+END
+mavlink_msg_ctrl_srfc_pt.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_ctrl_srfc_pt.h
+END
+mavlink_msg_pwm_commands.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_pwm_commands.h
+END
+mavlink_msg_diagnostic.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_diagnostic.h
+END
+mavlink_msg_cpu_load.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_cpu_load.h
+END
+mavlink_msg_filtered_data.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_filtered_data.h
+END
+mavlink_msg_slugs_action.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_slugs_action.h
+END
+mavlink_msg_mid_lvl_cmds.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/slugs/mavlink_msg_mid_lvl_cmds.h
+END

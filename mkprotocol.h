@@ -1,7 +1,8 @@
 #ifndef _MKPROTOCOL_H
 #define _MKPROTOCOL_H
 #include "buffer.h"
-
+#include "mavlink/include/protocol.h"
+#include "mavlink/include/common/mavlink_msg_waypoint.h"
 // slave addresses
 #define ANY_ADDRESS 0
 #define FC_ADDRESS 1

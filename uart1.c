@@ -62,7 +62,7 @@
 #include "main.h"
 #include "config.h"
 #include "menu.h"
-#include "GPS.h"
+#include "gps.h"
 #include "i2c.h"
 #include "uart0.h"
 #include "uart1.h"
@@ -181,6 +181,7 @@ u32 UART1_Display_Interval = 0;		// in ms
 /*            Initialization the UART1                  */
 /********************************************************/
 void UART1_Init (void)
+
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	UART_InitTypeDef UART_InitStructure;
@@ -344,26 +345,9 @@ void UART1_IRQHandler(void)
 	IDISABLE;
 }
 
-/**************************************************************/
-/* Process incomming data from debug uart                     */
-/**************************************************************/
-void UART1_ProcessRxData(void)
+void UART1_ProcessMkProtocol(void)
 {
-	// return on forwarding uart  or unlocked rx buffer
-	if(DebugUART != UART1) return;
-
-	u8 c;
-	// if rx buffer is not locked
-	if(UART1_rx_buffer.Locked == FALSE)
-	{ 
-		//collect data from primary rx fifo
-		while(fifo_get(&UART1_rx_fifo, &c))
-		{	
-			// break if complete frame is collected
-			if(MKProtocol_CollectSerialFrame(&UART1_rx_buffer, c)) break;
-		}
-	}
-   	if(UART1_rx_buffer.Locked == FALSE) return;
+	if(UART1_rx_buffer.Locked == FALSE) return;
 
 	Point_t * pPoint = NULL;
 	SerialMsg_t SerialMsg;
@@ -410,11 +394,15 @@ void UART1_ProcessRxData(void)
 					if(FC.StatusFlags & FC_STATUS_FLY) PointList_WPActive(TRUE); 
 					GPS_pWaypoint = PointList_WPBegin(); // updates POI index
 					if(GPS_pWaypoint != NULL) // if new WP exist
+
 					{   // update WP hold time stamp immediately!
 /*						if(GPS_pWaypoint->Heading > 0 && GPS_pWaypoint->Heading <= 360)
+
 						{
+
 						 CAM_Orientation.Azimuth = GPS_pWaypoint->Heading;
 						 CAM_Orientation.UpdateMask |= CAM_UPDATE_AZIMUTH;
+
 						}
 */
 					}
@@ -514,6 +502,7 @@ void UART1_ProcessRxData(void)
 			/*
 			case 'b': // submit extern control
 				memcpy(&ExternControl, SerialMsg.pData, sizeof(ExternControl));
+
 				UART1_ConfirmFrame = ExternControl.Frame;
 				break;
 			*/
@@ -566,6 +555,43 @@ void UART1_ProcessRxData(void)
 		break; // default:
 	}
 	Buffer_Clear(&UART1_rx_buffer); // free rc buffer for next frame
+}
+mavlink_message_t msg_tx; 
+mavlink_status_t status; 
+void UART1_ProcessMavlink(void)
+{
+	mavlink_waypoint_t wp;
+	DebugOut.Analog[23] = 2;
+    switch(msg_tx.msgid) 
+    { 
+	
+        case MAVLINK_MSG_ID_WAYPOINT:
+                    mavlink_msg_waypoint_decode(&msg_tx, &wp);
+            // handle wp->x, wp->y, wp->z here. 
+	DebugOut.Analog[24] = (int)wp.x; 
+            break;
+    }
+}
+/**************************************************************/
+/* Process incomming data from debug uart                     */
+/**************************************************************/
+void UART1_ProcessRxData(void)
+{
+	// return on forwarding uart  or unlocked rx buffer
+	if(DebugUART != UART1) return;
+
+	u8 c;
+	// if rx buffer is not locked
+	if(UART1_rx_buffer.Locked == FALSE)
+	{ //DebugOut.Analog[24]++;
+		//collect data from primary rx fifo
+		while(fifo_get(&UART1_rx_fifo, &c))
+		{	if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg_tx, &status))UART1_ProcessMavlink();
+			// break if complete frame is collected
+			if(MKProtocol_CollectSerialFrame(&UART1_rx_buffer, c)) break;
+		}
+	}
+   	UART1_ProcessMkProtocol();
 }
 
 

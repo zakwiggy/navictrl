@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta
+END
+mavlink_msg_radio_calibration.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta/mavlink_msg_radio_calibration.h
+END
+mavlink_msg_nav_filter_bias.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta/mavlink_msg_nav_filter_bias.h
+END
+mavlink_msg_request_rc_channels.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta/mavlink_msg_request_rc_channels.h
+END
+ualberta.h
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta/ualberta.h
+END
+mavlink.h
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta/mavlink.h
+END
+mavlink_msg_request_radio_calibration.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/11/trunk/mavlink/include/ualberta/mavlink_msg_request_radio_calibration.h
+END

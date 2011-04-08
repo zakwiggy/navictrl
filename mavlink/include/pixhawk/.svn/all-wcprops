@@ -1,0 +1,203 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk
+END
+mavlink_msg_brief_feature.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_brief_feature.h
+END
+mavlink_msg_image_trigger_control.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_image_trigger_control.h
+END
+mavlink_msg_debug_vect.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_debug_vect.h
+END
+mavlink_msg_encapsulated_image.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_encapsulated_image.h
+END
+pixhawk.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/pixhawk.h
+END
+mavlink_msg_vision_position_estimate.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_vision_position_estimate.h
+END
+mavlink_msg_watchdog_command.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_watchdog_command.h
+END
+mavlink_msg_watchdog_process_status.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_watchdog_process_status.h
+END
+mavlink_msg_request_dynamic_gyro_calibration.h
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_request_dynamic_gyro_calibration.h
+END
+mavlink_msg_position_control_setpoint_set.h
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_position_control_setpoint_set.h
+END
+mavlink_msg_raw_aux.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_raw_aux.h
+END
+mavlink_msg_request_static_calibration.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_request_static_calibration.h
+END
+mavlink_msg_point_of_interest_connection.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_point_of_interest_connection.h
+END
+mavlink_msg_watchdog_process_info.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_watchdog_process_info.h
+END
+mavlink.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink.h
+END
+mavlink_msg_manual_control.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_manual_control.h
+END
+mavlink_msg_image_triggered.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_image_triggered.h
+END
+mavlink_msg_pattern_detected.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_pattern_detected.h
+END
+mavlink_msg_watchdog_heartbeat.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_watchdog_heartbeat.h
+END
+mavlink_msg_marker.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_marker.h
+END
+mavlink_msg_image_available.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_image_available.h
+END
+mavlink_msg_attitude_control.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_attitude_control.h
+END
+mavlink_msg_position_control_offset_set.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_position_control_offset_set.h
+END
+mavlink_msg_set_altitude.h
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_set_altitude.h
+END
+mavlink_msg_data_transmission_handshake.h
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_data_transmission_handshake.h
+END
+mavlink_msg_position_control_setpoint.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_position_control_setpoint.h
+END
+mavlink_msg_set_cam_shutter.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_set_cam_shutter.h
+END
+mavlink_msg_point_of_interest.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_point_of_interest.h
+END
+mavlink_msg_request_data_stream.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_request_data_stream.h
+END
+mavlink_msg_vicon_position_estimate.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_vicon_position_estimate.h
+END
+mavlink_msg_get_image_ack.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_get_image_ack.h
+END
+mavlink_msg_aux_status.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_aux_status.h
+END
+mavlink_msg_encapsulated_data.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/pixhawk/mavlink_msg_encapsulated_data.h
+END

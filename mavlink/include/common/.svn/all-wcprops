@@ -1,0 +1,413 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/11/trunk/mavlink/include/common
+END
+mavlink_msg_gps_raw.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_gps_raw.h
+END
+mavlink_msg_local_position_setpoint.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_local_position_setpoint.h
+END
+mavlink_msg_param_request_list.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_param_request_list.h
+END
+mavlink_msg_attitude_controller_output.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_attitude_controller_output.h
+END
+mavlink_msg_nav_controller_output.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_nav_controller_output.h
+END
+mavlink_msg_waypoint.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint.h
+END
+mavlink_msg_waypoint_count.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_count.h
+END
+mavlink_msg_waypoint_set_current.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_set_current.h
+END
+mavlink_msg_rc_channels_raw.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_rc_channels_raw.h
+END
+mavlink_msg_gps_status.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_gps_status.h
+END
+mavlink_msg_global_position_int.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_global_position_int.h
+END
+mavlink_msg_change_operator_control.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_change_operator_control.h
+END
+mavlink_msg_request_dynamic_gyro_calibration.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_request_dynamic_gyro_calibration.h
+END
+mavlink_msg_state_correction.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_state_correction.h
+END
+mavlink_msg_waypoint_clear_all.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_clear_all.h
+END
+mavlink_msg_auth_key.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_auth_key.h
+END
+mavlink.h
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink.h
+END
+mavlink_msg_waypoint_current.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_current.h
+END
+mavlink_msg_action.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_action.h
+END
+mavlink_msg_manual_control.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_manual_control.h
+END
+mavlink_msg_system_time_utc.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_system_time_utc.h
+END
+mavlink_msg_local_position.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_local_position.h
+END
+mavlink_msg_waypoint_request.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_request.h
+END
+mavlink_msg_attitude.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_attitude.h
+END
+mavlink_msg_position_controller_output.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_position_controller_output.h
+END
+mavlink_msg_statustext.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_statustext.h
+END
+mavlink_msg_named_value_int.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_named_value_int.h
+END
+mavlink_msg_rc_channels_scaled.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_rc_channels_scaled.h
+END
+mavlink_msg_command_ack.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_command_ack.h
+END
+mavlink_msg_param_value.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_param_value.h
+END
+mavlink_msg_vfr_hud.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_vfr_hud.h
+END
+mavlink_msg_heartbeat.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_heartbeat.h
+END
+mavlink_msg_boot.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_boot.h
+END
+mavlink_msg_safety_set_allowed_area.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_safety_set_allowed_area.h
+END
+mavlink_msg_debug_vect.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_debug_vect.h
+END
+mavlink_msg_param_set.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_param_set.h
+END
+mavlink_msg_gps_raw_int.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_gps_raw_int.h
+END
+mavlink_msg_global_position.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_global_position.h
+END
+mavlink_msg_debug.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_debug.h
+END
+mavlink_msg_servo_output_raw.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_servo_output_raw.h
+END
+mavlink_msg_waypoint_ack.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_ack.h
+END
+mavlink_msg_attitude_new.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_attitude_new.h
+END
+mavlink_msg_ping.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_ping.h
+END
+mavlink_msg_system_time.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_system_time.h
+END
+mavlink_msg_raw_imu.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_raw_imu.h
+END
+mavlink_msg_set_nav_mode.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_set_nav_mode.h
+END
+mavlink_msg_param_request_read.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_param_request_read.h
+END
+mavlink_msg_scaled_imu.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_scaled_imu.h
+END
+mavlink_msg_named_value_float.h
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_named_value_float.h
+END
+mavlink_msg_request_static_calibration.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_request_static_calibration.h
+END
+mavlink_msg_position_target.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_position_target.h
+END
+mavlink_msg_waypoint_request_list.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_request_list.h
+END
+mavlink_msg_command.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_command.h
+END
+mavlink_msg_change_operator_control_ack.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_change_operator_control_ack.h
+END
+mavlink_msg_local_position_setpoint_set.h
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_local_position_setpoint_set.h
+END
+mavlink_msg_sys_status.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_sys_status.h
+END
+mavlink_msg_raw_pressure.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_raw_pressure.h
+END
+mavlink_msg_control_status.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_control_status.h
+END
+mavlink_msg_waypoint_set_global_reference.h
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_set_global_reference.h
+END
+mavlink_msg_gps_local_origin_set.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_gps_local_origin_set.h
+END
+mavlink_msg_waypoint_reached.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_waypoint_reached.h
+END
+mavlink_msg_set_altitude.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_set_altitude.h
+END
+mavlink_msg_safety_allowed_area.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_safety_allowed_area.h
+END
+mavlink_msg_action_ack.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_action_ack.h
+END
+mavlink_msg_gps_set_global_origin.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_gps_set_global_origin.h
+END
+mavlink_msg_request_data_stream.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_request_data_stream.h
+END
+mavlink_msg_set_mode.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/mavlink/include/common/mavlink_msg_set_mode.h
+END
+common.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/11/trunk/mavlink/include/common/common.h
+END

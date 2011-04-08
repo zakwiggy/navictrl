@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/11/trunk/mavlink/message_definitions
+END
+mavlink_standard_proposal.xml
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/mavlink_standard_proposal.xml
+END
+common_slugs.xml
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/common_slugs.xml
+END
+common.xml
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/common.xml
+END
+pixhawk.xml
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/pixhawk.xml
+END
+ardupilotmega.xml
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/ardupilotmega.xml
+END
+slugs.xml
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/slugs.xml
+END
+slugs_ap.xml
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/slugs_ap.xml
+END
+ualberta.xml
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/11/trunk/mavlink/message_definitions/ualberta.xml
+END

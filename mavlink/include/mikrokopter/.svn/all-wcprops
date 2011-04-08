@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/11/trunk/mavlink/include/mikrokopter
+END
+mavlink.h
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/11/trunk/mavlink/include/mikrokopter/mavlink.h
+END
+mavlink_msg_request_debug.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/11/trunk/mavlink/include/mikrokopter/mavlink_msg_request_debug.h
+END
+mikrokopter.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/11/trunk/mavlink/include/mikrokopter/mikrokopter.h
+END
+mavlink_msg_send_debug.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/11/trunk/mavlink/include/mikrokopter/mavlink_msg_send_debug.h
+END
