@@ -183,6 +183,7 @@ u32 UART1_Display_Interval = 0;		// in ms
 void UART1_Init (void)
 
 
+
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	UART_InitTypeDef UART_InitStructure;
@@ -562,15 +563,20 @@ mavlink_status_t status;
 void UART1_ProcessMavlink(void)
 {Point_t point;
 	mavlink_waypoint_t wp;
-	DebugOut.Analog[23] = 2;
+	DebugOut.Analog[23]++;
     switch(msg_tx.msgid) 
     { 
 	
         case MAVLINK_MSG_ID_WAYPOINT:
             mavlink_msg_waypoint_decode(&msg_tx, &wp);
             point.Position.Status = NEWDATA;
-	    point.Index=wp.x;
+	    point.Index=1;
 		point.Type=POINT_TYPE_WP;
+		point.Position.Longitude=(int)(wp.x*1000000);
+		point.Position.Latitude=(int)(wp.y*1000000);
+		point.Heading=-1;
+		point.ToleranceRadius=wp.param1*100;
+		point.HoldTime=wp.param2/1000;
 		if(point.Position.Status == NEWDATA)
 				{
 					//if(!(FC.StatusFlags & FC_STATUS_FLY)) PointList_Clear(); // flush the list	
