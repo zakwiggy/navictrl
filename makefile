@@ -1,4 +1,3 @@
-# Hey Emacs, this is a -*- makefile -*-
 #
 # Navi-Control Makefile
 # by ARTI for the Mikrokopter Project www.mikrokopter.de
