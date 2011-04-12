@@ -779,9 +779,9 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 void CalcHeadFree(void)
 {		
 		GPS_pWaypoint = PointList_WPBegin();
-		DebugOut.Analog[23] = GPSPosDevIntegral_North;
-				ToFC_Rotate_C=(s32)c_cos_8192(HeadFreeStartAngle/10 - ToFlightCtrl.CompassHeading)/256;
-				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - ToFlightCtrl.CompassHeading)/256;
+		
+				ToFC_Rotate_C=(s32)c_cos_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
+				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 			if(PointList_GetPOI()!=NULL)
 				{DebugOut.Analog[24] = 1;
 					DebugOut.Analog[25] = PointList_GetPOI()->Position.Longitude/10000;

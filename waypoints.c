@@ -341,7 +341,7 @@ void PointList_WPActive(u8 set)
 }
  
 Point_t* PointList_GetPOI(void)
-{
+{DebugOut.Analog[23] = POIIndex;
 	return PointList_GetAt(POIIndex);	
 }
 
