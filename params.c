@@ -28,10 +28,10 @@ u8 NCParams_SetValue(u8 id, s16 *pvalue)
 	{
 		case NCPARAMS_NEW_COMPASS_DIRECTION_SETPOINT:
 		    if(NULL == PointList_GetPOI())
-			{/*
+			{
 				CAM_Orientation.Azimuth = *pvalue;
 				CAM_Orientation.Elevation = 0;
-				CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;*/
+				CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;
 			}
 			break;
 

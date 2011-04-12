@@ -76,7 +76,7 @@
 #include "waypoints.h"
 #include "i2c.h"
 #include "mymath.h"
-
+#include "params.h"
 #define M_PI_180 	(M_PI / 180.0f)
 #define GPS_UPDATETIME_MS 200 		// 200ms is 5 Hz
 typedef enum
@@ -210,11 +210,7 @@ void GPS_UpdateParameter(void)
 		{
 
 			GPS_pWaypoint = PointList_WPBegin(); // reset WPList to begin
-			if(GPS_pWaypoint->Type=POINT_TYPE_POI)
-			{
-				GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
-				GPS_pWaypoint = PointList_WPNext();
-			}
+			
 		}	
 	}
 	FlightMode_Old = GPS_Parameter.FlightMode;
@@ -300,11 +296,7 @@ void GPS_Init(void)
 	GPS_pTargetPosition = NULL;
 	PointList_Init();
 	GPS_pWaypoint = PointList_WPBegin();
-	if(GPS_pWaypoint->Type=POINT_TYPE_POI)
-	{
-		GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
-		GPS_pWaypoint = PointList_WPNext();
-	}
+	
 	GPS_UpdateParameter();
 	UART1_PutString("ok");
 	CAM_Orientation.Azimuth=-1;		// angle measured clockwise from north
@@ -471,11 +463,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 						GPS_CopyPosition(&GPS_HomePosition, &(NaviData.HomePosition));
 					}
 					GPS_pWaypoint = PointList_WPBegin(); // go to start of waypoint list, return NULL of the list is empty
-					if(GPS_pWaypoint->Type=POINT_TYPE_POI)
-					{
-						GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
-						GPS_pWaypoint = PointList_WPNext();
-					}
+				
 				}
 
 				/* The selected flight mode influences the target position pointer and therefore the behavior */
@@ -658,7 +646,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				pTargetPositionOld = GPS_pTargetPosition;
 
 				/* Calculate position deviation from ranged target */
-				GPS_CalculateDeviation(&(GPSData.Position), &GPS_POIPosition, &POIDeviation);
+				if(PointList_GetPOI()!=NULL)
+				GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
 				// calculate deviation of current position to ranged target position in cm
 				if(GPS_CalculateDeviation(&(GPSData.Position), &RangedTargetPosition, &CurrentTargetDeviation))
 				{	// set target reached flag of we once reached the target point
@@ -669,8 +658,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 					// implement your control code here based
 					// in the info available in the CurrentTargetDeviation, GPSData and FromFlightCtrl.GyroHeading
 //----------------------------------------------------------------------------------------------------------------------------------		
-		CAM_Orientation.Azimuth=POIDeviation.Bearing;
-		CAM_Orientation.UpdateMask |= CAM_UPDATE_AZIMUTH;
+		NCParams_SetValue(NCPARAMS_NEW_COMPASS_DIRECTION_SETPOINT, &POIDeviation.Bearing);
 		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512;
 		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512;
 
