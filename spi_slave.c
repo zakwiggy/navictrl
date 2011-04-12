@@ -411,8 +411,7 @@ void SPI0_UpdateBuffer(void)
 				NaviData.FCStatusFlags = FC.StatusFlags;
 				NaviData.FCStatusFlags2 = FC.StatusFlags2;
 				HeadFreeStartAngle = (s32) FromFlightCtrl.Param.Byte[10] * 20; // convert to 0.1°
-				ToFC_Rotate_C=(s32)c_cos_8192(HeadFreeStartAngle/10)/256;
-				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10)/256;
+
 				break;
 
 		  	case SPI_FCCMD_ACCU:

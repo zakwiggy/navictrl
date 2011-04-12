@@ -414,14 +414,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 	static GPS_Pos_t RangedTargetPosition = {0,0,0, INVALID};		// the limited target position, this is derived from the target position with repect to the operating radius
 	static s32 OperatingRadiusOld = -1;
 	static u32 WPTime = 0;
-		DebugOut.Analog[23] = GPSPosDevIntegral_North;
-		DebugOut.Analog[24] = GPSPosDevIntegral_East;
-			if(PointList_GetPOI()!=NULL)
-				{
-					DebugOut.Analog[25] = PointList_GetPOI()->Position.Longitude/10000;
-					DebugOut.Analog[26] = PointList_GetPOI()->Position.Latitude/10000;				
-				//GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
-				}
+
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//+ Check for new data from GPS-receiver
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -784,6 +777,16 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 }
 
 void CalcHeadFree(void)
-{
+{		
+		GPS_pWaypoint = PointList_WPBegin();
+		DebugOut.Analog[23] = GPSPosDevIntegral_North;
+				ToFC_Rotate_C=(s32)c_cos_8192(HeadFreeStartAngle/10 - ToFlightCtrl.CompassHeading)/256;
+				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - ToFlightCtrl.CompassHeading)/256;
+			if(PointList_GetPOI()!=NULL)
+				{DebugOut.Analog[24] = 1;
+					DebugOut.Analog[25] = PointList_GetPOI()->Position.Longitude/10000;
+					DebugOut.Analog[26] = PointList_GetPOI()->Position.Latitude/10000;				
+				//GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
+				}
   return;
 }
