@@ -416,6 +416,12 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 	static u32 WPTime = 0;
 		DebugOut.Analog[23] = GPSPosDevIntegral_North;
 		DebugOut.Analog[24] = GPSPosDevIntegral_East;
+			if(PointList_GetPOI()!=NULL)
+				{
+					DebugOut.Analog[25] = PointList_GetPOI()->Position.Longitude/10000;
+					DebugOut.Analog[26] = PointList_GetPOI()->Position.Latitude/10000;				
+				//GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
+				}
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//+ Check for new data from GPS-receiver
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -646,8 +652,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				pTargetPositionOld = GPS_pTargetPosition;
 
 				/* Calculate position deviation from ranged target */
-				if(PointList_GetPOI()!=NULL)
-				GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
+			
 				// calculate deviation of current position to ranged target position in cm
 				if(GPS_CalculateDeviation(&(GPSData.Position), &RangedTargetPosition, &CurrentTargetDeviation))
 				{	// set target reached flag of we once reached the target point
@@ -681,8 +686,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 			GPSPosDevIntegral_East  += CurrentTargetDeviation.East/16;
 			GPS_LimitXY(&GPSPosDevIntegral_North, &GPSPosDevIntegral_East, 320*GPS_Parameter.I_Limit);
 		
-		DebugOut.Analog[25] = GPSPosDevIntegral_North;
-		DebugOut.Analog[26] = GPSPosDevIntegral_East;
+
 		// combine PI- and D-Part
 
 		GPS_LimitXY(&D_North, &D_East, GPS_Parameter.D_Limit);
