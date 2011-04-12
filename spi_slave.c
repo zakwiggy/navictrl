@@ -304,10 +304,9 @@ void SPI0_UpdateBuffer(void)
 				ToFlightCtrl.Param.sByte[4] = (s8) ToFcGpsZ;
 				ToFlightCtrl.Param.Byte[5] = (s8) ToFC_Rotate_C;
 				ToFlightCtrl.Param.Byte[6] = (s8) ToFC_Rotate_S;
-                		ToFlightCtrl.Param.sInt[4] = -1;
-				ToFlightCtrl.Param.sInt[5] = 0;
+                		
 				//ToFlightCtrl.Param.Byte[7] = 
-				/*if(CAM_Orientation.UpdateMask & CAM_UPDATE_AZIMUTH)
+				if(CAM_Orientation.UpdateMask & CAM_UPDATE_AZIMUTH)
 				{
 					ToFlightCtrl.Param.sInt[4] = CAM_Orientation.Azimuth;
 					CAM_Orientation.UpdateMask &= ~CAM_UPDATE_AZIMUTH;
@@ -325,7 +324,7 @@ void SPI0_UpdateBuffer(void)
 				{
 					if(FC.StatusFlags2 & FC_STATUS2_CAREFREE) ToFlightCtrl.Param.sInt[5] = CAM_Orientation.Elevation; // only, if carefree is active
 					else ToFlightCtrl.Param.sInt[5] = 0;
-				}*/
+				}
 				break;
 
 			case SPI_NCCMD_VERSION:

@@ -70,7 +70,7 @@
 #include "91x_lib.h"
 #include "main.h"
 #include "uart1.h"
-#include "GPS.h"
+#include "gps.h"
 #include "timer1.h"
 #include "spi_slave.h"
 #include "waypoints.h"
@@ -119,10 +119,10 @@ typedef struct
 GPS_Deviation_t CurrentTargetDeviation;		// Deviation from Target
 GPS_Deviation_t CurrentHomeDeviation;		// Deviation from Home
 GPS_Deviation_t TargetHomeDeviation;		// Deviation from Target to Home
-GPS_Deviation_t POIdeviation;
+GPS_Deviation_t POIDeviation;
 GPS_Stick_t		GPS_Stick;
 GPS_Parameter_t	GPS_Parameter;
-
+CAM_Orientation_t CAM_Orientation;
 // the gps reference positions
 GPS_Pos_t GPS_POIPosition	= {0,0,0, INVALID};
 GPS_Pos_t GPS_HoldPosition 	= {0,0,0, INVALID};			// the hold position
@@ -206,7 +206,16 @@ void GPS_UpdateParameter(void)
 		BeepTime = 100; // beep to indicate that mode has been switched
 		NCFlags &= ~NC_FLAG_TARGET_REACHED;
 
-		if(GPS_Parameter.FlightMode == GPS_FLIGHT_MODE_WAYPOINT) GPS_pWaypoint = PointList_WPBegin(); // reset WPList to begin
+		if(GPS_Parameter.FlightMode == GPS_FLIGHT_MODE_WAYPOINT)
+		{
+
+			GPS_pWaypoint = PointList_WPBegin(); // reset WPList to begin
+			if(GPS_pWaypoint->Type=POINT_TYPE_POI)
+			{
+				GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
+				GPS_pWaypoint = PointList_WPNext();
+			}
+		}	
 	}
 	FlightMode_Old = GPS_Parameter.FlightMode;
 }
@@ -291,8 +300,16 @@ void GPS_Init(void)
 	GPS_pTargetPosition = NULL;
 	PointList_Init();
 	GPS_pWaypoint = PointList_WPBegin();
+	if(GPS_pWaypoint->Type=POINT_TYPE_POI)
+	{
+		GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
+		GPS_pWaypoint = PointList_WPNext();
+	}
 	GPS_UpdateParameter();
 	UART1_PutString("ok");
+	CAM_Orientation.Azimuth=-1;		// angle measured clockwise from north
+	s16 Elevation=0; 		// angle measured upwards from horizon
+	u8 UpdateMask=0;
 }
 
 //------------------------------------------------------------
@@ -454,6 +471,11 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 						GPS_CopyPosition(&GPS_HomePosition, &(NaviData.HomePosition));
 					}
 					GPS_pWaypoint = PointList_WPBegin(); // go to start of waypoint list, return NULL of the list is empty
+					if(GPS_pWaypoint->Type=POINT_TYPE_POI)
+					{
+						GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
+						GPS_pWaypoint = PointList_WPNext();
+					}
 				}
 
 				/* The selected flight mode influences the target position pointer and therefore the behavior */
@@ -507,11 +529,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 							// waypoint trigger logic
 							if(GPS_pWaypoint != NULL) // waypoint exist
 							{
-								if(GPS_pWaypoint->Type=POINT_TYPE_POI)
-								{
-									GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
-									GPS_pWaypoint = PointList_WPNext();
-								}
+								
 								if(GPS_pWaypoint->Position.Status == INVALID) // should never happen
 								{
 									GPS_pWaypoint = PointList_WPNext(); // goto to next WP
@@ -640,7 +658,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				pTargetPositionOld = GPS_pTargetPosition;
 
 				/* Calculate position deviation from ranged target */
-
+				GPS_CalculateDeviation(&(GPSData.Position), &GPS_POIPosition, &POIDeviation);
 				// calculate deviation of current position to ranged target position in cm
 				if(GPS_CalculateDeviation(&(GPSData.Position), &RangedTargetPosition, &CurrentTargetDeviation))
 				{	// set target reached flag of we once reached the target point
@@ -651,7 +669,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 					// implement your control code here based
 					// in the info available in the CurrentTargetDeviation, GPSData and FromFlightCtrl.GyroHeading
 //----------------------------------------------------------------------------------------------------------------------------------		
-		
+		CAM_Orientation.Azimuth=POIDeviation.Bearing;
+		CAM_Orientation.UpdateMask |= CAM_UPDATE_AZIMUTH;
 		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512;
 		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512;
 
