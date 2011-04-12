@@ -656,7 +656,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 					// implement your control code here based
 					// in the info available in the CurrentTargetDeviation, GPSData and FromFlightCtrl.GyroHeading
 //----------------------------------------------------------------------------------------------------------------------------------		
-		NCParams_SetValue(NCPARAMS_NEW_COMPASS_DIRECTION_SETPOINT, &POIDeviation.Bearing);
+		
 		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512;
 		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512;
 
@@ -778,15 +778,17 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 void CalcHeadFree(void)
 {		
-		GPS_pWaypoint = PointList_WPBegin();
+
 		
 				ToFC_Rotate_C=(s32)c_cos_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 			if(PointList_GetPOI()!=NULL)
 				{DebugOut.Analog[24] = 1;
-					DebugOut.Analog[25] = PointList_GetPOI()->Position.Longitude/10000;
-					DebugOut.Analog[26] = PointList_GetPOI()->Position.Latitude/10000;				
-				//GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
+					GPS_CalculateDeviation(&GPS_HomePosition, &(PointList_GetPOI()->Position), &POIDeviation);
+					DebugOut.Analog[25] = POIDeviation.Bearing;
+					DebugOut.Analog[26] = PointList_GetPOI()->Position.Latitude/10000;	
+					NCParams_SetValue(NCPARAMS_NEW_COMPASS_DIRECTION_SETPOINT, &POIDeviation.Bearing);			
+				
 				}
   return;
 }
