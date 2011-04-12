@@ -784,10 +784,13 @@ void CalcHeadFree(void)
 				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 			if(PointList_GetPOI()!=NULL)
 				{DebugOut.Analog[24] = 1;
-					GPS_CalculateDeviation(&GPS_HomePosition, &(PointList_GetPOI()->Position), &POIDeviation);
-					DebugOut.Analog[25] = POIDeviation.Bearing;
-					DebugOut.Analog[26] = PointList_GetPOI()->Position.Latitude/10000;	
-					NCParams_SetValue(NCPARAMS_NEW_COMPASS_DIRECTION_SETPOINT, &POIDeviation.Bearing);			
+					GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
+	
+					CAM_Orientation.Azimuth = POIDeviation.Bearing;
+					CAM_Orientation.Elevation = (s16)(atan2(50*NaviData.Altimeter-PointList_GetPOI()->Position.Altitude, (POIDeviation.Distance)*10) / M_PI_180);
+					DebugOut.Analog[25] = CAM_Orientation.Azimuth;
+					DebugOut.Analog[26] = CAM_Orientation.Elevation;
+					CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;			
 				
 				}
   return;
