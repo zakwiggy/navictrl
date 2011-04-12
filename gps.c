@@ -119,11 +119,12 @@ typedef struct
 GPS_Deviation_t CurrentTargetDeviation;		// Deviation from Target
 GPS_Deviation_t CurrentHomeDeviation;		// Deviation from Home
 GPS_Deviation_t TargetHomeDeviation;		// Deviation from Target to Home
-
+GPS_Deviation_t POIdeviation;
 GPS_Stick_t		GPS_Stick;
 GPS_Parameter_t	GPS_Parameter;
 
 // the gps reference positions
+GPS_Pos_t GPS_POIPosition	= {0,0,0, INVALID};
 GPS_Pos_t GPS_HoldPosition 	= {0,0,0, INVALID};			// the hold position
 GPS_Pos_t GPS_HomePosition 	= {0,0,0, INVALID};			// the home position
 GPS_Pos_t * GPS_pTargetPosition = NULL;				    // pointer to the actual target position
@@ -506,6 +507,11 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 							// waypoint trigger logic
 							if(GPS_pWaypoint != NULL) // waypoint exist
 							{
+								if(GPS_pWaypoint->Type=POINT_TYPE_POI)
+								{
+									GPS_CopyPosition(&(GPS_pWaypoint->Position), &GPS_POIPosition);
+									GPS_pWaypoint = PointList_WPNext();
+								}
 								if(GPS_pWaypoint->Position.Status == INVALID) // should never happen
 								{
 									GPS_pWaypoint = PointList_WPNext(); // goto to next WP
