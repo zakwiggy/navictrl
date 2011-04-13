@@ -400,6 +400,7 @@ u8 GPS_CalculateDeviation(GPS_Pos_t * pCurrentPos, GPS_Pos_t * pTargetPos, GPS_D
 	return FALSE;
 }
 s32	GPSPosDevIntegral_North,GPSPosDevIntegral_East;
+
 void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 {
 	s32 D_North,D_East,P_North,P_East,I_North,I_East,PID_North,PID_East;
@@ -787,7 +788,7 @@ void CalcHeadFree(void)
 					GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
 	
 					CAM_Orientation.Azimuth = POIDeviation.Bearing;
-					CAM_Orientation.Elevation = (s16)(atan2(50*NaviData.Altimeter-PointList_GetPOI()->Position.Altitude, (POIDeviation.Distance)*10) / M_PI_180);
+					CAM_Orientation.Elevation = (s16)(-atan2( (POIDeviation.Distance)*10,50*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);
 					DebugOut.Analog[25] = CAM_Orientation.Azimuth;
 					DebugOut.Analog[26] = CAM_Orientation.Elevation;
 					CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;			
