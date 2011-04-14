@@ -517,7 +517,10 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 							// waypoint trigger logic
 							if(GPS_pWaypoint != NULL) // waypoint exist
 							{
-								
+								DebugOut.Analog[25] = ToFC_AltitudeRate;
+								DebugOut.Analog[26] = ToFC_AltitudeSetpoint;
+								ToFC_AltitudeRate=GPS_pWaypoint->AltitudeRate;
+								ToFC_AltitudeSetpoint=GPS_pWaypoint->Position.Altitude;
 								if(GPS_pWaypoint->Position.Status == INVALID) // should never happen
 								{
 									GPS_pWaypoint = PointList_WPNext(); // goto to next WP
@@ -784,13 +787,12 @@ void CalcHeadFree(void)
 				ToFC_Rotate_C=(s32)c_cos_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 			if(PointList_GetPOI()!=NULL)
-				{DebugOut.Analog[24] = 1;
+				{
 					GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
 	
 					CAM_Orientation.Azimuth = POIDeviation.Bearing;
-					CAM_Orientation.Elevation = (s16)(-atan2( (POIDeviation.Distance)*10,50*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);
-					DebugOut.Analog[25] = CAM_Orientation.Azimuth;
-					DebugOut.Analog[26] = CAM_Orientation.Elevation;
+					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance)*10,50*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);DebugOut.Analog[24] = NaviData.Altimeter;
+					
 					CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;			
 				
 				}

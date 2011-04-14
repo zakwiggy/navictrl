@@ -71,7 +71,7 @@ MCU = arm9e
 HEX_NAME = STR9
 
 # Target file name (without extension).
-TARGET = Navi-Ctrl_STR9_V0_24bTest01
+TARGET = Navi-Ctrl_STR9_V0_24bdebug01
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
