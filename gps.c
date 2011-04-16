@@ -676,7 +676,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 		PID_North = P_North + I_North;
 		PID_East  = P_East + I_East;
 
-		
+		DebugOut.Analog[27] = (s16)CurrentTargetDeviation.North;
+				DebugOut.Analog[28] = (s16) CurrentTargetDeviation.East;
 		GPS_LimitXY(&P_North, &P_North, GPS_Parameter.P_Limit);
 		
 			GPSPosDevIntegral_North += CurrentTargetDeviation.North/16;
@@ -787,12 +788,11 @@ void CalcHeadFree(void)
 				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 			if(PointList_GetPOI()!=NULL)
 				{
-				DebugOut.Analog[27] = (s16)50*NaviData.Altimeter;
-				DebugOut.Analog[28] = (s16)PointList_GetPOI()->Position.Altitude;
+				
 					GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
 	
 					CAM_Orientation.Azimuth = POIDeviation.Bearing;
-					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance)*10,50*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);DebugOut.Analog[24] = CAM_Orientation.Elevation;
+					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance),5*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);DebugOut.Analog[24] = CAM_Orientation.Elevation;
 					
 					CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;			
 				
