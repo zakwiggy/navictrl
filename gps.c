@@ -367,7 +367,7 @@ u8 GPS_CalculateDeviation(GPS_Pos_t * pCurrentPos, GPS_Pos_t * pTargetPos, GPS_D
 	// is 111.2km * cos(latitude).
 
 	// calculate the shortest longitude deviation from target
-	temp1 = DegFromGPS(pCurrentPos->Longitude) - DegFromGPS(pTargetPos->Longitude);
+	temp1 = DegFromGPS(pTargetPos->Longitude) - DegFromGPS(pCurrentPos->Longitude);
 	// outside an angular difference of -180 deg ... +180 deg its shorter to go the other way around
 	// In our application we wont fly more than 20.000 km but along the date line this is important.
 	if(temp1 > 180.0f) temp1 -= 360.0f;
@@ -375,7 +375,7 @@ u8 GPS_CalculateDeviation(GPS_Pos_t * pCurrentPos, GPS_Pos_t * pTargetPos, GPS_D
 	temp1 *= cos((RadiansFromGPS(pTargetPos->Latitude) + RadiansFromGPS(pCurrentPos->Latitude))/2);
 	// calculate latitude deviation from target
 	// this is allways within -180 deg ... 180 deg
-	temp2 = DegFromGPS(pCurrentPos->Latitude) - DegFromGPS(pTargetPos->Latitude);
+	temp2 = DegFromGPS(pTargetPos->Latitude) - DegFromGPS(pCurrentPos->Latitude);
 	// deviation from target position in cm
 	// i.e. the distance to walk from the target in northern and eastern direction to reach the current position
 
@@ -750,8 +750,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 	DebugOut.Analog[6] = NCFlags;
 
-	DebugOut.Analog[27] = (s16)CurrentTargetDeviation.North;
-	DebugOut.Analog[28] = (s16)CurrentTargetDeviation.East;
+	
 	DebugOut.Analog[29] = GPS_Stick.Nick;
 	DebugOut.Analog[30] = GPS_Stick.Roll;
 
@@ -788,10 +787,12 @@ void CalcHeadFree(void)
 				ToFC_Rotate_S=(s32)c_sin_8192(HeadFreeStartAngle/10 - FromFlightCtrl.GyroHeading /10)/256;
 			if(PointList_GetPOI()!=NULL)
 				{
+				DebugOut.Analog[27] = (s16)50*NaviData.Altimeter;
+				DebugOut.Analog[28] = (s16)PointList_GetPOI()->Position.Altitude;
 					GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
 	
 					CAM_Orientation.Azimuth = POIDeviation.Bearing;
-					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance)*10,50*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);DebugOut.Analog[24] = NaviData.Altimeter;
+					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance)*10,50*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);DebugOut.Analog[24] = CAM_Orientation.Elevation;
 					
 					CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;			
 				
