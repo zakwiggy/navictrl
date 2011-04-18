@@ -184,9 +184,9 @@ void GPS_UpdateParameter(void)
 			}
 		}
 		GPS_Parameter.Gain 	= (float)Parameter.NaviGpsGain;
-		GPS_Parameter.P		= (float)Parameter.NaviGpsP;
-		GPS_Parameter.I		= (float)Parameter.NaviGpsI;
-		GPS_Parameter.D		= (float)Parameter.NaviGpsD;
+		GPS_Parameter.P		= (float)(Parameter.NaviGpsP-100)*6;
+		GPS_Parameter.I		= (float)(Parameter.NaviGpsI-100)*6;
+		GPS_Parameter.D		= (float)(Parameter.NaviGpsD-100)*6;
 		GPS_Parameter.A		= (float)Parameter.NaviGpsD;
 		GPS_Parameter.ACC 	= (float)Parameter.NaviGpsACC;
 		GPS_Parameter.P_Limit = (s32)Parameter.NaviGpsPLimit;
@@ -367,7 +367,7 @@ u8 GPS_CalculateDeviation(GPS_Pos_t * pCurrentPos, GPS_Pos_t * pTargetPos, GPS_D
 	// is 111.2km * cos(latitude).
 
 	// calculate the shortest longitude deviation from target
-	temp1 = DegFromGPS(pTargetPos->Longitude) - DegFromGPS(pCurrentPos->Longitude);
+	temp1 = DegFromGPS(pCurrentPos->Longitude) - DegFromGPS(pTargetPos->Longitude);
 	// outside an angular difference of -180 deg ... +180 deg its shorter to go the other way around
 	// In our application we wont fly more than 20.000 km but along the date line this is important.
 	if(temp1 > 180.0f) temp1 -= 360.0f;
@@ -375,7 +375,7 @@ u8 GPS_CalculateDeviation(GPS_Pos_t * pCurrentPos, GPS_Pos_t * pTargetPos, GPS_D
 	temp1 *= cos((RadiansFromGPS(pTargetPos->Latitude) + RadiansFromGPS(pCurrentPos->Latitude))/2);
 	// calculate latitude deviation from target
 	// this is allways within -180 deg ... 180 deg
-	temp2 = DegFromGPS(pTargetPos->Latitude) - DegFromGPS(pCurrentPos->Latitude);
+	temp2 = DegFromGPS(pCurrentPos->Latitude) - DegFromGPS(pTargetPos->Latitude);
 	// deviation from target position in cm
 	// i.e. the distance to walk from the target in northern and eastern direction to reach the current position
 
