@@ -660,30 +660,30 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 					// in the info available in the CurrentTargetDeviation, GPSData and FromFlightCtrl.GyroHeading
 //----------------------------------------------------------------------------------------------------------------------------------		
 		
-		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512L;
-		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512L;
-
+		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512;
+		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512;
+		
 		// P-Part
-		P_North = ((s32)GPS_Parameter.P * CurrentTargetDeviation.North)/2048L;
-		P_East =  ((s32)GPS_Parameter.P * CurrentTargetDeviation.East)/2048L;
-		DebugOut.Analog[24] = P_North;
-		DebugOut.Analog[25] = P_East;
-		DebugOut.Analog[26] = GPS_Parameter.P;
+		P_North = ((s32)GPS_Parameter.P * CurrentTargetDeviation.North)/2048;
+		P_East =  ((s32)GPS_Parameter.P * CurrentTargetDeviation.East)/2048;
+		
+		DebugOut.Analog[25] =P_North;
+		DebugOut.Analog[26] = P_East;
 		// I-Part
-		I_North = ((s32)GPS_Parameter.I * GPSPosDevIntegral_North)/8192L;//add declaration
-		I_East =  ((s32)GPS_Parameter.I * GPSPosDevIntegral_East)/8192L;//add declaration
-
+		I_North = ((s32)GPS_Parameter.I * GPSPosDevIntegral_North)/8192;//add declaration
+		I_East =  ((s32)GPS_Parameter.I * GPSPosDevIntegral_East)/8192;//add declaration
+		GPS_LimitXY(&P_North, &P_North, GPS_Parameter.P_Limit);
 		// combine P & I
 		PID_North = P_North + I_North;
 		PID_East  = P_East + I_East;
 
 		DebugOut.Analog[27] = (s16)CurrentTargetDeviation.North;
 				DebugOut.Analog[28] = (s16) CurrentTargetDeviation.East;
-		GPS_LimitXY(&P_North, &P_North, GPS_Parameter.P_Limit);
 		
-			GPSPosDevIntegral_North += CurrentTargetDeviation.North/16L;
-			GPSPosDevIntegral_East  += CurrentTargetDeviation.East/16L;
-			GPS_LimitXY(&GPSPosDevIntegral_North, &GPSPosDevIntegral_East, 320*GPS_Parameter.I_Limit);
+		
+			GPSPosDevIntegral_North += CurrentTargetDeviation.North/16;
+			GPSPosDevIntegral_East  += CurrentTargetDeviation.East/16;
+			GPS_LimitXY(&GPSPosDevIntegral_North, &GPSPosDevIntegral_East, (8192L*GPS_Parameter.I_Limit)/((s32)GPS_Parameter.I));
 		
 
 		// combine PI- and D-Part
@@ -691,10 +691,12 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 		GPS_LimitXY(&D_North, &D_East, GPS_Parameter.D_Limit);
 		PID_North += D_North;
 		PID_East  += D_East;
-
+		
+		DebugOut.Analog[23] = PID_North;
+		DebugOut.Analog[24] = PID_East;
 		// scale combination with gain.
-		PID_North = (PID_North * (s32)GPS_Parameter.Gain) / 100L;
-		PID_East  = (PID_East  * (s32)GPS_Parameter.Gain) / 100L;
+		PID_North = (PID_North * (s32)GPS_Parameter.Gain) / 100;
+		PID_East  = (PID_East  * (s32)GPS_Parameter.Gain) / 100;
 
 		// GPS to nick and roll settings
 
@@ -712,8 +714,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 		coscompass = (s32)c_cos_8192(FromFlightCtrl.GyroHeading /10);//GYRO_DEG_FACTOR=ParamSet.GyroAccFactor*42
 		sincompass = (s32)c_sin_8192(FromFlightCtrl.GyroHeading / 10);//GYRO_DEG_FACTOR
-		PID_Nick =   (coscompass * PID_North + sincompass * PID_East) / 8192L;
-		PID_Roll  =  (sincompass * PID_North - coscompass * PID_East) / 8192L;
+		PID_Nick =   (coscompass * PID_North + sincompass * PID_East) / 8192;
+		PID_Roll  =  (sincompass * PID_North - coscompass * PID_East) / 8192;
 
 	
 		// limit resulting GPS control vector
