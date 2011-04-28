@@ -517,8 +517,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 							// waypoint trigger logic
 							if(GPS_pWaypoint != NULL) // waypoint exist
 							{
-								DebugOut.Analog[25] = ToFC_AltitudeRate;
-								DebugOut.Analog[26] = ToFC_AltitudeSetpoint;
+
 								ToFC_AltitudeRate=GPS_pWaypoint->AltitudeRate;
 								ToFC_AltitudeSetpoint=GPS_pWaypoint->Position.Altitude;
 								if(GPS_pWaypoint->Position.Status == INVALID) // should never happen
@@ -661,16 +660,18 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 					// in the info available in the CurrentTargetDeviation, GPSData and FromFlightCtrl.GyroHeading
 //----------------------------------------------------------------------------------------------------------------------------------		
 		
-		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512;
-		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512;
+		D_North = ((s32)GPS_Parameter.D * GPSData.Speed_North)/512L;
+		D_East =  ((s32)GPS_Parameter.D * GPSData.Speed_East)/512L;
 
 		// P-Part
-		P_North = ((s32)GPS_Parameter.P * CurrentTargetDeviation.North)/2048;
-		P_East =  ((s32)GPS_Parameter.P * CurrentTargetDeviation.East)/2048;
-
+		P_North = ((s32)GPS_Parameter.P * CurrentTargetDeviation.North)/2048L;
+		P_East =  ((s32)GPS_Parameter.P * CurrentTargetDeviation.East)/2048L;
+		DebugOut.Analog[24] = P_North;
+		DebugOut.Analog[25] = P_East;
+		DebugOut.Analog[26] = GPS_Parameter.P;
 		// I-Part
-		I_North = ((s32)GPS_Parameter.I * GPSPosDevIntegral_North)/8192;//add declaration
-		I_East =  ((s32)GPS_Parameter.I * GPSPosDevIntegral_East)/8192;//add declaration
+		I_North = ((s32)GPS_Parameter.I * GPSPosDevIntegral_North)/8192L;//add declaration
+		I_East =  ((s32)GPS_Parameter.I * GPSPosDevIntegral_East)/8192L;//add declaration
 
 		// combine P & I
 		PID_North = P_North + I_North;
@@ -680,8 +681,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				DebugOut.Analog[28] = (s16) CurrentTargetDeviation.East;
 		GPS_LimitXY(&P_North, &P_North, GPS_Parameter.P_Limit);
 		
-			GPSPosDevIntegral_North += CurrentTargetDeviation.North/16;
-			GPSPosDevIntegral_East  += CurrentTargetDeviation.East/16;
+			GPSPosDevIntegral_North += CurrentTargetDeviation.North/16L;
+			GPSPosDevIntegral_East  += CurrentTargetDeviation.East/16L;
 			GPS_LimitXY(&GPSPosDevIntegral_North, &GPSPosDevIntegral_East, 320*GPS_Parameter.I_Limit);
 		
 
@@ -692,8 +693,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 		PID_East  += D_East;
 
 		// scale combination with gain.
-		PID_North = (PID_North * (s32)GPS_Parameter.Gain) / 100;
-		PID_East  = (PID_East  * (s32)GPS_Parameter.Gain) / 100;
+		PID_North = (PID_North * (s32)GPS_Parameter.Gain) / 100L;
+		PID_East  = (PID_East  * (s32)GPS_Parameter.Gain) / 100L;
 
 		// GPS to nick and roll settings
 
@@ -711,8 +712,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 		coscompass = (s32)c_cos_8192(FromFlightCtrl.GyroHeading /10);//GYRO_DEG_FACTOR=ParamSet.GyroAccFactor*42
 		sincompass = (s32)c_sin_8192(FromFlightCtrl.GyroHeading / 10);//GYRO_DEG_FACTOR
-		PID_Nick =   (coscompass * PID_North + sincompass * PID_East) / 8192;
-		PID_Roll  =  (sincompass * PID_North - coscompass * PID_East) / 8192;
+		PID_Nick =   (coscompass * PID_North + sincompass * PID_East) / 8192L;
+		PID_Roll  =  (sincompass * PID_North - coscompass * PID_East) / 8192L;
 
 	
 		// limit resulting GPS control vector
@@ -792,7 +793,7 @@ void CalcHeadFree(void)
 					GPS_CalculateDeviation(&(GPSData.Position), &(PointList_GetPOI()->Position), &POIDeviation);
 	
 					CAM_Orientation.Azimuth = POIDeviation.Bearing;
-					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance),5*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);DebugOut.Analog[24] = CAM_Orientation.Elevation;
+					CAM_Orientation.Elevation = (s16)(atan2( (POIDeviation.Distance),5*NaviData.Altimeter - PointList_GetPOI()->Position.Altitude) / M_PI_180);
 					
 					CAM_Orientation.UpdateMask = CAM_UPDATE_AZIMUTH;			
 				
