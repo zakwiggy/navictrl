@@ -350,7 +350,7 @@ int main(void)
 		LED_RED_ON;
 	}
 
-	GPS_Init();
+	GPS_Init(&(ToFlightCtrl.GPSStick));
 
 	// ---------- Prepare the isr driven
 	// set to absolute lowest priority

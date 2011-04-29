@@ -23,7 +23,7 @@ typedef struct
 extern CAM_Orientation_t CAM_Orientation;
 extern Point_t* GPS_pWaypoint;
 u8 GPS_CopyPosition(GPS_Pos_t * pGPSPosSrc, GPS_Pos_t* pGPSPosTgt);
-void GPS_Init(void);
+void GPS_Init(GPS_Stick_t* pGPS_Stick);
 void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick);
 void CalcHeadFree(void);
 

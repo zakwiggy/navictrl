@@ -120,7 +120,7 @@ GPS_Deviation_t CurrentTargetDeviation;		// Deviation from Target
 GPS_Deviation_t CurrentHomeDeviation;		// Deviation from Home
 GPS_Deviation_t TargetHomeDeviation;		// Deviation from Target to Home
 GPS_Deviation_t POIDeviation;
-GPS_Stick_t		GPS_Stick;
+
 GPS_Parameter_t	GPS_Parameter;
 CAM_Orientation_t CAM_Orientation;
 // the gps reference positions
@@ -278,19 +278,19 @@ u8 GPS_ClearPosition(GPS_Pos_t * pGPSPos)
 
 
 //------------------------------------------------------------
-void GPS_Neutral(void)
+void GPS_Neutral(GPS_Stick_t* pGPS_Stick)
 {
-	GPS_Stick.Nick 	= 0;
-	GPS_Stick.Roll 	= 0;
-	GPS_Stick.Yaw 	= 0;
+	(*pGPS_Stick).Nick 	= 0;
+	(*pGPS_Stick).Roll 	= 0;
+	(*pGPS_Stick).Yaw 	= 0;
 }
 
 //------------------------------------------------------------
-void GPS_Init(void)
+void GPS_Init(GPS_Stick_t* pGPS_Stick)
 {
 	UART1_PutString("\r\n GPS init...");
 	UBX_Init();
-	GPS_Neutral();
+	GPS_Neutral(pGPS_Stick);
 	GPS_ClearPosition(&GPS_HoldPosition);
 	GPS_ClearPosition(&GPS_HomePosition);
 	GPS_pTargetPosition = NULL;
@@ -489,9 +489,11 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 						{
 							
 							GPS_Parameter.PID_Limit = 0; // disables PID output, as long as the manual conrol is active
-						    	GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
-							GPS_pTargetPosition = NULL;
-							GPS_TargetRadius = 0;
+						    	//GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
+							//GPS_pTargetPosition = NULL;
+							//GPS_TargetRadius = 0;
+							GPS_pTargetPosition = &GPS_HoldPosition;
+							GPS_TargetRadius = 100;
 						}
 						else
 						{
@@ -721,8 +723,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 		// limit resulting GPS control vector
 		GPS_LimitXY(&PID_Nick, &PID_Roll, GPS_Parameter.PID_Limit);
 
-		GPS_Stick.Nick = (s16)PID_Nick;
-		GPS_Stick.Roll = (s16)PID_Roll;
+		(*pGPS_Stick).Nick = (s16)PID_Nick;
+		(*pGPS_Stick).Roll = (s16)PID_Roll;
 	
 
 
@@ -733,14 +735,14 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 				}
 				else // deviation could not be calculated
 				{   // do nothing on gps sticks!
-					GPS_Neutral();
+					GPS_Neutral(pGPS_Stick);
 					NCFlags &= ~NC_FLAG_TARGET_REACHED;	// clear target reached
 				}
 
 	 		}// eof if GPSSignal is OK
 			else // GPSSignal not OK
 			{
-				GPS_Neutral();
+				GPS_Neutral(pGPS_Stick);
 				// beep if signal is not sufficient
 				if(GPS_Parameter.FlightMode != GPS_FLIGHT_MODE_FREE)
 				{
@@ -755,8 +757,8 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 	DebugOut.Analog[6] = NCFlags;
 
 	
-	DebugOut.Analog[29] = GPS_Stick.Nick;
-	DebugOut.Analog[30] = GPS_Stick.Roll;
+	DebugOut.Analog[29] = (*pGPS_Stick).Nick;
+	DebugOut.Analog[30] = (*pGPS_Stick).Roll;
 
 	// update navi data, send back to ground station
 	GPS_CopyPosition(&(GPSData.Position),   &(NaviData.CurrentPosition));
