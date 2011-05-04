@@ -414,7 +414,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 	static GPS_Pos_t RangedTargetPosition = {0,0,0, INVALID};		// the limited target position, this is derived from the target position with repect to the operating radius
 	static s32 OperatingRadiusOld = -1;
-	static u32 WPTime = 0;
+	static u32 WPTime = 0,logTime=0;
 
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//+ Check for new data from GPS-receiver
@@ -487,6 +487,13 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 
 						if(GPS_IsManuallyControlled())
 						{
+							if(CheckDelay(logTime))
+							{
+								GPS_Parameter.PID_Limit = 0; // disables PID output, as long as the manual conrol is active
+							    	GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);  // update hold position
+								GPS_pTargetPosition = NULL;	// set target position invalid
+								GPS_TargetRadius = 0;
+							}
 							
 							GPS_Parameter.PID_Limit = 0; // disables PID output, as long as the manual conrol is active
 						    	//GPS_CopyPosition(&(GPSData.Position), &GPS_HoldPosition);
@@ -497,6 +504,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 						}
 						else
 						{
+							logTime = SetDelay(GPS_Parameter.BrakingDuration * 1000);
 							GPS_pTargetPosition = &GPS_HoldPosition;
 							GPS_TargetRadius = 100; // 1 meter
 						}
