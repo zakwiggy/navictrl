@@ -674,7 +674,7 @@ void GPS_Navigation(gps_data_t *pGPS_Data, GPS_Stick_t* pGPS_Stick)
 		// I-Part
 		I_North = ((s32)GPS_Parameter.I * GPSPosDevIntegral_North)/8192;//add declaration
 		I_East =  ((s32)GPS_Parameter.I * GPSPosDevIntegral_East)/8192;//add declaration
-		GPS_LimitXY(&P_North, &P_North, GPS_Parameter.P_Limit);
+		GPS_LimitXY(&P_North, &P_East, GPS_Parameter.P_Limit);
 		// combine P & I
 		PID_North = P_North + I_North;
 		PID_East  = P_East + I_East;
