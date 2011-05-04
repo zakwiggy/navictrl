@@ -149,7 +149,7 @@ void GPS_UpdateParameter(void)
 		GPS_Parameter.P_Limit = 90;
 		GPS_Parameter.I_Limit = 90;
 		GPS_Parameter.D_Limit = 90;
-		GPS_Parameter.PID_Limit = 200;
+		GPS_Parameter.PID_Limit = 100;
 		GPS_Parameter.BrakingDuration = 0;
 		GPS_Parameter.SpeedCompensation = (float) 30;
 		GPS_Parameter.MinSat = 6;
@@ -184,15 +184,15 @@ void GPS_UpdateParameter(void)
 			}
 		}
 		GPS_Parameter.Gain 	= (float)Parameter.NaviGpsGain;
-		GPS_Parameter.P		= (float)(Parameter.NaviGpsP-100)*6;
-		GPS_Parameter.I		= (float)(Parameter.NaviGpsI-100)*6;
-		GPS_Parameter.D		= (float)(Parameter.NaviGpsD-100)*6;
+		GPS_Parameter.P		= (float)(Parameter.NaviGpsP);
+		GPS_Parameter.I		= (float)(Parameter.NaviGpsI);
+		GPS_Parameter.D		= (float)(Parameter.NaviGpsD);
 		GPS_Parameter.A		= (float)Parameter.NaviGpsD;
 		GPS_Parameter.ACC 	= (float)Parameter.NaviGpsACC;
 		GPS_Parameter.P_Limit = (s32)Parameter.NaviGpsPLimit;
 		GPS_Parameter.I_Limit = (s32)Parameter.NaviGpsILimit;
 		GPS_Parameter.D_Limit = (s32)Parameter.NaviGpsDLimit;
-		GPS_Parameter.PID_Limit = 2* (u32)Parameter.NaviAngleLimitation;
+		GPS_Parameter.PID_Limit =  (u32)Parameter.NaviAngleLimitation;
 		GPS_Parameter.BrakingDuration = (u32)Parameter.NaviPH_LoginTime;
 		GPS_Parameter.SpeedCompensation = (float)Parameter.NaviSpeedCompensation;
 		GPS_Parameter.MinSat = (u8)Parameter.NaviGpsMinSat;
